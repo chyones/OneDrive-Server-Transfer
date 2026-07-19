@@ -1,0 +1,55 @@
+# .NET build output
+**/bin/
+**/obj/
+artifacts/win-x64/*
+!artifacts/win-x64/.gitkeep
+
+# Generated source validation evidence
+artifacts/source/*
+!artifacts/source/.gitkeep
+
+# User-specific IDE files
+.vs/
+.vscode/*
+!.vscode/extensions.json
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# JetBrains
+.idea/
+*.sln.iml
+
+# Test and coverage output
+TestResults/
+coverage/
+coverage.*
+*.trx
+
+# Logs and runtime transfer data
+*.log
+*.partial
+_TransferReport/
+OneDriveData/
+
+# Local configuration and secrets
+appsettings.json
+appsettings.*.json
+!appsettings.example.json
+.env
+.env.*
+*.pfx
+*.p12
+*.pem
+*.key
+*.cer
+*.crt
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Optional packages
+*.zip
