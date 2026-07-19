@@ -4,7 +4,9 @@ This plan implements the simple workflow defined in `IMPLEMENTATION_CONTRACT.md`
 
 ## M0 — Contract simplification and pre-implementation hardening
 
-**Status:** `DOCUMENTATION_COMPLETE` after the workflow-alignment evidence for the exact reviewed documentation commit is committed.
+**Status:** `IN_PROGRESS`
+
+M0 remains in progress until this workflow-alignment change is reviewed and merged and replacement evidence is committed against the exact merged documentation commit. Until then, M1 remains blocked.
 
 Evidence is maintained under:
 
@@ -12,7 +14,7 @@ Evidence is maintained under:
 artifacts/evidence/
 ```
 
-Completed outcomes:
+Workflow-alignment outcomes prepared for M0 completion:
 
 - `IMPLEMENTATION_CONTRACT.md` is the single binding contract;
 - the product is defined as an internal read-only archival-copy tool;
@@ -32,7 +34,9 @@ Completed outcomes:
 
 ## M1 — Solution and CI foundation
 
-**Status:** `NOT_STARTED`
+**Status:** `BLOCKED`
+
+M1 may start only after M0 is marked `DOCUMENTATION_COMPLETE` in `.ai/PHASE_STATUS.md` with committed replacement evidence tied to the exact reviewed documentation commit.
 
 Goals:
 
