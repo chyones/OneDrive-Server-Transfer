@@ -14,7 +14,7 @@ The application uses one window. The IT administrator performs only these action
 2. Sign in through the official Microsoft sign-in flow.
 3. Paste the employee's OneDrive for Business root URL.
 4. Select a local destination on the same Windows Server.
-5. Review the resolved employee and destination confirmation.
+5. Review the resolved employee, signed-in transfer account, and destination confirmation.
 6. Press `Copy Data`.
 7. Monitor progress and review the final result.
 
@@ -67,11 +67,13 @@ profile
 
 Do not request Microsoft 365 write permissions.
 
+After sign-in, verify that the authenticated account belongs to the configured tenant. Support a deployment allowlist of authorized transfer-account Microsoft Entra object IDs. When the allowlist is configured, reject every account not present in it. Do not authorize an account by display name alone, and do not treat a mutable email address as the sole durable identity.
+
 The IT administrator grants the designated transfer account access to the employee's OneDrive outside the application, including temporary Site Collection Administrator access when operationally required. The application only validates existing access.
 
 When temporary Site Collection Administrator access is used, the external operating procedure must require:
 
-1. removal after the completed, failed, or cancelled transfer no longer requires it;
+1. removal after the completed, failed, cancelled, or abandoned transfer no longer requires it;
 2. verification of removal through Microsoft 365 administration tools; and
 3. an external record containing the transfer run ID, grant time, removal time, responsible administrator, and verification result.
 
@@ -101,7 +103,9 @@ Reject:
 - SharePoint, Teams, project-site, or communication-site libraries; and
 - sources outside the configured tenant.
 
-Copy active files, nested folders, and empty folders, including Arabic, Unicode, long names, and large files.
+Copy active file items, nested folder items, and empty folders, including Arabic, English, Unicode, large, and long-name files.
+
+Microsoft Graph package items, including OneNote notebooks, are not file or folder items and are not copied in version 1. Classify them as `Unsupported`, include them in the reports, and force the run result to `CompletedWithWarnings` unless another condition requires `Failed`, `Cancelled`, or `Interrupted`. Never silently skip a package item or claim that it was copied. Exporting or reconstructing package content requires a separately approved future scope.
 
 Do not include Recycle Bin content, deleted-item history, previous versions, sharing metadata, comments, activity, retention, compliance, audit records, or external shortcut content belonging to another drive.
 
@@ -124,6 +128,8 @@ Store employee content only in `OneDriveData`. Store transfer state, reports, an
 Bind each destination to at least Tenant ID, source Drive ID, and a protected employee identity. Reject a destination bound to another source. Do not silently adopt a non-empty destination without valid application state.
 
 Acquire an operating-system-backed exclusive lock so two processes or Windows sessions cannot use the same destination concurrently.
+
+Before scheduling downloads, determine destination-volume free space and calculate the known remaining source bytes. Require free space greater than the known remaining bytes plus a fixed 5 GiB safety reserve. When the total is incomplete or changes during reconciliation, recheck before each file and require at least that file's expected size plus the reserve. A disk-full or reserve violation must stop new scheduling safely, preserve verified files and valid partial files, persist accurate state, and never return `Completed`.
 
 ## 7. Inventory and source changes
 
@@ -152,6 +158,7 @@ A source deletion must never automatically delete an already copied local file.
 - Respect `Retry-After` and retry transient failures with bounded backoff, up to five attempts per file.
 - Do not stop unrelated files because one file failed when continuation is safe.
 - On cancellation, stop new scheduling, cancel supported requests, preserve completed files, and preserve safe partial files.
+- After content verification, preserve the source `createdDateTime` and `lastModifiedDateTime` on the local file when Windows supports the values. Apply directory timestamps after child processing. Timestamp failures do not invalidate verified bytes, but they must be recorded and force `CompletedWithWarnings`.
 
 ## 9. Verification and existing files
 
@@ -160,8 +167,9 @@ For every completed file:
 1. confirm successful HTTP completion;
 2. confirm written bytes equal the expected source size;
 3. re-read source metadata and verify source identity and relevant metadata remained stable;
-4. verify a supported Microsoft source hash when available; and
-5. calculate and store a streaming local SHA-256.
+4. verify a supported Microsoft source hash when available;
+5. calculate and store a streaming local SHA-256; and
+6. apply and verify source timestamps when supported.
 
 Store source-hash verification and local SHA-256 separately. Never claim source cryptographic verification when Microsoft Graph did not provide a comparable source hash.
 
@@ -169,7 +177,7 @@ Skip an existing file only when transfer state proves it represents the same sou
 
 Never overwrite unrelated local content. Generate a deterministic safe name and report the conflict when required.
 
-## 10. Local state and resume
+## 10. Local state, run states, and recovery
 
 Use one application-owned SQLite database:
 
@@ -181,19 +189,23 @@ SQLite is embedded and requires no database server. Use it for source binding, l
 
 Store at minimum:
 
-- schema version and run ID;
-- tenant, source drive, and protected employee identity;
+- schema version, path-mapping version, and run ID;
+- tenant, source drive, authenticated transfer-account identity, and protected employee identity;
 - source item and parent IDs;
 - source and mapped local paths;
+- item facet classification, including unsupported package items;
 - ETag or CTag when available;
-- source size and modified time;
+- source size, created time, and modified time;
 - supported source-hash information;
 - local SHA-256;
 - transfer state and attempt count;
+- timestamp-preservation result;
 - delta checkpoint; and
 - timestamps and final result.
 
 Use transactions and durable incremental commits. Recovery must be idempotent. Reject unsupported future schema versions clearly.
+
+Before opening an existing destination for resume, run SQLite integrity validation. Before every supported schema migration, create a protected backup of the state database and execute the migration transactionally. If integrity validation or migration fails, preserve the original database with a timestamped diagnostic copy, do not silently reset or rebuild state, do not overwrite existing employee content, and require restoration of a known-good state database or selection of a new empty destination.
 
 Approved item states:
 
@@ -204,17 +216,49 @@ Downloading
 Verified
 Completed
 Skipped
+Unsupported
 Failed
 Cancelled
 ```
 
-## 11. Path safety
+Approved run states:
+
+```text
+InProgress
+Completed
+CompletedWithWarnings
+Failed
+Cancelled
+Interrupted
+```
+
+Run-state rules:
+
+- `Completed`: every supported item is `Completed` or validly `Skipped`, no item is `Failed` or `Unsupported`, required timestamps succeeded, and reconciliation reached a stable delta state.
+- `CompletedWithWarnings`: safe work finished but at least one item is `Failed` or `Unsupported`, a timestamp could not be preserved, or the source did not stabilize within three reconciliation passes.
+- `Failed`: source validation, destination validation, binding, locking, state integrity, storage safety, or another fatal requirement prevented safe continuation.
+- `Cancelled`: the administrator requested cancellation and state was persisted safely.
+- `Interrupted`: a previous `InProgress` run ended without an orderly terminal transition and remains eligible for validated resume.
+
+## 11. Path safety and `PathMappingVersion = 1`
 
 Use deterministic Windows-safe path mapping with `PathMappingVersion = 1`.
 
-Handle Unicode normalization, invalid characters, reserved names, trailing dots and spaces, empty sanitized names, case-insensitive collisions, file-versus-folder collisions, long paths, and deterministic collision suffixes.
+For version 1:
+
+1. Normalize every source path component to Unicode Normalization Form C.
+2. Encode Windows-invalid characters, ASCII control characters, trailing dots, and trailing spaces as `_xHHHH_` using the uppercase four-digit UTF-16 code unit value.
+3. Prefix Windows reserved device names with `_` after normalization and encoding.
+4. When the mapped component would be empty, use `_empty_` followed by the deterministic collision suffix.
+5. Detect collisions using ordinal case-insensitive comparison and treat file-versus-folder conflicts as collisions.
+6. Derive the collision suffix as `~` followed by the first 10 lowercase hexadecimal characters of SHA-256 over the UTF-8 source Drive Item ID. Insert the suffix before the file extension when practical and append it to folder names.
+7. Limit each mapped component to 200 UTF-16 code units. When longer, truncate only the human-readable portion and retain the deterministic suffix and as much of the extension as fits.
+8. Use long-path-capable Windows APIs. If the canonical final path still exceeds the supported runtime or filesystem limit, fail that item with a stable path-length error instead of shortening it non-deterministically.
+9. Persist every mapping in SQLite and reuse it on resume and rerun.
 
 Validate canonical containment during create, open, replace, and rename operations. Prevent traversal and unsafe symbolic-link, junction, mount-point, or reparse-point redirection. Do not follow or overwrite untrusted hard-linked destination files.
+
+Changing any mapping rule requires a new `PathMappingVersion` and an approved compatibility and migration decision.
 
 ## 12. User interface
 
@@ -223,29 +267,33 @@ Create one professional WPF window containing only:
 - Microsoft sign-in, signed-in account, remember sign-in, and sign-out;
 - employee OneDrive URL;
 - destination selector;
+- resolved employee, authorized transfer account, and destination confirmation;
 - `Copy Data` and `Cancel`;
 - current operation and current file;
-- discovered, completed, skipped, and failed counts;
+- discovered, completed, skipped, unsupported, and failed counts;
 - downloaded size;
 - progress bar; and
 - a bounded recent-activity list.
 
 While totals are unknown, show `Calculating` or `Unknown` and use indeterminate progress. Never fabricate a percentage.
 
-Every user-facing error must contain a short title, plain-language explanation, corrective action, and stable reference code. Never display tokens, temporary URLs, raw Graph responses, stack traces, or authorization headers.
+Every user-facing error must contain a short title, plain-language explanation, corrective action, and stable reference code. Never display tokens, temporary URLs, raw Graph responses, stack traces, authorization headers, tenant IDs, drive IDs, or protected database values.
 
 ## 13. Reports
 
-Create per run:
+Create a unique report directory for every run:
 
 ```text
-TransferSummary.json
-TransferReport.csv
-FailedFiles.csv
-TransferLog.log
+SelectedDestination\_TransferReport\Runs\<RunId>\
+├── TransferSummary.json
+├── TransferReport.csv
+├── FailedFiles.csv
+└── TransferLog.log
 ```
 
-SQLite remains the operational source for recovery. CSV files are human-readable reports only.
+Never overwrite or append to another run's report files. SQLite remains the operational source for recovery. CSV and JSON files are human-readable reports only.
+
+Reports must include unsupported package items, timestamp warnings, disk-space failures, source-instability warnings, and the exact terminal run state.
 
 Use UTF-8, correct CSV escaping, and spreadsheet-formula-injection protection. Segment reports internally only when practical file-size limits require it.
 
@@ -260,7 +308,7 @@ Use UTF-8, correct CSV escaping, and spreadsheet-formula-injection protection. S
 
 ## 15. Tests and validation
 
-Automated tests must cover URL validation, root resolution, rejected source types, delta paging and recovery, external shortcut rejection, destination validation and binding, exclusive locking, path mapping, streaming and fixed concurrency, range resume and safe restart, temporary URL credential isolation, retries and throttling, source changes during download, source-hash and local SHA-256 behavior, SQLite transactions and recovery, existing-file conflicts, cancellation, CSV safety, and error redaction.
+Automated tests must cover URL validation, tenant and authorized-account validation, root resolution, rejected source types, package-item classification, delta paging and recovery, external shortcut rejection, destination validation and binding, exclusive locking, disk headroom and disk-full recovery, path-mapping version 1, streaming and fixed concurrency, range resume and safe restart, temporary URL credential isolation, retries and throttling, source changes during download, source-hash and local SHA-256 behavior, timestamp preservation, SQLite transactions, integrity checks, migration backup and recovery, existing-file conflicts, run-state rules, per-run report isolation, cancellation, CSV safety, and error redaction.
 
 Windows CI is mandatory before `Source Implementation Complete`. Required CI evidence includes:
 
@@ -273,7 +321,7 @@ Windows CI is mandatory before `Source Implementation Complete`. Required CI evi
 
 A non-Windows development environment may perform additional supported checks, but it cannot replace mandatory Windows CI build and test evidence.
 
-Production acceptance additionally requires actual Windows Server 2019 execution, WPF startup, Microsoft interactive sign-in, real test-employee OneDrive validation, complete copy, interruption and resume, reconciliation, destination locking, access-removal verification, production ACL and encryption validation, and self-contained publish.
+Production acceptance additionally requires actual Windows Server 2019 execution, WPF startup, Microsoft interactive sign-in with an authorized transfer account, real test-employee OneDrive validation, complete copy, unsupported-package reporting when present, interruption and resume, reconciliation, destination locking, disk-space behavior, timestamp preservation, production ACL and encryption validation, access-removal verification, and self-contained publish.
 
 ## 16. Deliverables
 
@@ -288,12 +336,12 @@ Production acceptance additionally requires actual Windows Server 2019 execution
 
 ## 17. Completion labels
 
-- `Documentation Ready`: corrected contract and project controls exist; implementation has not started.
+- `Documentation Ready`: one binding contract and aligned controls exist, no unresolved binding contradiction remains, implementation has not started, and committed documentation evidence is tied to an exact validated commit.
 - `Source Implementation Complete`: complete source exists, mandatory Windows CI restore/build/tests and other required source checks passed, and committed evidence exists. Real-tenant and interactive production checks may remain unexecuted.
 - `Production Ready`: every mandatory Windows Server, real-tenant, transfer, resume, security, access-removal, encryption, and publish test passed with evidence.
 - `Not Complete`: mandatory implementation or validation is missing.
 
-Never infer success from an unexecuted command, checked box, ignored local file, or verbal claim.
+Never infer success from an unexecuted command, checked box, ignored local file, mutable branch name, or verbal claim.
 
 ## 18. Explicitly out of scope
 
@@ -308,6 +356,7 @@ Never infer success from an unexecuted command, checked box, ignored local file,
 - web dashboard or central reporting;
 - email notifications;
 - previous-version, Recycle Bin, sharing, compliance, or audit backup;
+- exporting or reconstructing OneNote notebooks or other Microsoft Graph package items;
 - custom five-million-item benchmark as a release blocker; and
 - custom database-engine or JSONL-index implementation.
 
