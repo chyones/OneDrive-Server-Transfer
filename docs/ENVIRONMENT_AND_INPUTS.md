@@ -11,7 +11,8 @@ Do not store passwords, tokens, client secrets, employee content, temporary down
 | Tenant ID | Yes | Not provided |
 | Entra public-client application Client ID | Yes | Not provided |
 | Allowed OneDrive host | Yes | Not provided |
-| Dedicated transfer administrator email | Yes | Not provided |
+| Authorized transfer-account Entra object ID or IDs | Yes | Not provided |
+| Dedicated transfer administrator email | Recommended | Not provided |
 | Admin consent completed | Yes | Not confirmed |
 | Public-client flow enabled | Yes | Not confirmed |
 | Redirect URI `http://localhost` | Yes | Not confirmed |
@@ -29,7 +30,7 @@ openid
 profile
 ```
 
-Do not create a client secret or add write permissions.
+Do not create a client secret, add write permissions, or authorize accounts by display name or mutable email address alone.
 
 ## Test employee OneDrive
 
@@ -42,8 +43,13 @@ Do not create a client secret or add write permissions.
 | Nested folders prepared | Yes | Not confirmed |
 | Empty folder prepared | Yes | Not confirmed |
 | Arabic and Unicode names prepared | Yes | Not confirmed |
+| Reserved Windows names and unsafe characters prepared | Yes | Not confirmed |
+| Case-insensitive and file-versus-folder collision cases prepared | Yes | Not confirmed |
+| Long component and long full-path cases prepared | Yes | Not confirmed |
 | Large file prepared | Yes | Not confirmed |
 | File-change test prepared | Yes | Not confirmed |
+| OneNote notebook or other package item prepared | Yes | Not confirmed |
+| Timestamp-preservation cases prepared | Yes | Not confirmed |
 | Invalid file, subfolder, consumer, shared, and SharePoint URLs prepared | Yes | Not confirmed |
 
 ## Windows Server 2019
@@ -56,13 +62,14 @@ Do not create a client secret or add write permissions.
 | Windows execution account | Yes | Not provided |
 | RDP access | Yes | Not confirmed |
 | Local destination root | Yes | Not provided |
-| Free disk space and reserved headroom | Yes | Not confirmed |
+| Free disk space and fixed 5 GiB reserve available | Yes | Not confirmed |
+| Disk-full test destination or controlled test method | Yes | Not confirmed |
 | Write permission | Yes | Not confirmed |
 | Restricted NTFS ACL baseline | Yes | Not confirmed |
 | Token-cache location and ACL reviewed | Yes | Not confirmed |
 | BitLocker or approved equivalent | Yes | Not confirmed |
 | Approved encryption exception | When needed | Not provided |
-| Long-path support | When needed | Not confirmed |
+| Long-path support | Yes | Not confirmed |
 | Proxy present | Yes/No | Not provided |
 | Outbound HTTPS permitted | Yes | Not confirmed |
 | Antivirus/application-control constraints reviewed | Yes | Not confirmed |
@@ -82,8 +89,9 @@ Temporary Microsoft download hosts vary. Requests to them must not include Graph
 
 | Value | Required | Status |
 |---|---:|---|
-| Contract correction reviewed and merged | Before M1 | Not complete |
-| Corrected M0 evidence tied to merged commit | Before M1 | Not complete |
+| Original contract correction reviewed and merged | Before M1 | Complete — PR #2 |
+| Pre-implementation hardening reviewed and merged | Before M1 | Complete — PR #3, commit `e9434ff54c373e1d0129ba2583027897f6f3ff25` |
+| Final M0 evidence tied to hardened commit | Before M1 | Complete — `artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json` |
 | Windows GitHub Actions workflows | Before source completion | Not started |
 | Main-branch required checks | Before protected implementation merges | Not confirmed |
 | Deterministic dependency restore | Yes | Not started |
@@ -101,20 +109,21 @@ MicrosoftIdentity.TenantId
 MicrosoftIdentity.ClientId
 MicrosoftIdentity.RedirectUri = http://localhost
 MicrosoftIdentity.AllowedOneDriveHost
+MicrosoftIdentity.AuthorizedAccountObjectIds
 Transfer.MaximumRetryAttempts = 5
 ```
 
-`MaximumRetryAttempts` accepts values from 1 through 5. Download concurrency is fixed at three and is not configurable.
+`AuthorizedAccountObjectIds` contains one or more approved Entra object IDs. `MaximumRetryAttempts` accepts values from 1 through 5. Download concurrency is fixed at three, and the destination-space safety reserve is fixed at 5 GiB; neither is configurable or shown in the UI.
 
 ## Post-transfer administrative record
 
 When temporary employee OneDrive administrative access is no longer needed, record externally:
 
-- transfer run ID
-- protected employee identity
-- access grant time
-- access removal time
-- administrator performing removal
-- verification result
+- transfer run ID;
+- protected employee identity;
+- access grant time;
+- access removal time;
+- administrator performing removal; and
+- verification result.
 
 The application remains read-only and does not perform this permission change.

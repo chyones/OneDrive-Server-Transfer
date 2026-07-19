@@ -17,8 +17,10 @@ When instructions conflict, use this order:
 
 ## Current repository state
 
-- M0 contract simplification and pre-implementation hardening is `DOCUMENTATION_COMPLETE` only after the current evidence file is tied to the reviewed baseline commit.
-- Completion label: `Documentation Ready` only when all control files and evidence agree.
+- M0 contract simplification and pre-implementation hardening is `DOCUMENTATION_COMPLETE`.
+- Completion label: `Documentation Ready`.
+- M0 evidence: `artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json`.
+- Validated documentation baseline: `e9434ff54c373e1d0129ba2583027897f6f3ff25`.
 - Application implementation has not started.
 - Next phase: `M1 — Solution and CI foundation`.
 - Do not claim source code, Windows build, WPF execution, Microsoft sign-in, OneDrive transfer, publish, or production validation without executed evidence.
