@@ -1,0 +1,77 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M0 — Documentation and controls",
+  "documentationScope": "AI context cleanup and active-control consolidation",
+  "completionState": "DOCUMENTATION_COMPLETE",
+  "validatedSourceCommit": "35fa808a26f2de16c45e1b9da6faa01638d10d1e",
+  "executedAtUtc": "2026-07-19T17:49:00Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "operatingSystem": "Not applicable — repository documentation review",
+    "applicationCodePresent": false
+  },
+  "validatedActions": [
+    "Removed the superseded contract-amendment file from the active tree.",
+    "Removed duplicate AI start-prompt and execution-rules files.",
+    "Removed invalid and superseded M0 evidence files; Git history retains traceability.",
+    "Reduced AGENTS.md to authority, startup, scope, non-negotiable controls, and evidence rules.",
+    "Reduced START_HERE, PHASE_STATUS, HANDOFF, and PROJECT_MEMORY so each has one distinct purpose.",
+    "Replaced the mixed historical decision log with active approved decisions only.",
+    "Simplified README and SECURITY.md to indexes and product overview rather than duplicate specifications.",
+    "Removed pull-request and commit history from ENVIRONMENT_AND_INPUTS.md.",
+    "Condensed IMPLEMENTATION_PLAN.md around phase goals, required reading, and exit criteria.",
+    "Confirmed IMPLEMENTATION_CONTRACT.md remains the single binding contract and the product scope is unchanged."
+  ],
+  "removedActiveFiles": [
+    "IMPLEMENTATION_CONTRACT_AMENDMENTS.md",
+    ".ai/AI_EXECUTION_RULES.md",
+    ".ai/AI_START_PROMPT.md",
+    "artifacts/evidence/M00_documentation-readiness_20260719.json",
+    "artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json",
+    "artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json",
+    "artifacts/evidence/M00_microsoft-platform-baseline_20260719T172157Z.json"
+  ],
+  "activeEntryPoints": [
+    "AGENTS.md",
+    "IMPLEMENTATION_CONTRACT.md",
+    ".ai/START_HERE.md",
+    ".ai/PHASE_STATUS.md",
+    ".ai/HANDOFF.md",
+    ".ai/PROJECT_MEMORY.md",
+    ".ai/DECISION_LOG.md",
+    "docs/IMPLEMENTATION_PLAN.md"
+  ],
+  "result": "PASS",
+  "exitCode": 0,
+  "checks": {
+    "bindingContractChanged": false,
+    "productScopeChanged": false,
+    "applicationImplementationStarted": false,
+    "employeeCredentialPathIntroduced": false,
+    "microsoft365WriteAccessIntroduced": false,
+    "graphBetaIntroduced": false,
+    "secretsOrEmployeeDataAdded": false
+  },
+  "unexecutedChecks": [
+    "dotnet restore",
+    "Windows Release build",
+    "automated application tests",
+    "WPF startup",
+    "Microsoft sign-in",
+    "real-tenant OneDrive validation",
+    "scan, copy, resume, reconciliation, reporting, publish, and production validation"
+  ],
+  "limitations": [
+    "This evidence validates documentation structure and active AI context only.",
+    "It does not justify Source Implementation Complete or Production Ready."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}

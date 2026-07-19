@@ -1,223 +1,86 @@
 # OneDrive Server Transfer
 
-An internal IT-controlled Windows archival tool used to copy one employee's supported Microsoft 365 OneDrive for Business files and folders to approved local storage attached to the same Windows Server.
+Internal Windows application for copying the supported active contents of one employee's Microsoft 365 OneDrive for Business to approved local storage on the same Windows Server.
 
-The tool supports authorized operational backup, employee offboarding, and recovery preparation. It copies data only and never deletes or modifies the Microsoft 365 source.
+The application copies only. It never modifies or deletes Microsoft 365 source content and never requests an employee password.
 
-## Important security notice
+## Status
 
-- The application must never request, collect, store, log, or process an employee password.
-- The operator must authenticate through Microsoft Entra ID using an authorized IT transfer account.
-- Microsoft 365 access is read-only.
-- The tool must never delete, rename, move, edit, upload, or change permissions on source OneDrive content.
-- Employee archive data and reports must be protected by restricted NTFS permissions and approved storage encryption controls.
+- Completion label: `Documentation Ready`
+- Application implementation: not started
+- Current phase: `M1 — Solution and CI foundation`
 
-## Current status
+The exact status and evidence pointer are maintained only in `.ai/PHASE_STATUS.md`.
 
-**Documentation Ready — application implementation has not started.**
+## Operator workflow
 
-Completed documentation phase:
+1. Open the WPF application.
+2. Sign in with the authorized IT transfer account.
+3. Enter employee UPN or OneDrive root URL.
+4. Select a local destination.
+5. Run mandatory `Scan`.
+6. Review employee, operator, counts, known size, unsupported items, path warnings, and storage warnings.
+7. Run `Start Copy` after a successful current scan.
+8. Monitor progress and review the result and reports.
 
-```text
-M0 — Contract simplification and pre-implementation hardening
-Status: DOCUMENTATION_COMPLETE
-```
+Changing source or destination invalidates the scan.
 
-Current committed M0 evidence:
-
-```text
-artifacts/evidence/M00_microsoft-platform-baseline_20260719T172157Z.json
-```
-
-Validated documentation source commit:
-
-```text
-50e25cc9501ef22ad05ebe6abc1e7a96603efce2
-```
-
-Previous workflow-alignment evidence remains in the repository for historical traceability.
-
-Current implementation phase:
-
-```text
-M1 — Solution and CI foundation
-Status: NOT_STARTED
-Start authorization: Granted
-```
-
-M1 may begin now. The implementation agent must mark M1 `IN_PROGRESS` before creating source files. Documentation Ready does not mean the application builds, runs, signs in, accesses OneDrive, copies data, publishes, or is production ready.
-
-## Intended IT workflow
-
-1. Open the application on the Windows Server.
-2. Sign in with the approved Microsoft transfer account.
-3. Enter the employee UPN or paste the employee OneDrive for Business root URL.
-4. Select a local destination folder.
-5. Press `Scan` to perform the mandatory dry run.
-6. Review the resolved employee, signed-in operator, destination, file count, known total size, unsupported items, path warnings, and storage warnings.
-7. Press `Start Copy` after the scan succeeds.
-8. Monitor progress and review the final result and reports.
-
-Changing the source or destination invalidates the scan and disables `Start Copy` until another scan succeeds.
-
-## Destination structure
+## Output
 
 ```text
 SelectedDestination\
 ├── OneDriveData\
 └── _TransferReport\
     ├── TransferState.db
-    └── Runs\
-        └── <RunId>\
-            ├── TransferSummary.json
-            ├── TransferReport.csv
-            ├── FailedFiles.csv
-            └── TransferLog.log
+    └── Runs\<RunId>\
+        ├── TransferSummary.json
+        ├── TransferReport.csv
+        ├── FailedFiles.csv
+        └── TransferLog.log
 ```
 
-- `OneDriveData` contains copied employee files and folders.
-- `_TransferReport` contains SQLite operational state and isolated per-run reports.
-- SQLite is the source of truth for scan, resume, and recovery.
-- CSV and JSON files are audit reports only.
-- The destination is bound to one tenant, employee Entra object ID, and source drive to prevent data mixing.
-- Another authorized IT operator may resume only after all source, destination, authorization, and state checks succeed.
-- Earlier reports are never overwritten by a later run.
+SQLite is the operational source for scan, resume, recovery, binding, and mappings. CSV and JSON are audit outputs only.
 
-## Supported source input
+## Version 1 boundary
 
-The source field accepts one of:
+Supported:
 
-- an employee Microsoft Entra UPN, such as `employee@company.com`; or
-- the root URL of that employee's OneDrive for Business.
+- one employee business OneDrive root;
+- active supported files, nested folders, and empty folders;
+- local fixed or directly attached storage;
+- Unicode, Arabic, large files, long names, and deterministic Windows-safe path mapping;
+- interruption, validated resume, reconciliation, integrity checks, timestamps, and isolated reports.
 
-The application resolves the final source to the configured tenant, employee Entra object ID, and default business OneDrive drive. It rejects consumer OneDrive, files, subfolders, shared links, SharePoint libraries, Teams libraries, and external tenants.
-
-## Mandatory dry run
-
-`Scan` does not download employee file content. It must:
-
-- resolve the employee and source drive;
-- inventory the complete drive through Microsoft Graph delta paging;
-- classify supported and unsupported items;
-- calculate file count and known total size;
-- apply deterministic Windows-safe path mapping;
-- identify collisions, invalid paths, and long-path failures;
-- validate the destination, locking, binding, write access, and storage reserve; and
-- present an accurate preflight summary.
-
-`Start Copy` remains disabled when the scan fails or becomes stale.
-
-## Supported content
-
-- one employee OneDrive for Business root;
-- same configured Microsoft 365 tenant;
-- active supported file and folder items;
-- nested and empty folders; and
-- Arabic, English, Unicode, large, long-name, and long-path files within the documented Windows mapping rules.
-
-## Explicit unsupported content
-
-Microsoft Graph package items, including OneNote notebooks, are not copied in version 1. They are reported as `Unsupported` and make the final result `Incomplete`. They are never silently skipped or represented as copied.
-
-The first release does not include:
+Not included:
 
 - Recycle Bin or previous versions;
-- sharing permissions, links, comments, activity, compliance, or audit records;
+- sharing, comments, activity, compliance, or audit data;
 - SharePoint or Teams libraries;
-- consumer OneDrive;
-- external shortcuts to another drive;
-- OneNote or other package export;
-- multiple employees in one run;
-- scheduling, dashboards, email notifications, or service mode; or
-- network, UNC, NAS, SMB, or remote destinations.
+- consumer OneDrive or external shortcuts;
+- OneNote/package export;
+- multiple employees, scheduling, service mode, dashboards, notifications, or remote destinations.
 
-## Technology
+## Fixed technology
 
-- C# and .NET 10 LTS;
-- WPF and MVVM;
-- Microsoft Graph v1.0;
-- MSAL interactive delegated authentication;
-- WAM-preferred sign-in with MSAL system-browser fallback;
-- local SQLite transfer state; and
-- self-contained `win-x64` publish.
+- C# and .NET 10 LTS
+- WPF and MVVM
+- Microsoft Graph `v1.0`
+- delegated interactive MSAL, WAM preferred with system-browser fallback
+- embedded SQLite
+- self-contained `win-x64` publish
 
-Version 1 prohibits Microsoft Graph beta, application permissions, Microsoft 365 write permissions, ROPC, device-code flow, client secrets, certificates, and employee authentication.
+Graph beta, application permissions, Microsoft 365 write permissions, ROPC, device-code flow, client secrets, certificates, and employee authentication are prohibited.
 
-## Core archive behavior
+## Source of truth
 
-- Microsoft Graph delta inventory and reconciliation;
-- opaque next-link and delta-link preservation;
-- supported delta `410 Gone` fresh enumeration and reconciliation;
-- mandatory scan before copy;
-- bounded memory and fixed maximum of three simultaneous downloads;
-- streaming downloads and `.partial` files;
-- safe HTTP Range resume;
-- one automatic retry owner, `Retry-After` handling, and bounded retry;
-- isolated unauthenticated HTTP client for temporary download hosts;
-- supported Microsoft source hashes kept separate from local SHA-256;
-- Microsoft Graph `sha256Hash` ignored because Microsoft documents it as unsupported;
-- source timestamp preservation with explicit warnings;
-- fixed 5 GiB destination-space reserve;
-- deterministic `PathMappingVersion = 1` with collision-suffix expansion;
-- SQLite integrity validation and safe migration recovery; and
-- exact run states: `InProgress`, `Completed`, `CompletedWithWarnings`, `Incomplete`, `Failed`, `Cancelled`, and `Interrupted`.
+- Binding requirements: `IMPLEMENTATION_CONTRACT.md`
+- Agent process: `AGENTS.md`
+- Current status: `.ai/PHASE_STATUS.md`
+- Current task: `.ai/HANDOFF.md`
+- Implementation phases: `docs/IMPLEMENTATION_PLAN.md`
+- Acceptance: `docs/ACCEPTANCE_MATRIX.md`
+- Environment inputs: `docs/ENVIRONMENT_AND_INPUTS.md`
 
-`Incomplete` means the archive is missing supported content, contains unsupported or unknown content semantics, or could not reach a stable source snapshot. It must never be presented as a successful complete archive.
+Implementation agents should begin with `.ai/START_HERE.md` and must not use deleted files, old pull requests, or Git history as active instructions.
 
-## Security model
-
-- authorized IT users only;
-- no employee-password fields or employee impersonation;
-- read-only Microsoft Graph access;
-- configured-tenant validation;
-- authorized transfer-account Entra object-ID allowlist when configured;
-- no Microsoft password storage and no client secret;
-- no Microsoft 365 write permissions;
-- DPAPI-protected application token cache;
-- temporary download URLs are never logged or stored;
-- Graph credentials are never sent to temporary download hosts;
-- local attached storage only;
-- destination containment and source binding;
-- restricted NTFS permissions;
-- BitLocker, approved equivalent, or approved documented exception for production storage; and
-- removal and verification of temporary Site Collection Administrator access after it is no longer required.
-
-See `SECURITY.md`, `docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md`, and `docs/REPORT_SCHEMA.md`.
-
-## Microsoft platform controls
-
-Current Microsoft platform implementation controls are defined in:
-
-- `docs/MICROSOFT_PLATFORM_BASELINE.md`;
-- `docs/AUTHENTICATION_AND_TOKEN_POLICY.md`;
-- `docs/GRAPH_ENDPOINT_PERMISSION_MATRIX.md`;
-- `docs/GRAPH_DELTA_AND_RECONCILIATION_POLICY.md`;
-- `docs/GRAPH_RESILIENCY_POLICY.md`;
-- `docs/DOWNLOAD_AND_INTEGRITY_POLICY.md`; and
-- `docs/PATCHING_AND_RELEASE_LIFECYCLE.md`.
-
-These documents operationalize the binding contract without expanding the user workflow. Agents must recheck the current official Microsoft references listed in the baseline before completing affected milestones.
-
-## Binding source of truth
-
-`IMPLEMENTATION_CONTRACT.md` is the single binding project contract.
-
-`IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded historical material and does not override the binding contract.
-
-The custom disk-index engine, JSONL state engine, and five-million-item release benchmark are not first-release requirements.
-
-## Implementation phases
-
-- M0 — Contract simplification and pre-implementation hardening: `DOCUMENTATION_COMPLETE`
-- M1 — Solution and CI foundation: `NOT_STARTED`, authorized to start
-- M2 — Microsoft authentication
-- M3 — Employee source resolution and validation
-- M4 — Local destination and source binding
-- M5 — Scan, copy, resume, verification, and local state
-- M6 — UI, errors, and reports
-- M7 — Windows and real-tenant acceptance
-- M8 — Internal release
-
-Real tenant, Entra application, authorized transfer account, test employee, and Windows Server values are not committed. Complete `docs/ENVIRONMENT_AND_INPUTS.md` before real-tenant validation.
-
-Never commit passwords, tokens, client secrets, employee content, production state databases, temporary download URLs, or unredacted production reports.
+Never commit passwords, tokens, secrets, employee content, temporary download URLs, production databases, or unredacted production reports.
