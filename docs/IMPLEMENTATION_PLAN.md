@@ -4,17 +4,21 @@ This plan implements the simple workflow defined in `IMPLEMENTATION_CONTRACT.md`
 
 ## M0 — Contract simplification and pre-implementation hardening
 
-**Status:** `IN_PROGRESS`
+**Status:** `DOCUMENTATION_COMPLETE`
 
-M0 remains in progress until this workflow-alignment change is reviewed and merged and replacement evidence is committed against the exact merged documentation commit. Until then, M1 remains blocked.
-
-Evidence is maintained under:
+Committed evidence:
 
 ```text
-artifacts/evidence/
+artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json
 ```
 
-Workflow-alignment outcomes prepared for M0 completion:
+Validated documentation source commit:
+
+```text
+c93b38b7e41ffbb50c82b4f8389e71ef511ac54d
+```
+
+Completed outcomes:
 
 - `IMPLEMENTATION_CONTRACT.md` is the single binding contract;
 - the product is defined as an internal read-only archival-copy tool;
@@ -28,15 +32,16 @@ Workflow-alignment outcomes prepared for M0 completion:
 - destination source binding prevents employee-data mixing;
 - authorized transfer-account validation is defined;
 - OneNote and other package items have an explicit unsupported-and-incomplete policy;
+- protected Graph identifiers are excluded from normal UI and user-facing errors;
 - disk headroom, disk-full behavior, timestamp preservation, exact run states, per-run reports, path mapping, collision fallback, and SQLite corruption recovery are defined;
 - mandatory Windows CI, access-removal verification, and production storage protection are binding; and
 - obsolete five-million-item custom-index requirements are removed as first-release blockers.
 
 ## M1 — Solution and CI foundation
 
-**Status:** `BLOCKED`
+**Status:** `NOT_STARTED`
 
-M1 may start only after M0 is marked `DOCUMENTATION_COMPLETE` in `.ai/PHASE_STATUS.md` with committed replacement evidence tied to the exact reviewed documentation commit.
+M1 is authorized to start. The implementation agent must mark M1 `IN_PROGRESS` in `.ai/PHASE_STATUS.md` before creating or changing source files.
 
 Goals:
 
