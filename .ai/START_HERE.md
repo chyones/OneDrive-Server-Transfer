@@ -3,11 +3,10 @@
 ## Current state
 
 - Application implementation has not started.
-- Current milestone: `M0 — Contract simplification and correction`.
-- Current status: `IN_PROGRESS`.
-- Current completion label: `Not Complete`.
-- The former M0 evidence is superseded because it did not record an immutable source commit.
-- Do not begin M1 until the contract-correction pull request is reviewed, merged, and evidenced correctly.
+- M0 contract correction is `DOCUMENTATION_COMPLETE`.
+- Current completion label: `Documentation Ready`.
+- Next milestone: `M1 — Solution and CI foundation`.
+- M0 evidence: `artifacts/evidence/M00_contract-correction_20260719T110925Z.json`.
 
 ## Required reading order
 
@@ -23,7 +22,7 @@
 10. `/docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md`
 11. `/docs/ENVIRONMENT_AND_INPUTS.md`
 
-`IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded and retained only for history.
+`IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded and retained only for historical traceability.
 
 ## Product summary
 
@@ -31,25 +30,15 @@ The IT administrator opens one WPF window, signs in with Microsoft, pastes one e
 
 The product is read-only against Microsoft 365 and does not include dashboards, scheduling, batch processing, remote destinations, or service mode.
 
-## Current exact action
+## Next exact action
 
-Complete M0 only:
+Begin M1 only:
 
-1. Review the simplified contract and control documents.
-2. Confirm they contain no binding contradictions.
-3. Resolve the former evidence-review issue.
-4. Merge the correction through review.
-5. Create a new redacted M0 evidence summary tied to the exact merged commit.
-6. Only then move M1 to `IN_PROGRESS`.
+1. Mark M1 `IN_PROGRESS`.
+2. Create `./OneDriveServerTransfer.sln` at repository root.
+3. Create WPF application and test projects.
+4. Configure .NET 10, MVVM, dependency injection, logging, configuration, SQLite, and deterministic restore.
+5. Add mandatory Windows CI for restore, Release build, tests, static checks, vulnerability review, and secret detection.
+6. Commit valid M1 evidence before beginning M2.
 
-## Future solution path
-
-```text
-./OneDriveServerTransfer.sln
-```
-
-Do not create a nested project container.
-
-## Working rule
-
-Proceed milestone by milestone. Never report Windows, Microsoft sign-in, real OneDrive copy, or production validation without actual executed evidence.
+Do not create a nested project container. Never report Windows, Microsoft sign-in, real OneDrive copy, or production validation without executed evidence.
