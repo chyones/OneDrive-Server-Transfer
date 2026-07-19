@@ -2,101 +2,74 @@
 
 ## Security posture
 
-OneDrive Server Transfer is designed as a read-only Microsoft 365 backup-copy utility. The current version must never request Microsoft 365 write permissions or modify source OneDrive content.
+OneDrive Server Transfer is a read-only internal Microsoft 365 copy utility. It must never request Microsoft 365 write permissions or modify source OneDrive content.
 
-The binding security requirements are defined by:
+Binding security requirements are defined by:
 
-1. `IMPLEMENTATION_CONTRACT_AMENDMENTS.md`
-2. `IMPLEMENTATION_CONTRACT.md`
-3. `docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md`
+1. `IMPLEMENTATION_CONTRACT.md`
+2. `docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md`
+
+`IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded.
 
 ## Never commit secrets or employee data
 
 Do not commit:
 
 - Microsoft 365 passwords
-- Access or refresh tokens
-- Client secrets
-- Private certificates or private keys
-- Authentication headers or cookies
-- Temporary Microsoft download URLs
-- Production `appsettings.json`
-- Employee OneDrive files
-- Production manifests, logs, or reports containing employee information
-- Unredacted ACL, tenant, account, destination, or audit details
+- access or refresh tokens
+- client secrets
+- private certificates or private keys
+- authorization headers or cookies
+- temporary download URLs
+- production `appsettings.json`
+- employee OneDrive files
+- production SQLite state databases
+- production logs or reports containing employee information
+- unredacted tenant, account, destination, or ACL details
 
-Only `appsettings.example.json` with placeholders may be committed during implementation.
-
-Small validation summaries committed under `artifacts/evidence` must be redacted and must explicitly confirm that they contain no secrets or employee data.
+Only placeholder configuration and redacted evidence may be committed.
 
 ## Approved Microsoft access model
 
-- Interactive delegated sign-in through MSAL
-- Public-client application registration
+- interactive delegated MSAL sign-in
+- single-tenant public-client registration
 - MFA and Conditional Access support
-- Required delegated permissions only:
-  - `User.Read`
-  - `Files.Read.All`
-  - `Sites.Read.All`
-  - `offline_access`
-  - `openid`
-  - `profile`
-- No client secret
-- No write permission
-- Microsoft Graph `v1.0` only
+- `User.Read`, `Files.Read.All`, `Sites.Read.All`, `offline_access`, `openid`, and `profile`
+- no client secret
+- no write permission
+- Microsoft Graph v1.0 only
 
-Before production acceptance, document the threat impact of the delegated permissions and persistent session access. Evaluate a narrower officially supported model without silently changing the approved authentication design.
-
-Use a dedicated transfer administrator account where operationally possible.
-
-## Microsoft access lifecycle
-
-The IT administrator grants Site Collection Administrator access to the employee OneDrive outside the application. The application validates existing access but does not grant, alter, or remove permissions.
-
-When a completed, failed, or cancelled transfer no longer requires that access:
-
-- remove the temporary Site Collection Administrator assignment
-- verify removal through Microsoft 365 administration tools
-- record the run ID, grant time, removal time, responsible administrator, and verification result outside the application
+Use a dedicated transfer administrator account where practical. Grant and remove employee OneDrive administrative access outside the application.
 
 ## Local destination security
 
-Only local storage attached to the same Windows Server is permitted. UNC, mapped network drives, NAS, SMB, and remote destinations are outside scope.
+- accept local attached storage only
+- reject UNC, mapped drives, NAS, SMB, and remote destinations
+- bind each destination to one tenant, employee, and drive
+- reject another source or unsafe non-empty destination
+- restrict NTFS access to authorized accounts
+- use BitLocker or an approved organizational equivalent or exception for production storage
+- do not broadly disable antivirus, EDR, firewall, or application-control protections
 
-Production acceptance requires:
+## Integrity and containment
 
-- restricted NTFS ACLs for `OneDriveData`, `_TransferReport`, application files, and token-cache files
-- no broad inherited read access for unrelated users
-- BitLocker or an approved documented equivalent or exception for the backup volume
-- no broad disabling of antivirus, EDR, firewall, or application-control protections
-
-## Integrity and destination containment
-
-- Calculate and persist local SHA-256 for every completed file.
-- Revalidate local SHA-256 before trusting recovered completed state.
-- Never call size and metadata validation source cryptographic verification.
-- Revalidate destination containment before create, open, replace, and rename operations.
-- Prevent symbolic-link, junction, mount-point, and reparse-point time-of-check/time-of-use redirection.
-
-## Supply-chain security
-
-Before Production Ready status:
-
-- use deterministic dependency restore
-- run dependency-vulnerability and secret scans
-- generate an SBOM
-- tie the publish output to an exact source commit
-- use Authenticode signing when an approved organizational certificate is available
-- document any approved unsigned-release limitation
+- use Graph delta inventory and persist checkpoints safely
+- use SQLite transactions for application state
+- calculate local SHA-256 for completed files
+- distinguish local SHA-256 from supported Microsoft source-hash verification
+- prevent path traversal and unsafe reparse-point redirection
+- revalidate destination containment during file operations
+- do not follow or overwrite untrusted hard-linked destination files
+- never send Graph credentials to temporary download hosts
 
 ## Reporting a security issue
 
-Do not place sensitive details in a public issue. Use the repository owner's private communication channel and provide:
+Use a private repository-owner communication channel or GitHub private security reporting when enabled. Provide only redacted information:
 
-- a concise description
+- concise description
 - affected component
 - reproduction conditions
 - potential impact
 - redacted evidence
 
-Do not include active credentials, employee data, tokens, private keys, or temporary download URLs.
+Never include active credentials, employee content, tokens, private keys, production state databases, or temporary download URLs.
