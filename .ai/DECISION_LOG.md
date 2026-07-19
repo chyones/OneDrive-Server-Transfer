@@ -1,6 +1,6 @@
 # Decision Log
 
-Use UTC dates. Do not delete prior decisions. Superseded decisions remain for traceability.
+Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SUPERSEDED` and record the replacement.
 
 ## Status values
 
@@ -9,145 +9,124 @@ Use UTC dates. Do not delete prior decisions. Superseded decisions remain for tr
 - `REJECTED`
 - `SUPERSEDED`
 
-## Approved decisions
+## Historical decisions retained
 
 ### D-001 — Native Windows desktop application
 
 - Status: `APPROVED`
-- Decision: C# .NET 10 LTS WPF application.
-- Reason: Native Windows Server operation with a simple professional interface.
+- Decision: C# .NET 10 LTS WPF application running on Windows Server 2019.
 
 ### D-002 — Local destination only
 
 - Status: `APPROVED`
 - Decision: Write only to local storage attached to the same Windows Server.
-- Excluded: UNC, mapped network drives, NAS, SMB, remote-server destinations.
+- Excluded: UNC, mapped drives, NAS, SMB, and remote destinations.
 
 ### D-003 — Read-only Microsoft 365 access
 
 - Status: `APPROVED`
-- Decision: Delegated interactive MSAL authentication using approved read permissions only.
-- Excluded: Client secret and write permissions.
+- Decision: Interactive delegated MSAL authentication with read permissions only.
+- Excluded: client secret, application-only authentication, and write permissions.
 
 ### D-004 — One employee OneDrive root per run
 
 - Status: `APPROVED`
-- Decision: Backup the active in-scope content of one employee OneDrive for Business root.
-- Excluded: Shared files, subfolders as source, SharePoint libraries, batch processing.
+- Decision: Copy the active content of one employee OneDrive for Business root.
 
 ### D-005 — Fixed concurrency
 
 - Status: `APPROVED`
-- Decision: Maximum three simultaneous file downloads.
-- Configuration: Not user-editable and not deployment-configurable.
+- Decision: Maximum three simultaneous file downloads; not user-editable.
 
 ### D-006 — Versioned operational formats
 
 - Status: `APPROVED`
-- Decision:
-  - `ManifestVersion = 1`
-  - `PathMappingVersion = 1`
+- Decision: Start with `StateSchemaVersion = 1` and `PathMappingVersion = 1`.
 
 ### D-007 — Evidence-based completion
 
 - Status: `APPROVED`
-- Decision: Separate Documentation Ready, Source Implementation Complete, and Production Ready.
-- Production Ready requires actual Windows and real-tenant validation.
+- Decision: Separate Documentation Ready, Source Implementation Complete, and Production Ready. Production Ready requires actual Windows and real-tenant evidence.
 
 ### D-008 — Repository root is project root
 
-- Date: 2026-07-19 UTC
 - Status: `APPROVED`
-- Context: The base contract required a nested project directory while repository controls and artifacts were already defined at repository root.
-- Decision: Create `OneDriveServerTransfer.sln`, `src`, `tests`, `scripts`, `docs`, and `artifacts` directly at repository root. Do not create a nested project container.
-- Contract sections affected: Section 4.
-- Security impact: Removes ambiguous duplicate governance and artifact locations.
-- Compatibility impact: None; source layout only.
-- Test impact: All scripts and workflows use repository-root paths.
-- Approval: User authorized direct documentation correction before implementation.
+- Decision: Create the solution, source, tests, scripts, docs, and artifacts directly at repository root.
 
 ### D-009 — Durable evidence summaries
 
-- Date: 2026-07-19 UTC
 - Status: `APPROVED`
-- Context: Raw generated evidence is ignored by Git and cannot support durable phase claims in a fresh clone.
-- Decision: Commit small redacted evidence summaries under `artifacts/evidence`; retain raw generated output under ignored source and publish directories or CI artifacts.
-- Contract sections affected: Sections 15, 24, 27.
-- Security impact: Requires explicit redaction and prohibits sensitive evidence content.
-- Compatibility impact: None.
-- Test impact: Every completed milestone requires a committed evidence summary.
-- Approval: User authorized direct documentation correction before implementation.
+- Decision: Commit small redacted milestone summaries under `artifacts/evidence`; raw generated output remains local or in CI artifacts.
 
-### D-010 — Local SHA-256 for every completed file
+### D-010 — Local SHA-256
 
-- Date: 2026-07-19 UTC
 - Status: `APPROVED`
-- Context: Size and source metadata cannot detect later local same-size corruption or substitution.
-- Decision: Calculate, persist, and revalidate streaming local SHA-256 for every completed file while retaining exact claims about whether a source-provided hash existed.
-- Contract sections affected: Sections 10, 11, 12, 14.
-- Security impact: Detects local corruption and tampering after download.
-- Compatibility impact: Manifest and report schemas must include local SHA-256.
-- Test impact: Add corruption, same-size substitution, recovery, and bounded-memory hash tests.
-- Approval: User authorized direct documentation correction before implementation.
+- Decision: Calculate and persist streaming local SHA-256 for every completed file and keep it separate from Microsoft source-hash verification.
 
 ### D-011 — Continuous destination containment
 
-- Date: 2026-07-19 UTC
 - Status: `APPROVED`
-- Context: Startup-only reparse-point validation is vulnerable to directory replacement during multi-day transfers.
-- Decision: Revalidate containment and reparse-point state during create, open, replace, and rename operations, including adversarial junction-swap tests.
-- Contract sections affected: Sections 9, 10, 14.
-- Security impact: Prevents writes outside the selected destination through time-of-check/time-of-use redirection.
-- Compatibility impact: Windows filesystem implementation must use safe handle and final-path validation techniques.
-- Test impact: Add live junction replacement and race-oriented tests.
-- Approval: User authorized direct documentation correction before implementation.
+- Decision: Revalidate safe containment during file create, open, replace, and rename operations.
 
-### D-012 — Production ACL and storage-protection baseline
+### D-012 — NTFS and storage protection
 
-- Date: 2026-07-19 UTC
 - Status: `APPROVED`
-- Decision: Production acceptance requires restricted NTFS access, protected token cache, and BitLocker or an approved documented equivalent or exception.
-- Contract sections affected: Sections 9, 20, 24.
-- Security impact: Protects employee backup data and authentication material at rest.
-- Compatibility impact: Production preparation checklist expanded.
-- Test impact: Add ACL validation and production evidence.
-- Approval: User authorized direct documentation correction before implementation.
+- Decision: Production use requires restricted local access and BitLocker or an approved organizational equivalent or exception.
 
-### D-013 — Manifest lookup design gate
+### D-013 — Custom five-million-item disk index
 
-- Date: 2026-07-19 UTC
-- Status: `APPROVED`
-- Context: Segment-order metadata alone is not a sufficient five-million-item operational index.
-- Decision: M5 cannot begin until a disk-based index design is documented and approved, covering lookup keys, crash safety, recovery, complexity, and benchmark behavior. The no-database rule remains unchanged.
-- Contract sections affected: Sections 11, 14, 26.
-- Security impact: Prevents unreliable or unbounded recovery logic.
-- Compatibility impact: Manifest architecture must remain versioned and migratable.
-- Test impact: Add index recovery, lookup-complexity, collision, and benchmark evidence.
-- Approval: User authorized direct documentation correction before implementation.
+- Status: `SUPERSEDED`
+- Former decision: No database and a custom disk-based index designed for five million items.
+- Replaced by: D-016.
+- Reason: It added major implementation risk and complexity unrelated to the required simple internal workflow.
 
 ### D-014 — Microsoft access lifecycle
 
+- Status: `APPROVED`
+- Decision: Grant Site Collection Administrator access outside the application, use a dedicated transfer account where practical, and remove access when no longer required.
+
+## Current approved decisions
+
+### D-015 — Simple IT workflow is the product boundary
+
 - Date: 2026-07-19 UTC
 - Status: `APPROVED`
-- Decision: Use a dedicated transfer account where possible, document delegated-permission threat impact, and require external removal and verification of temporary Site Collection Administrator access after it is no longer required.
-- Contract sections affected: Sections 7, 8, 19, 24.
-- Security impact: Reduces persistent privileged access.
-- Compatibility impact: Operational procedure only; application remains read-only.
-- Test impact: Production acceptance must include external access-removal evidence.
-- Approval: User authorized direct documentation correction before implementation.
+- Context: The repository had accumulated controls that exceeded the actual operational need.
+- Decision: The administrator signs in, pastes one employee OneDrive root URL, selects a local destination, presses `Copy Data`, monitors progress, and reviews the result in one window.
+- Excluded: dashboards, scheduling, batch employee processing, service mode, remote destinations, central reporting, and advanced user-facing controls.
+- Approval: Repository owner explicitly restated the required workflow in the current conversation.
 
-## New decision template
+### D-016 — Local SQLite transfer state
 
-```text
-### D-NNN — Title
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Context: Reliable resume, crash recovery, source binding, and lookup are required, but a custom JSONL database engine is unnecessary.
+- Decision: Use one local SQLite file at `_TransferReport/TransferState.db`. SQLite is embedded and requires no database server.
+- Security impact: State database must not contain tokens, passwords, temporary URLs, or employee file contents and must be protected by NTFS permissions.
+- Compatibility impact: Replaces the custom five-million-item index requirement.
+- Test impact: Add transaction, recovery, schema-version, and corruption-handling tests.
 
-- Date: YYYY-MM-DD UTC
-- Status: PROPOSED
-- Context:
-- Decision:
-- Contract sections affected:
-- Security impact:
-- Compatibility impact:
-- Test impact:
-- Approval:
-```
+### D-017 — Graph delta inventory and reconciliation
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Context: The application needs a complete page-by-page initial inventory and reliable detection of changes without retaining the full hierarchy in memory.
+- Decision: Use Microsoft Graph v1.0 drive delta for initial inventory, persist the delta checkpoint, and use up to three bounded reconciliation passes.
+- Security impact: Read-only Graph calls only.
+- Test impact: Add paging, checkpoint, restart, deletion, move, rename, and continued-change tests.
+
+### D-018 — Destination source binding
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Bind each destination to Tenant ID, source Drive ID, and protected employee identity. Reject another source or an unsafe non-empty destination.
+- Security impact: Prevents mixing data from different employees.
+- Test impact: Add mismatch and recovery tests.
+
+### D-019 — Previous M0 evidence is invalid
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Context: The former M0 evidence recorded a mutable branch but no immutable source commit and was merged with an unresolved review comment.
+- Decision: Mark the former evidence `SUPERSEDED`, reset M0 to `IN_PROGRESS`, and create corrected evidence only after the contract correction is reviewed and merged.
+- Test impact: Documentation evidence validation must reject summaries without an exact validated commit.

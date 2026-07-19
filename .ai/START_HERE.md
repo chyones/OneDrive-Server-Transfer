@@ -2,50 +2,54 @@
 
 ## Current state
 
-- Repository preparation and pre-implementation hardening are complete.
-- Application code has not been implemented.
-- Current milestone: `M0`.
-- Current completion label: `Documentation Ready`.
-- M0 status: `DOCUMENTATION_COMPLETE`.
-- The next implementation milestone is `M1 — Solution foundation and enforceable CI foundation`.
+- Application implementation has not started.
+- Current milestone: `M0 — Contract simplification and correction`.
+- Current status: `IN_PROGRESS`.
+- Current completion label: `Not Complete`.
+- The former M0 evidence is superseded because it did not record an immutable source commit.
+- Do not begin M1 until the contract-correction pull request is reviewed, merged, and evidenced correctly.
 
 ## Required reading order
 
 1. `/AGENTS.md`
-2. `/IMPLEMENTATION_CONTRACT_AMENDMENTS.md`
-3. `/IMPLEMENTATION_CONTRACT.md`
-4. `/.ai/PROJECT_MEMORY.md`
-5. `/.ai/PHASE_STATUS.md`
-6. `/.ai/HANDOFF.md`
-7. `/.ai/DECISION_LOG.md`
-8. `/docs/IMPLEMENTATION_PLAN.md`
-9. `/docs/ACCEPTANCE_MATRIX.md`
-10. `/docs/EVIDENCE_POLICY.md`
-11. `/docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md`
-12. `/docs/ENVIRONMENT_AND_INPUTS.md`
+2. `/IMPLEMENTATION_CONTRACT.md`
+3. `/.ai/PROJECT_MEMORY.md`
+4. `/.ai/PHASE_STATUS.md`
+5. `/.ai/HANDOFF.md`
+6. `/.ai/DECISION_LOG.md`
+7. `/docs/IMPLEMENTATION_PLAN.md`
+8. `/docs/ACCEPTANCE_MATRIX.md`
+9. `/docs/EVIDENCE_POLICY.md`
+10. `/docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md`
+11. `/docs/ENVIRONMENT_AND_INPUTS.md`
 
-## First implementation action
+`IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded and retained only for history.
 
-Create the .NET 10 WPF solution foundation directly under the repository root according to M1.
+## Product summary
 
-Required solution path:
+The IT administrator opens one WPF window, signs in with Microsoft, pastes one employee OneDrive for Business root URL, selects a local destination on the same Windows Server, presses `Copy Data`, monitors progress, and reviews the result.
+
+The product is read-only against Microsoft 365 and does not include dashboards, scheduling, batch processing, remote destinations, or service mode.
+
+## Current exact action
+
+Complete M0 only:
+
+1. Review the simplified contract and control documents.
+2. Confirm they contain no binding contradictions.
+3. Resolve the former evidence-review issue.
+4. Merge the correction through review.
+5. Create a new redacted M0 evidence summary tied to the exact merged commit.
+6. Only then move M1 to `IN_PROGRESS`.
+
+## Future solution path
 
 ```text
 ./OneDriveServerTransfer.sln
 ```
 
-Do not create a nested `./OneDriveServerTransfer` project directory.
-
-Before writing code:
-
-- Confirm the repository contains no pre-existing implementation.
-- Update M1 to `IN_PROGRESS` in `.ai/PHASE_STATUS.md`.
-- Update `.ai/HANDOFF.md` with the active task.
-- Preserve the local-only, read-only, one-employee-OneDrive scope.
-- Plan enforceable CI and evidence-summary generation as part of M1.
+Do not create a nested project container.
 
 ## Working rule
 
-Proceed milestone by milestone. Every completed milestone requires a committed redacted evidence summary under `artifacts/evidence` before the next milestone starts.
-
-Do not claim Windows validation when working on macOS or Linux.
+Proceed milestone by milestone. Never report Windows, Microsoft sign-in, real OneDrive copy, or production validation without actual executed evidence.

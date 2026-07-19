@@ -1,89 +1,85 @@
 # Acceptance Matrix
 
-This matrix identifies mandatory evidence. The binding contract and amendments remain authoritative.
+The binding contract is `IMPLEMENTATION_CONTRACT.md`.
 
-| Area | Contract focus | Required evidence | Completion level |
-|---|---|---|---|
-| Repository layout | Amendment A-001 | Root solution inventory; no nested project container | Source |
-| Durable evidence | Amendment A-002 | Committed redacted milestone summaries under `artifacts/evidence` | All phases |
-| Solution structure | Sections 3, 13, 15, 16 | Solution inventory, restore result, Windows CI | Source |
-| Enforceable quality gates | Amendment A-005 | GitHub Actions checks and actual check results | Source |
-| Authentication | Sections 7, 19; A-009 | Unit tests; token-cache protection; real Windows sign-in | Source + Production |
-| Permission threat model | Amendment A-009 | Approved delegated-permission assessment | Source + Production |
-| OneDrive root validation | Section 8 | URL/drive tests; real tenant validation | Source + Production |
-| Local destination | Section 9; A-007 | Local-path, mapped-drive, reparse-point tests | Source |
-| Destination containment | Amendment A-007 | Adversarial junction-swap and final-path tests | Source + Windows |
-| NTFS and storage protection | Amendment A-008 | ACL validation; volume encryption or approved exception | Production |
-| Destination locking | Section 9 | Cross-process/session Windows test | Production |
-| Enumeration | Sections 10, 26 | Bounded page pipeline tests and benchmark | Source + Production |
-| Path mapping | Section 11 | `PathMappingVersion = 1` tests | Source |
-| Manifest index | Amendment A-010 | Approved architecture; lookup/recovery/scale evidence | Source |
-| Manifest | Section 11 | Crash, recovery, version, segmentation tests | Source |
-| Transfer/resume | Section 10 | Range, restart, partial, throttle tests | Source |
-| Download integrity | Section 10; A-006 | Source-hash tests; local SHA-256; corruption detection | Source |
-| Reports and audit | Section 12; A-012 | Segmentation, UTF-8, formula protection, protected audit fields | Source |
-| Reconciliation | Section 10 | Three-pass and source-change tests | Source + Production |
-| Cancellation | Section 10 | Incomplete enumeration and discovered-item tests | Source |
-| UI | Section 6 | View-model tests; WPF startup and review | Production |
-| Large scale | Section 26 | 5,000,000-item production-pipeline benchmark | Production |
-| Supply chain | Amendment A-013 | Lock strategy, vulnerability scan, secret scan, SBOM | Source + Production |
-| Code signing | Amendment A-013 | Authenticode signature or approved documented limitation | Production |
-| Access removal | Amendment A-009 | External SCA grant/removal and verification record | Production |
-| Publish | Sections 16, 24 | Self-contained `win-x64` output tied to source commit | Production |
-| Windows Server execution | Section 24 | Application executes on Windows Server 2019 | Production |
+| Area | Required evidence | Completion level |
+|---|---|---|
+| Contract consistency | Reviewed documents aligned with the simple IT workflow | Documentation |
+| Solution structure | Root solution inventory, restore result, Windows CI | Source |
+| Authentication | Unit tests, token-cache protection, real Windows sign-in | Source + Production |
+| OneDrive validation | URL and drive tests, real tenant validation | Source + Production |
+| Delta inventory | Page processing, checkpoint persistence, recovery tests | Source |
+| Local destination | Local-path rejection tests, source binding, write and space checks | Source + Windows |
+| Destination locking | Cross-process/session Windows test | Production |
+| Path safety | Mapping, containment, reparse-point, traversal, and unrelated-file tests | Source + Windows |
+| SQLite state | Transactions, crash recovery, schema version, rerun lookup | Source |
+| Transfer and resume | Streaming, Range, restart, partial, retry, throttle tests | Source |
+| Credential isolation | No Graph credentials sent to temporary download hosts | Source |
+| Integrity | Source-hash tests, local SHA-256, corruption detection | Source |
+| Reconciliation | Graph delta changes, maximum three passes, warning outcome | Source + Production |
+| Cancellation | Safe stop, retained completed and partial files, accurate summary | Source |
+| UI | View-model tests, WPF startup and operational review | Production |
+| Reports | UTF-8, escaping, formula protection, summary and failed records | Source |
+| Supply chain | Dependency lock strategy, vulnerability scan, secret scan, SBOM where available | Release |
+| Publish | Self-contained `win-x64` tied to exact source commit | Production |
+| Windows Server | Published application executes on Windows Server 2019 | Production |
 
-## Completion rules
+## Documentation Ready
 
-### Documentation Ready
+Requires:
 
-- Contract, amendments, and control documents exist.
-- No application implementation is claimed.
-- M0 uses `DOCUMENTATION_COMPLETE`.
+- one binding contract
+- simple workflow clearly defined
+- no unresolved binding contradictions
+- previous invalid evidence explicitly superseded
+- corrected documentation reviewed and merged
+- valid documentation evidence tied to an exact commit
 
-### Source Implementation Complete
+## Source Implementation Complete
 
-- Complete source exists at repository root structure.
-- Supported restore, static checks, CI, unit tests, security tests, and synthetic validation were executed.
-- Each completed milestone has a committed redacted evidence summary.
-- Windows-only production checks may remain explicitly unexecuted.
-- Must not be presented as production ready.
+Requires:
 
-### Production Ready
+- complete application source
+- Windows CI restore, Release build, and automated tests
+- implemented Graph delta inventory
+- implemented local SQLite state and recovery
+- implemented transfer, resume, integrity, destination binding, UI, and reports
+- no placeholder or fake production behavior
+- committed evidence for each completed source milestone
 
-Requires all production-acceptance evidence, including:
+This status must not be represented as Production Ready.
+
+## Production Ready
+
+Requires actual evidence for:
 
 - Windows Release build and automated tests
 - WPF startup
 - Microsoft interactive sign-in
-- Real employee OneDrive root validation
-- Complete backup transfer
-- Interruption and resume
-- Final reconciliation
-- Destination locking across processes or sessions
-- Continuous reparse-point containment
-- Restricted NTFS ACL validation
-- Volume encryption or approved exception
-- Protected audit records
-- External Site Collection Administrator access removal and verification
-- Dependency scan, secret scan, SBOM, and source-commit traceability
-- Authenticode signing or approved documented limitation
-- Self-contained `win-x64` publish
-- Execution on Windows Server 2019
-- Large-scale benchmark acceptance
+- real employee OneDrive validation
+- complete copy to local storage
+- interruption and resume
+- source-change reconciliation
+- destination locking across processes or sessions
+- destination containment and NTFS access review
+- self-contained `win-x64` publish
+- execution on Windows Server 2019
+- release traceability and documented signing status
 
 ## Evidence rules
 
-Every evidence summary must state:
+Every completed milestone evidence summary must contain:
 
-- schema version and milestone
-- date and time in UTC
-- source commit and application version where available
+- evidence schema version
+- milestone
+- exact validated source commit
+- UTC execution time
 - environment and operating system
 - command or action executed
 - result and exit code
-- relevant counts or thresholds
-- raw output path or CI artifact
+- relevant test counts or thresholds
+- raw artifact or CI location when applicable
 - limitations and unexecuted checks
 - redaction confirmation
 
-Never infer success from an unexecuted step, a checked PR-template box, an ignored local file, or a verbal claim.
+A mutable branch name alone is not evidence. An unexecuted command, checked box, ignored file, or verbal claim is not evidence.

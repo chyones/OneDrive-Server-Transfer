@@ -4,46 +4,52 @@ Last updated: 2026-07-19 UTC
 
 ## Overall status
 
-- Completion label: `Documentation Ready`
+- Completion label: `Not Complete`
 - Implementation started: No
 - Production ready: No
-- Current phase: `M0 — Repository and contract readiness`
-- Current phase status: `DOCUMENTATION_COMPLETE`
-- Current evidence: `artifacts/evidence/M00_documentation-readiness_20260719.json`
-- Next phase: `M1 — Solution foundation and enforceable CI foundation`
+- Current phase: `M0 — Contract simplification and correction`
+- Current phase status: `IN_PROGRESS`
+- Previous M0 evidence: `SUPERSEDED`
+- Next phase: `M1 — Solution and CI foundation`
+
+## Reason for M0 reset
+
+The former M0 evidence file did not contain the required immutable source commit and was merged with an unresolved review comment. It cannot support `DOCUMENTATION_COMPLETE`.
+
+M0 remains `IN_PROGRESS` until the simplified contract is reviewed and merged and a new evidence summary references the exact merged commit.
 
 ## Phase table
 
 | Phase | Status | Evidence | Notes |
 |---|---|---|---|
-| M0 Repository and contract readiness | DOCUMENTATION_COMPLETE | `artifacts/evidence/M00_documentation-readiness_20260719.json` | No application code |
-| M1 Solution foundation and enforceable CI foundation | NOT_STARTED | None | Next phase; solution belongs at repository root |
-| M2 Authentication and configuration | NOT_STARTED | None |  |
-| M3 OneDrive root resolution and validation | NOT_STARTED | None |  |
-| M4 Destination, locking, containment, ACL, and path mapping | NOT_STARTED | None | Includes adversarial reparse-point protection |
-| M5 Enumeration, disk-based manifest indexing, and reporting | NOT_STARTED | None | Index architecture decision required before implementation |
-| M6 Transfer, resume, local SHA-256, and source integrity | NOT_STARTED | None |  |
-| M7 Reconciliation, cancellation, errors, and UI | NOT_STARTED | None |  |
-| M8 Tests, adversarial security tests, and production-pipeline benchmark | NOT_STARTED | None |  |
-| M9 Windows build, SBOM, signing decision, and publish | NOT_STARTED | None | Requires compatible Windows |
-| M10 Production acceptance | NOT_STARTED | None | Requires real tenant and Windows Server 2019 |
+| M0 Contract simplification and correction | IN_PROGRESS | Pending corrected post-merge evidence | Current phase |
+| M1 Solution and CI foundation | NOT_STARTED | None | Application source begins only after M0 |
+| M2 Microsoft authentication | NOT_STARTED | None |  |
+| M3 Employee OneDrive validation | NOT_STARTED | None |  |
+| M4 Local destination and source binding | NOT_STARTED | None |  |
+| M5 Copy, resume, verification, and local state | NOT_STARTED | None |  |
+| M6 UI, errors, and reports | NOT_STARTED | None |  |
+| M7 Windows and real-tenant acceptance | NOT_STARTED | None | Requires compatible Windows and tenant inputs |
+| M8 Internal release | NOT_STARTED | None |  |
 
-## Update protocol
+## M0 completion requirements
 
-When starting a phase:
+1. Simplified binding contract is reviewed and merged.
+2. All control documents agree with the simple IT workflow.
+3. Former contradictory requirements are removed or explicitly superseded.
+4. The unresolved evidence concern is addressed.
+5. A committed redacted evidence summary records the exact merged source commit.
 
-1. Confirm the previous completed phase has a committed redacted evidence summary when implementation evidence applies.
-2. Change the phase status to `IN_PROGRESS`.
-3. Add the exact scope to `.ai/HANDOFF.md`.
+## Status rules
 
-When completing a phase:
+Allowed states:
 
-1. Execute all available required validation.
-2. Commit a redacted evidence summary under `artifacts/evidence`.
-3. Add the exact evidence path to this file.
-4. Record tests, thresholds, and limitations.
-5. Set the highest justified status.
-6. Update `.ai/PROJECT_MEMORY.md` with durable facts.
-7. Set the next phase.
+- `NOT_STARTED`
+- `IN_PROGRESS`
+- `BLOCKED`
+- `DOCUMENTATION_COMPLETE`
+- `SOURCE_COMPLETE`
+- `WINDOWS_VALIDATED`
+- `PRODUCTION_VALIDATED`
 
 Never mark a Windows phase complete from non-Windows evidence. Never use `SOURCE_COMPLETE` for documentation-only work.
