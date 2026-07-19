@@ -2,28 +2,27 @@
 
 Last updated: 2026-07-19 UTC
 
-## Overall status on this branch
+## Overall status
 
-- Completion label: `Not Complete`
-- Implementation started: No
+- Completion label: `Documentation Ready`
+- Application implementation started: No
 - Production ready: No
-- Current phase: `M0 — Contract simplification and pre-implementation hardening`
-- Current phase status: `IN_PROGRESS`
-- Reason: workflow-alignment documentation is implemented but not yet reviewed, merged, and tied to replacement evidence
-- Previous validated evidence: `artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json`
-- Previous validated source commit: `e9434ff54c373e1d0129ba2583027897f6f3ff25`
-- Replacement workflow-alignment evidence: None
-- Next implementation phase: `M1 — Solution and CI foundation`
-- M1 status: `BLOCKED`
+- Completed phase: `M0 — Contract simplification and pre-implementation hardening`
+- M0 status: `DOCUMENTATION_COMPLETE`
+- M0 evidence: `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json`
+- Validated documentation source commit: `c93b38b7e41ffbb50c82b4f8389e71ef511ac54d`
+- Current implementation phase: `M1 — Solution and CI foundation`
+- M1 status: `NOT_STARTED`
+- M1 start authorized: Yes
 
-The previous evidence validates the previous main documentation baseline only. It does not validate this branch's UPN-or-URL, mandatory-scan, employee-password prohibition, report-schema, `Incomplete`, durable-identity, and path-collision changes.
+M1 may begin now. Before creating or changing source files, the implementation agent must mark M1 `IN_PROGRESS`. Documentation Ready does not imply that Windows build, WPF execution, Microsoft sign-in, OneDrive access, scan, copy, resume, publish, or production validation has occurred.
 
 ## Phase table
 
 | Phase | Status | Evidence | Notes |
 |---|---|---|---|
-| M0 Contract simplification and pre-implementation hardening | IN_PROGRESS | Replacement evidence pending | Documentation branch must be reviewed and merged first |
-| M1 Solution and CI foundation | BLOCKED | None | Starts only after replacement M0 evidence |
+| M0 Contract simplification and pre-implementation hardening | DOCUMENTATION_COMPLETE | `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json` | Validated against commit `c93b38b7e41ffbb50c82b4f8389e71ef511ac54d` |
+| M1 Solution and CI foundation | NOT_STARTED | None | Authorized to start; mark `IN_PROGRESS` before source changes |
 | M2 Microsoft authentication | NOT_STARTED | None |  |
 | M3 Employee source resolution and validation | NOT_STARTED | None |  |
 | M4 Local destination and source binding | NOT_STARTED | None |  |
@@ -32,32 +31,53 @@ The previous evidence validates the previous main documentation baseline only. I
 | M7 Windows and real-tenant acceptance | NOT_STARTED | None | Requires compatible Windows and tenant inputs |
 | M8 Internal release | NOT_STARTED | None |  |
 
-## Workflow-alignment scope
+## Validated M0 scope
 
-- product described as an internal read-only archival-copy tool;
-- employee UPN or OneDrive root URL accepted as source input;
-- employee passwords and employee impersonation prohibited;
-- authorized IT operator remains the authenticated actor;
+The committed M0 evidence confirms the reviewed documentation baseline defines:
+
+- an internal read-only archival-copy tool;
+- one employee UPN or OneDrive root URL as source input;
+- no employee-password collection or employee impersonation;
+- the authorized IT operator as the authenticated actor;
 - mandatory `Scan` dry run before `Start Copy`;
-- scan invalidated by source or destination changes;
-- durable source identity defined as Tenant ID, employee Entra object ID, and source Drive ID;
+- scan invalidation when source or destination changes;
+- durable source identity using Tenant ID, employee Entra object ID, and source Drive ID;
 - operator identity recorded for audit without permanent operator binding;
-- `Incomplete` added for failed, unsupported, or unstable content;
-- `CompletedWithWarnings` limited to non-content warnings;
-- deterministic residual-collision suffix expansion defined;
-- SQLite confirmed as operational state and CSV/JSON as audit output only;
-- `docs/REPORT_SCHEMA.md` added;
-- `.ai/START_HERE.md` no longer contains a duplicated stale evidence filename; and
-- controls, plan, security, acceptance, and agent instructions aligned.
+- `Incomplete` for failed supported content, unsupported content, or an unstable source snapshot;
+- `CompletedWithWarnings` only for non-content warnings after all supported items are copied or validly skipped;
+- SQLite as operational state and CSV/JSON as audit output only;
+- deterministic `PathMappingVersion = 1` with residual-collision suffix expansion;
+- protected Graph identifiers excluded from the normal UI and user-facing errors;
+- `docs/REPORT_SCHEMA.md`; and
+- aligned contract, security, acceptance, implementation, evidence, startup, and agent controls.
 
-## Required M0 completion sequence
+## M0 evidence limitations
 
-1. Complete branch consistency review.
-2. Open and review the documentation pull request.
-3. Merge the reviewed documentation change.
-4. Commit a replacement redacted M0 evidence summary tied to the exact merged source commit.
-5. Update phase status and handoff to `DOCUMENTATION_COMPLETE`.
-6. Unblock M1.
+The M0 evidence is documentation-only. The following remain unexecuted:
+
+- Windows restore and Release build;
+- automated application tests;
+- WPF startup;
+- Microsoft interactive sign-in;
+- real tenant and employee OneDrive resolution;
+- dry run, copy, interruption, resume, reconciliation, and report generation;
+- self-contained publish; and
+- production NTFS, encryption, access-removal, and Windows Server acceptance.
+
+## M1 start boundary
+
+M1 may create only the solution and CI foundation required by the binding contract:
+
+- `OneDriveServerTransfer.sln` at repository root;
+- WPF application project;
+- automated-test project;
+- .NET 10 Windows targeting;
+- MVVM, dependency injection, structured logging, and configuration foundations;
+- SQLite dependency and schema foundation;
+- deterministic restore; and
+- mandatory Windows GitHub Actions.
+
+M1 must not implement M2 authentication, M3 source resolution, Graph inventory, dry-run behavior, file transfer, or fake production success paths.
 
 ## Status rules
 
