@@ -14,34 +14,36 @@ The tool supports authorized operational backup, employee offboarding, and recov
 
 ## Current status
 
-**Workflow alignment in review — application implementation has not started.**
+**Documentation Ready — application implementation has not started.**
 
-Current branch phase:
+Completed documentation phase:
 
 ```text
 M0 — Contract simplification and pre-implementation hardening
-Status: IN_PROGRESS
+Status: DOCUMENTATION_COMPLETE
 ```
 
-Previous validated main evidence:
+Committed M0 evidence:
 
 ```text
-artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json
+artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json
 ```
 
-Previous validated main baseline:
+Validated documentation source commit:
 
 ```text
-e9434ff54c373e1d0129ba2583027897f6f3ff25
+c93b38b7e41ffbb50c82b4f8389e71ef511ac54d
 ```
 
-The previous evidence does not validate this branch. M1 remains blocked until the workflow-alignment documentation is reviewed, merged, and replacement evidence is committed for the exact merged source commit.
-
-Next implementation phase after that gate:
+Current implementation phase:
 
 ```text
 M1 — Solution and CI foundation
+Status: NOT_STARTED
+Start authorization: Granted
 ```
+
+M1 may begin now. The implementation agent must mark M1 `IN_PROGRESS` before creating source files. Documentation Ready does not mean the application builds, runs, signs in, accesses OneDrive, copies data, publishes, or is production ready.
 
 ## Intended IT workflow
 
@@ -183,8 +185,8 @@ The custom disk-index engine, JSONL state engine, and five-million-item release 
 
 ## Implementation phases
 
-- M0 — Contract simplification and pre-implementation hardening: in progress on this documentation branch
-- M1 — Solution and CI foundation: blocked pending reviewed merged M0 evidence
+- M0 — Contract simplification and pre-implementation hardening: `DOCUMENTATION_COMPLETE`
+- M1 — Solution and CI foundation: `NOT_STARTED`, authorized to start
 - M2 — Microsoft authentication
 - M3 — Employee source resolution and validation
 - M4 — Local destination and source binding
