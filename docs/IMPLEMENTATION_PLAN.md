@@ -1,260 +1,179 @@
 # Implementation Plan
 
-This plan organizes the binding contract into controlled milestones. It does not replace `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` or `IMPLEMENTATION_CONTRACT.md`.
+This plan implements the simple workflow defined in `IMPLEMENTATION_CONTRACT.md`. It does not expand product scope.
 
-The repository root is the project root. Every completed implementation milestone requires a committed redacted evidence summary under `artifacts/evidence`.
+## M0 — Contract simplification and correction
 
-## M0 — Repository and contract readiness
-
-**Status:** `DOCUMENTATION_COMPLETE`
-
-Deliverables:
-
-- Approved base implementation contract
-- Binding contract amendments
-- README and agent operating rules
-- Security policy and security/integrity requirements
-- Environment-input checklist
-- Acceptance matrix
-- Evidence policy
-- Change-control process
-- AI memory and phase tracking
-
-Exit evidence:
-
-- Contract and amendments exist and have a defined authority order
-- Repository contains no application code falsely presented as complete
-- Phase status says implementation has not started
-- Repository-root, evidence, security, and completion-state contradictions are corrected
-
-## M1 — Solution foundation and enforceable CI foundation
+**Status:** `IN_PROGRESS`
 
 Goals:
 
-- Create `./OneDriveServerTransfer.sln` at repository root
-- Create WPF application and test projects under `src` and `tests`
-- Configure .NET 10 Windows targeting
-- Establish MVVM, dependency injection, structured logging, and configuration foundations
-- Add `appsettings.example.json`
-- Enforce `MaximumRetryAttempts` range `1..5`
-- Add deterministic dependency restore or lock-file strategy
-- Add build and validation scripts
-- Add enforceable GitHub Actions checks for restore, Release build, tests, static checks, dependency review, and secret detection
-- Add automated policy checks against prohibited APIs, write permissions, and remote destination support when practical
+- make `IMPLEMENTATION_CONTRACT.md` the single binding contract
+- align every control document with the actual IT workflow
+- remove the custom five-million-item benchmark and custom index engine as release blockers
+- approve local SQLite state for resume and recovery
+- require Graph delta for initial inventory and reconciliation
+- correct invalid M0 evidence and close the unresolved review concern
 
 Exit criteria:
 
-- Solution path and project structure match the amended contract
-- Solution restores where supported
-- Compatible Windows CI performs a real Release build and automated tests
-- No placeholder production services
-- No checked PR-template item is treated as validation evidence
-- Redacted M1 evidence summary committed under `artifacts/evidence`
+- no binding document contradicts the simple product workflow
+- previous invalid M0 evidence is explicitly superseded
+- corrected documentation is reviewed and merged
+- a valid evidence summary references the exact merged source commit
 
-## M2 — Authentication and configuration
+## M1 — Solution and CI foundation
 
 Goals:
 
-- Implement MSAL interactive sign-in
-- Support MFA and Conditional Access
-- Implement silent token acquisition and renewal
-- Implement DPAPI token-cache persistence on Windows
-- Implement Remember sign-in and sign-out behavior
-- Enforce public-client and no-secret design
-- Protect the application-owned token cache from unrelated non-administrative users
-- Document the threat impact of delegated permissions and persistent session access
+- create `OneDriveServerTransfer.sln` at repository root
+- create WPF application and test projects
+- configure .NET 10 Windows targeting
+- add MVVM, dependency injection, structured logging, and configuration
+- add deterministic dependency restore
+- add Windows GitHub Actions for restore, Release build, tests, formatting/static analysis, dependency review, and secret detection
 
 Exit criteria:
 
-- Authentication services are isolated from UI
-- Token and secret logging protections are tested
-- Token-cache ACL behavior is tested on Windows where required
-- No client secret or Microsoft 365 write permission exists
-- Non-Windows limitations are explicitly reported
-- Windows interactive sign-in remains unvalidated until actually executed
-- Redacted M2 evidence summary committed
+- solution structure matches the contract
+- Windows CI builds and tests real source
+- no placeholder production services
+- committed M1 evidence exists
 
-## M3 — Employee OneDrive root resolution and validation
+## M2 — Microsoft authentication
 
 Goals:
 
-- Validate HTTPS and allowed tenant host
-- Resolve employee personal-site root URL
-- Resolve default Graph drive root
-- Require `driveType = business`
-- Reject files, subfolders, shared folders, consumer OneDrive, and SharePoint libraries
-- Validate administrator read access
-- Record protected audit identities required by the amended contract
+- implement MSAL interactive delegated sign-in
+- support MFA and Conditional Access
+- implement silent token acquisition and renewal
+- implement DPAPI-protected application token cache
+- implement `Remember sign-in` and sign-out accurately
+- prevent secret and token logging
 
 Exit criteria:
 
-- URL and drive-type test matrix passes
-- User-facing error mappings exist
-- No beta or fallback Microsoft APIs are used
-- Real tenant behavior remains unvalidated until actually executed
-- Redacted M3 evidence summary committed
+- authentication logic is isolated from WPF views
+- cache behavior and redaction tests pass
+- no client secret or write permission exists
+- real Microsoft sign-in remains unclaimed until executed
+- committed M2 evidence exists
 
-## M4 — Local destination, locking, containment, ACL, and path mapping
+## M3 — Employee OneDrive validation
 
 Goals:
 
-- Accept only local attached storage
-- Reject UNC, network drives, and unsafe reparse points
-- Create `OneDriveData` and `_TransferReport`
-- Implement cross-process and cross-session destination lock
-- Implement deterministic `PathMappingVersion = 1`
-- Revalidate containment before create, open, replace, and rename operations
-- Prevent reparse-point time-of-check/time-of-use redirection
-- Validate restricted NTFS access-control baseline without broadly weakening ACLs
+- validate HTTPS and configured tenant host
+- resolve one employee personal-site root URL
+- resolve its default `driveType = business` drive root
+- reject files, subfolders, shared folders, consumer OneDrive, and SharePoint or Teams libraries
+- validate administrator read access
+- show a simple employee and source confirmation
 
 Exit criteria:
 
-- Destination validation and lock tests pass
-- Path-mapping contract tests pass
-- Existing unsupported versions are rejected safely
-- Adversarial junction-swap tests pass
-- No file operation can escape the canonical destination boundary
-- ACL validation behavior is tested and documented
-- Redacted M4 evidence summary committed
+- URL and source-type tests pass
+- Graph v1.0 only
+- no source modification path exists
+- committed M3 evidence exists
 
-## M5 — Enumeration, disk-based manifest indexing, and reporting
-
-Precondition:
-
-Before implementation, add an approved decision describing the five-million-item on-disk index design, including lookup keys, file format, crash safety, recovery, integrity, expected complexity, and benchmark behavior.
+## M4 — Local destination and source binding
 
 Goals:
 
-- Implement page-by-page bounded enumeration
-- Prevent traversal of external `remoteItem` content
-- Create segmented versioned manifest
-- Implement a genuine bounded-memory disk-based lookup index
-- Implement explicit persisted transfer states
-- Create segmented complete and failed CSV reports
-- Implement formula-injection protection and indexes
-- Include all required protected audit fields
+- accept only local attached storage
+- reject UNC, mapped, NAS, SMB, and remote destinations
+- create `OneDriveData` and `_TransferReport`
+- bind destination to tenant, employee, and drive
+- reject another source or unsafe non-empty destination
+- implement cross-process and cross-session destination locking
+- implement deterministic `PathMappingVersion = 1`
+- validate destination containment and safe file operations
+- check write access and disk-space headroom
 
 Exit criteria:
 
-- No full-drive metadata materialization
-- Queue capacity is bounded
-- Routine lookups do not require repeated complete scans of all JSONL segments
-- Crash-safe manifest and index recovery tests pass
-- CSV segmentation and integrity tests pass
-- Index lookup and collision behavior passes scale-oriented validation
-- Redacted M5 evidence summary committed
+- path, source-binding, lock, and mapping tests pass
+- file operations cannot escape the selected destination
+- unrelated local files cannot be overwritten
+- committed M4 evidence exists
 
-## M6 — Transfer, resume, local SHA-256, and source integrity
+## M5 — Inventory, copy, resume, and verification
 
 Goals:
 
-- Implement streaming downloads
-- Implement fixed maximum of three simultaneous downloads
-- Implement `.partial` handling
-- Implement HTTP Range resume
-- Isolate temporary download URLs from Graph bearer tokens
-- Implement post-download source metadata revalidation
-- Verify supported Graph source hashes
-- Calculate and store streaming local SHA-256 for every completed file
-- Revalidate local SHA-256 before trusting recovered completed state
-- Implement bounded retry and throttling behavior
+- implement Graph delta initial inventory page by page
+- persist `@odata.deltaLink` safely
+- use bounded queues and fixed concurrency of three
+- create folders and copy files through streaming
+- implement `.partial` handling and Range resume
+- isolate temporary download-host requests from Graph credentials
+- implement bounded retry and throttling
+- implement source metadata revalidation
+- verify supported source hashes
+- calculate local SHA-256
+- implement SQLite transaction state and crash recovery
+- perform up to three bounded delta reconciliation passes
 
 Exit criteria:
 
-- Range and restart scenarios pass
-- Hash and fallback verification tests pass
-- Same-size local substitution or corruption is detected
-- Temporary URLs are never persisted or logged
-- Completed state cannot precede final-file commitment
-- Retry configuration cannot exceed five attempts
-- Redacted M6 evidence summary committed
+- paging, checkpoint, copy, resume, retry, hash, SQLite recovery, and reconciliation tests pass
+- no complete-drive hierarchy is retained in memory
+- rerun skips verified completed files
+- committed M5 evidence exists
 
-## M7 — Reconciliation, cancellation, errors, and UI completion
+## M6 — UI, errors, and reports
 
 Goals:
 
-- Implement a maximum of three reconciliation passes
-- Use supported Graph v1.0 change tracking where available
-- Preserve local backups after source deletion
-- Implement cancellation scope accurately
-- Complete the bounded activity area and final summaries
-- Map technical failures to clear reference-coded user errors
-- Produce protected run summaries with required audit fields
+- complete the single-window WPF interface
+- implement responsive progress and cancellation
+- keep activity history bounded
+- map technical failures to simple reference-coded errors
+- generate `TransferSummary.json`, `TransferReport.csv`, `FailedFiles.csv`, and `TransferLog.log`
+- protect CSV output from formula injection
 
 Exit criteria:
 
-- Reconciliation outcomes pass
-- `CompletedWithWarnings` and `CompletedWithErrors` are correct
-- Cancellation never claims undiscovered items were evaluated
-- UI exposes no internal Graph or diagnostic details
-- Audit records are sufficient without exposing internal identifiers in normal UI
-- Redacted M7 evidence summary committed
+- view-model tests pass
+- no technical secrets or Graph internals appear in the UI
+- reports are readable and state remains in SQLite
+- committed M6 evidence exists
 
-## M8 — Automated tests, adversarial security tests, and production-pipeline benchmark
+## M7 — Windows and real-tenant acceptance
 
 Goals:
 
-- Complete the binding contract test matrix
-- Add adversarial destination-containment and local-integrity tests
-- Add the 5,000,000-item synthetic benchmark
-- Exercise production enumeration, queues, path mapping, on-disk index, manifest, report, state, and reconciliation components
-- Generate machine-readable evidence
+- run Release build and automated tests on compatible Windows
+- start the WPF application
+- validate real Microsoft sign-in
+- validate a real employee test OneDrive root
+- run a complete test copy
+- test network interruption and resume
+- test source change reconciliation
+- test destination locking across processes or sessions
+- verify local destination permissions and containment
+- publish self-contained `win-x64`
 
 Exit criteria:
 
-- Processed item count exactly matches configured item count
-- Peak managed heap remains below the contract threshold on compatible Windows
-- Queue capacity remains bounded
-- No benchmark-only alternate implementation exists
-- Manifest-index lookups remain operational at scale
-- Junction replacement, local corruption, and unsafe ACL cases are tested
-- Redacted M8 evidence summary committed
+- every mandatory Windows and real-tenant acceptance item passes
+- failures and unexecuted checks are reported explicitly
+- committed M7 evidence exists
 
-## M9 — Windows build, SBOM, signing decision, and self-contained publish
+## M8 — Internal release
 
 Goals:
 
-- Run Release build on compatible Windows
-- Execute automated tests on Windows
-- Start the WPF application
-- Publish self-contained `win-x64`
-- Place successful publish under `artifacts/win-x64`
-- Generate an SBOM
-- Run dependency-vulnerability and secret scans
-- Associate output with an exact source commit
-- Apply Authenticode signing when an approved organizational certificate is available
-- Document any approved unsigned-build limitation
+- prepare the approved self-contained Windows package
+- generate SBOM and dependency scan results where tooling supports them
+- apply Authenticode signing when an approved certificate is available
+- complete installation and operating instructions
+- tie the release to an exact source commit
 
 Exit criteria:
 
-- Build, tests, startup, scan, SBOM, and publish evidence exist
-- Published application executes on Windows Server 2019
-- Signature verification passes when signing is required and available
-- Unexecuted checks are not marked passed
-- Redacted M9 evidence summary committed
-
-## M10 — Production acceptance
-
-Goals:
-
-- Configure real Entra application values
-- Validate Microsoft interactive sign-in
-- Validate real employee test OneDrive access
-- Run a complete test backup
-- Test interruption and resume
-- Test reconciliation during source changes
-- Test destination locking across processes or sessions
-- Validate continuous containment and production NTFS ACL baseline
-- Confirm BitLocker or approved equivalent/exception
-- Execute the production-pipeline benchmark
-- Verify protected audit records
-- Remove and verify removal of temporary Site Collection Administrator access after the test
-
-Exit criteria:
-
-- Every binding production-acceptance item passes
-- External Site Collection Administrator grant/removal record exists
-- Security, supply-chain, Windows, benchmark, and real-tenant evidence exists
-- The project may be marked `Production Ready`
-- Remaining limitations are genuine and documented
-- Redacted M10 evidence summary committed
+- release package runs on Windows Server 2019
+- signing status or approved unsigned limitation is documented
+- final evidence and handoff are complete
+- project may be marked `Production Ready` only when M7 and M8 acceptance evidence passes
