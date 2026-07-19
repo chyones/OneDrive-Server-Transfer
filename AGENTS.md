@@ -28,8 +28,9 @@ The Microsoft platform documents listed below are mandatory non-conflicting impl
 ## Current repository state
 
 - M0 contract simplification and pre-implementation hardening is `DOCUMENTATION_COMPLETE`.
-- Committed M0 evidence: `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json`.
-- Validated documentation source commit: `c93b38b7e41ffbb50c82b4f8389e71ef511ac54d`.
+- Current committed M0 evidence: `artifacts/evidence/M00_microsoft-platform-baseline_20260719T172157Z.json`.
+- Validated documentation source commit: `50e25cc9501ef22ad05ebe6abc1e7a96603efce2`.
+- Prior workflow-alignment evidence is retained for historical traceability.
 - Application implementation has not started.
 - Current phase: `M1 — Solution and CI foundation`.
 - M1 is authorized to start and is currently `NOT_STARTED`.
