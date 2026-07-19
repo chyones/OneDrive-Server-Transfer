@@ -10,7 +10,10 @@ This file contains durable project facts. Do not place transient logs, secrets, 
 - Primary operator: Authorized IT administrator
 - Runtime target: Windows Server 2019 x64 with Desktop Experience
 - UI language: English
-- Current state: M0 contract correction in progress; application implementation not started
+- Current state: `Documentation Ready`; application implementation not started
+- Completed phase: `M0 — Contract simplification and correction`
+- M0 evidence: `artifacts/evidence/M00_contract-correction_20260719T110925Z.json`
+- Next phase: `M1 — Solution and CI foundation`
 
 ## Binding authority
 
@@ -24,14 +27,15 @@ This file contains durable project facts. Do not place transient logs, secrets, 
 
 Copy the active files and folders from one employee's Microsoft 365 OneDrive for Business root to a local destination selected by the IT administrator on the same Windows Server.
 
-The user workflow is:
+Workflow:
 
 1. Open the application.
 2. Sign in with Microsoft.
 3. Paste the employee OneDrive root URL.
 4. Select the local destination.
-5. Press `Copy Data`.
-6. Monitor progress and review the result.
+5. Confirm the resolved employee and destination.
+6. Press `Copy Data`.
+7. Monitor progress and review the result.
 
 The application remains read-only against Microsoft 365.
 
@@ -59,7 +63,7 @@ The application remains read-only against Microsoft 365.
 
 ## Destination rules
 
-- Administrator selects any local attached destination on the same Windows Server.
+- Administrator selects local attached storage on the same Windows Server.
 - Reject UNC, mapped drives, NAS, SMB, remote storage, and unsafe redirection.
 - Create `OneDriveData` and `_TransferReport`.
 - Bind destination to Tenant ID, source Drive ID, and protected employee identity.
@@ -68,48 +72,36 @@ The application remains read-only against Microsoft 365.
 
 ## Inventory, transfer, and recovery
 
-- Use Microsoft Graph drive delta for initial complete inventory and reconciliation.
+- Use Microsoft Graph drive delta for initial inventory and reconciliation.
 - Persist the delta checkpoint.
-- Process pages and queues with bounded memory.
+- Keep pages, queues, and memory bounded.
 - Fixed maximum of three simultaneous downloads.
 - Use streaming and `.partial` files.
-- Resume with valid HTTP Range responses and restart safely when Range is ignored or invalid.
+- Resume only with valid HTTP Range responses.
 - Never send Graph credentials to temporary download hosts.
 - Retry transient failures up to five attempts per file.
-- Use up to three bounded reconciliation passes and return warnings when the source does not stabilize.
-- Store state in `_TransferReport/TransferState.db` using SQLite transactions.
-- Recovery must be idempotent.
+- Use local SQLite state at `_TransferReport/TransferState.db`.
+- Recovery must be transactional and idempotent.
 
 ## Integrity and path safety
 
 - Separate supported Microsoft source-hash verification from local SHA-256.
 - Calculate local SHA-256 for every completed file.
-- Never overwrite an unrelated local file.
+- Never overwrite unrelated local content.
 - Use deterministic `PathMappingVersion = 1`.
 - Prevent traversal, unsafe reparse-point redirection, and untrusted hard-link overwrite behavior.
-- Validate containment throughout file operations.
 
-## User interface
+## Production requirements
 
-One WPF window only:
+- Mandatory Windows CI restore, Release build, and automated tests before `Source Implementation Complete`.
+- Restricted NTFS permissions for backup data and token cache.
+- BitLocker, approved equivalent, or documented approved exception for production storage.
+- Temporary Site Collection Administrator access must be removed, verified, and externally recorded after it is no longer required.
+- Production Ready requires real Windows Server, Microsoft sign-in, employee OneDrive copy, resume, reconciliation, locking, security, and publish evidence.
 
-- Microsoft sign-in controls
-- employee OneDrive URL
-- destination selector
-- `Copy Data` and `Cancel`
-- simple progress counts and progress bar
-- bounded recent activity
-- simple reference-coded errors
+## Out of scope
 
 No dashboards, scheduling, batch employee processing, user management, service mode, central reporting, email notifications, or remote destinations.
-
-## Evidence and completion truth
-
-- Former M0 evidence is superseded because it omitted an immutable validated source commit.
-- M0 remains `IN_PROGRESS` until corrected documents are reviewed, merged, and evidenced against the exact merged commit.
-- Cross-platform checks are not Windows validation.
-- Source implementation is not Production Ready.
-- Production Ready requires actual Windows Server, Microsoft sign-in, real OneDrive copy, resume, reconciliation, locking, security, and publish evidence.
 
 ## Values not yet provided
 
