@@ -1,0 +1,131 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M0",
+  "documentationScope": "Microsoft platform baseline hardening",
+  "completionState": "DOCUMENTATION_COMPLETE",
+  "validatedSourceCommit": "50e25cc9501ef22ad05ebe6abc1e7a96603efce2",
+  "executedAtUtc": "2026-07-19T17:21:57Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/add-microsoft-platform-baseline",
+    "operatingSystem": "Documentation review through connected GitHub and official Microsoft documentation",
+    "applicationCodePresent": false
+  },
+  "validatedActions": [
+    {
+      "action": "Reviewed current repository contract and active AI control documents",
+      "result": "Passed",
+      "exitCode": 0
+    },
+    {
+      "action": "Reviewed current official Microsoft guidance for MSAL.NET WAM and browser fallback, Microsoft Graph permissions, drive-item delta, throttling, file downloads, drive-item hashes, .NET servicing, self-contained publishing, and Windows Server 2019 lifecycle",
+      "result": "Passed",
+      "exitCode": 0
+    },
+    {
+      "action": "Added non-conflicting Microsoft platform controls and aligned agent instructions, environment inputs, implementation phases, acceptance criteria, and project overview",
+      "result": "Passed",
+      "exitCode": 0
+    },
+    {
+      "action": "Compared branch to main and confirmed documentation-only changes",
+      "result": "Passed",
+      "exitCode": 0,
+      "details": {
+        "filesChanged": 13,
+        "sourceFilesAdded": 0,
+        "applicationImplementationStarted": false
+      }
+    }
+  ],
+  "documentsReviewed": [
+    "IMPLEMENTATION_CONTRACT.md",
+    "AGENTS.md",
+    ".ai/START_HERE.md",
+    "README.md",
+    "docs/ACCEPTANCE_MATRIX.md",
+    "docs/ENVIRONMENT_AND_INPUTS.md",
+    "docs/IMPLEMENTATION_PLAN.md",
+    "docs/MICROSOFT_PLATFORM_BASELINE.md",
+    "docs/AUTHENTICATION_AND_TOKEN_POLICY.md",
+    "docs/GRAPH_ENDPOINT_PERMISSION_MATRIX.md",
+    "docs/GRAPH_DELTA_AND_RECONCILIATION_POLICY.md",
+    "docs/GRAPH_RESILIENCY_POLICY.md",
+    "docs/DOWNLOAD_AND_INTEGRITY_POLICY.md",
+    "docs/PATCHING_AND_RELEASE_LIFECYCLE.md"
+  ],
+  "officialReferencesReviewed": [
+    "https://learn.microsoft.com/entra/msal/dotnet/acquiring-tokens/desktop-mobile/wam",
+    "https://learn.microsoft.com/entra/msal/dotnet/acquiring-tokens/using-web-browsers",
+    "https://learn.microsoft.com/graph/best-practices-concept",
+    "https://learn.microsoft.com/graph/permissions-reference",
+    "https://learn.microsoft.com/graph/api/drive-get?view=graph-rest-1.0",
+    "https://learn.microsoft.com/graph/api/site-getbypath?view=graph-rest-1.0",
+    "https://learn.microsoft.com/graph/api/driveitem-delta?view=graph-rest-1.0",
+    "https://learn.microsoft.com/graph/throttling",
+    "https://learn.microsoft.com/graph/api/driveitem-get-content?view=graph-rest-1.0",
+    "https://learn.microsoft.com/graph/api/resources/hashes?view=graph-rest-1.0",
+    "https://dotnet.microsoft.com/platform/support/policy/dotnet-core",
+    "https://learn.microsoft.com/dotnet/core/deploying/runtime-patch-selection",
+    "https://learn.microsoft.com/lifecycle/products/windows-server-2019"
+  ],
+  "approvedDocumentationOutcomes": [
+    "WAM-preferred interactive delegated MSAL authentication with system-browser fallback",
+    "No ROPC, device-code flow, client secret, certificate, application permission, Microsoft 365 write permission, or Graph beta API in version 1",
+    "Endpoint-to-permission matrix with no unapproved directory permission",
+    "Opaque delta links, duplicate-item handling, and supported HTTP 410 fresh enumeration and reconciliation",
+    "Exactly one retry owner, Retry-After handling, bounded backoff, and correlation IDs",
+    "Temporary download URL isolation from Graph credentials and persistence",
+    "Range resume validation for HTTP 206 and safe restart after HTTP 200",
+    "Microsoft Graph sha256Hash is ignored; supported source hashes remain separate from local SHA-256",
+    "Self-contained releases require republish for runtime security updates and exact patch evidence",
+    "Windows and .NET support status must remain valid for Production Ready"
+  ],
+  "contradictionChecks": {
+    "productWorkflowChanged": false,
+    "version1ScopeExpanded": false,
+    "employeePasswordPathIntroduced": false,
+    "microsoft365WriteAccessIntroduced": false,
+    "applicationPermissionsIntroduced": false,
+    "graphBetaIntroduced": false,
+    "remoteDestinationIntroduced": false,
+    "serviceModeIntroduced": false,
+    "bindingContractContradictionFound": false
+  },
+  "unexecutedChecks": [
+    "dotnet restore",
+    "Windows Release build",
+    "automated application tests",
+    "WPF startup",
+    "WAM interactive sign-in",
+    "system-browser fallback",
+    "MFA and Conditional Access",
+    "real tenant permission validation",
+    "real employee UPN and OneDrive URL resolution",
+    "Graph delta scan",
+    "HTTP 410 delta reset",
+    "OneDrive file copy",
+    "throttling and Retry-After behavior",
+    "temporary download URL expiration",
+    "Range resume",
+    "source-hash and local SHA-256 verification",
+    "interruption and resume",
+    "self-contained publish",
+    "Windows Server 2019 execution",
+    "production readiness validation"
+  ],
+  "limitations": [
+    "This evidence validates documentation alignment only.",
+    "Exact MSAL.NET, Microsoft Graph SDK, .NET SDK, and bundled runtime versions remain implementation and release decisions.",
+    "Microsoft documentation must be revalidated before affected milestones and releases."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}
