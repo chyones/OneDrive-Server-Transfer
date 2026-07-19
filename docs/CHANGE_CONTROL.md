@@ -2,60 +2,50 @@
 
 ## Contract status
 
-The binding implementation contract consists of:
+`IMPLEMENTATION_CONTRACT.md` is the single binding repository contract.
 
-1. `IMPLEMENTATION_CONTRACT_AMENDMENTS.md`
-2. `IMPLEMENTATION_CONTRACT.md`
+`IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded and retained only for historical traceability.
 
-The amendments prevail when the two documents conflict. Requirements not changed by the amendments remain binding.
+Current explicit instructions from the repository owner take priority and must be incorporated through reviewed documentation changes when they alter durable scope.
 
-The implementation agent must not edit either document merely to simplify development.
+## Changes requiring explicit owner approval
 
-## Changes requiring explicit approval
+Explicit approval is required before changing:
 
-Explicit user approval is required before changing:
-
-- Product purpose or backup scope
+- product purpose or copied-data scope
 - Windows Server target
-- WPF or .NET version
-- Microsoft authentication method
-- Microsoft Graph permissions
-- Microsoft API surface
-- Local-only destination rule
-- Concurrency or retry invariants
-- Local integrity requirements
-- Reparse-point and destination-containment requirements
-- NTFS or storage-protection requirements
-- Manifest, disk-index, or path-mapping compatibility
-- Evidence and completion-state requirements
-- Supply-chain or production acceptance requirements
-- Any future-version item currently out of scope
+- WPF, .NET, or Microsoft Graph platform choices
+- Microsoft authentication method or permissions
+- local-only destination rule
+- one-employee-per-run workflow
+- concurrency or retry invariants
+- SQLite state model or compatibility version
+- destination source binding
+- integrity, path-containment, NTFS, or storage-protection requirements
+- evidence and completion-state rules
+- any future feature currently out of scope
 
 ## Change procedure
 
 1. Record the proposal in `.ai/DECISION_LOG.md` as `PROPOSED`.
-2. Identify affected contract and amendment sections.
+2. Identify affected contract sections.
 3. Describe security, compatibility, test, evidence, and migration impact.
-4. Do not implement until approval is explicit.
-5. After approval, update together:
-   - `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` or `IMPLEMENTATION_CONTRACT.md` as appropriate
-   - dependent `docs/` files
-   - `AGENTS.md` and AI startup files when authority or workflow changes
-   - `.ai/PROJECT_MEMORY.md`
-   - `.ai/DECISION_LOG.md`
-   - `.ai/PHASE_STATUS.md` when phase scope changes
-6. Add or update tests and evidence requirements created by the decision.
-7. Preserve superseded decisions for traceability.
+4. Obtain explicit owner approval.
+5. Update the binding contract and dependent documents together.
+6. Update project memory, phase status, handoff, and AI instructions.
+7. Add or update required tests and evidence.
+8. Preserve superseded decisions for traceability.
+9. Use a reviewable pull request; do not merge known unresolved blocking findings.
 
 ## Operational corrections
 
-A small operational correction may be implemented without changing product scope only when it:
+A small operational correction may be implemented without expanding scope only when it:
 
 - is required to make an approved requirement work
-- does not weaken security, integrity, evidence, or audit requirements
+- does not weaken security, integrity, source binding, or evidence
 - does not add a feature
-- does not change platform, permissions, destination type, or compatibility format
-- is documented in the decision log and final report
-- is supported by tests and evidence appropriate to the affected phase
+- does not change platform, permissions, destination type, or state compatibility
+- is documented in the decision log and implementation report
+- is supported by appropriate tests and evidence
 
-An operational correction cannot be used to bypass the manifest-index design gate, production security baseline, or milestone evidence requirements.
+Operational corrections cannot be used to bypass owner approval or to make unsupported completion claims.
