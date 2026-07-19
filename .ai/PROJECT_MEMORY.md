@@ -11,14 +11,21 @@ This file contains durable project facts for future AI sessions. Do not place tr
 - Runtime target: Windows Server 2019 x64 with Desktop Experience
 - UI language: English
 - Current state: Documentation Ready; implementation not started
+- M0 state: `DOCUMENTATION_COMPLETE`
+
+## Binding authority
+
+- `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` has highest repository-contract authority.
+- `IMPLEMENTATION_CONTRACT.md` remains binding except where explicitly amended.
+- The repository root is the project root.
+- Required solution path: `./OneDriveServerTransfer.sln`.
+- Do not create a nested `./OneDriveServerTransfer` project container.
 
 ## Fixed product purpose
 
 Create a complete local file-and-folder backup of the active in-scope content of one employee's Microsoft 365 OneDrive.
 
-The administrator manually receives Site Collection Administrator access outside the application.
-
-The application validates the employee OneDrive root and copies data to local storage attached to the same Windows Server.
+The administrator manually receives Site Collection Administrator access outside the application. The application validates the employee OneDrive root and copies data to local storage attached to the same Windows Server.
 
 ## Fixed technology
 
@@ -42,6 +49,11 @@ The application validates the employee OneDrive root and copies data to local st
 - No SharePoint REST or CSOM fallback
 - Temporary download URLs receive no Graph bearer token
 - Secrets and employee content never enter GitHub
+- Local SHA-256 is stored for every completed file
+- Destination containment is revalidated during file operations
+- Production destination and reports require a restricted NTFS ACL baseline
+- Production storage requires BitLocker or an approved documented equivalent or exception
+- Site Collection Administrator access is removed and externally recorded after it is no longer required
 
 ## Fixed source rules
 
@@ -61,8 +73,9 @@ The application validates the employee OneDrive root and copies data to local st
   - `OneDriveData`
   - `_TransferReport`
 - Lock destination across processes and Windows sessions
+- Prevent reparse-point time-of-check/time-of-use redirection throughout transfer operations
 
-## Fixed transfer rules
+## Fixed transfer and integrity rules
 
 - Bounded page-by-page enumeration
 - Fixed maximum of three simultaneous file downloads
@@ -71,14 +84,26 @@ The application validates the employee OneDrive root and copies data to local st
 - Byte-range resume where supported
 - Post-download metadata revalidation
 - Source hash verification when Graph provides a supported hash
+- Streaming local SHA-256 for every completed file
 - Three reconciliation passes maximum
 - Backup behavior, not synchronization
 - Never delete local backup solely because source changed or disappeared
+- Retry attempts must remain between 1 and 5 inclusive
 
-## Compatibility versions
+## Manifest architecture
 
 - `ManifestVersion = 1`
 - `PathMappingVersion = 1`
+- A small list of JSONL segments is not sufficient as the five-million-item lookup index.
+- Before M5, record an approved disk-based index design covering lookup keys, crash safety, recovery, complexity, and benchmark behavior.
+- The no-database rule remains binding unless explicitly amended by the user.
+
+## Evidence rules
+
+- Raw generated source evidence: `artifacts/source`
+- Generated Windows publish output: `artifacts/win-x64`
+- Small redacted committed evidence summaries: `artifacts/evidence`
+- A phase-status claim without its required committed evidence summary is not valid completion evidence.
 
 ## Scale target
 
@@ -91,7 +116,7 @@ The application validates the employee OneDrive root and copies data to local st
 ## Completion truth
 
 - macOS can support source preparation only.
-- Production Ready requires actual Windows and real-tenant validation.
+- Production Ready requires actual Windows, security, supply-chain, and real-tenant validation.
 - Current label: `Documentation Ready`.
 
 ## Values not yet provided
@@ -106,3 +131,6 @@ The application validates the employee OneDrive root and copies data to local st
 - Windows Server name/build/account
 - Local destination root
 - Proxy status
+- Production ACL baseline confirmation
+- Production volume-encryption status
+- Authenticode certificate availability

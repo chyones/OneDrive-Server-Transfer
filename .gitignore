@@ -1,12 +1,18 @@
 # .NET build output
 **/bin/
 **/obj/
+
+# Generated Windows publish output
 artifacts/win-x64/*
 !artifacts/win-x64/.gitkeep
 
-# Generated source validation evidence
+# Generated raw source-validation output
 artifacts/source/*
 !artifacts/source/.gitkeep
+
+# Durable redacted evidence summaries are intentionally committed
+!artifacts/evidence/
+!artifacts/evidence/**
 
 # User-specific IDE files
 .vs/
@@ -45,6 +51,12 @@ appsettings.*.json
 *.key
 *.cer
 *.crt
+
+# SBOM and scan working output
+artifacts/**/*.sarif
+artifacts/**/*.spdx.json
+artifacts/**/*.cyclonedx.json
+!artifacts/evidence/*.json
 
 # OS files
 .DS_Store

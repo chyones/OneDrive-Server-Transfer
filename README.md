@@ -6,7 +6,7 @@ A native Windows desktop application specification for creating a complete local
 
 **Documentation Ready — Implementation Not Started**
 
-This repository currently contains the approved implementation contract, execution plan, AI working memory, acceptance controls, and project-governance files. It intentionally contains no application code yet.
+This repository contains the approved implementation contract, binding corrections, execution plan, AI working memory, acceptance controls, and project-governance files. It intentionally contains no application code yet.
 
 ## Product summary
 
@@ -20,82 +20,93 @@ The IT administrator manually grants the designated Microsoft 365 administrator 
 
 The application is read-only against Microsoft 365. It does not grant permissions, modify OneDrive data, support network destinations, or operate as a synchronization service.
 
-## Source of truth
+## Binding source of truth
 
-The binding requirements are in:
+The binding requirements are, in precedence order:
 
-- [`IMPLEMENTATION_CONTRACT.md`](IMPLEMENTATION_CONTRACT.md)
+1. [`IMPLEMENTATION_CONTRACT_AMENDMENTS.md`](IMPLEMENTATION_CONTRACT_AMENDMENTS.md)
+2. [`IMPLEMENTATION_CONTRACT.md`](IMPLEMENTATION_CONTRACT.md)
 
-When another document conflicts with the implementation contract, the implementation contract wins.
+The amendments correct repository structure, evidence handling, completion states, integrity verification, destination containment, access controls, audit requirements, manifest indexing, and milestone governance. Requirements not changed by the amendments remain fully binding.
 
 ## Start here for AI implementation
 
 An implementation agent must read these files in order:
 
 1. [`AGENTS.md`](AGENTS.md)
-2. [`IMPLEMENTATION_CONTRACT.md`](IMPLEMENTATION_CONTRACT.md)
-3. [`.ai/START_HERE.md`](.ai/START_HERE.md)
-4. [`.ai/PROJECT_MEMORY.md`](.ai/PROJECT_MEMORY.md)
-5. [`.ai/PHASE_STATUS.md`](.ai/PHASE_STATUS.md)
-6. [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md)
-7. [`docs/ACCEPTANCE_MATRIX.md`](docs/ACCEPTANCE_MATRIX.md)
+2. [`IMPLEMENTATION_CONTRACT_AMENDMENTS.md`](IMPLEMENTATION_CONTRACT_AMENDMENTS.md)
+3. [`IMPLEMENTATION_CONTRACT.md`](IMPLEMENTATION_CONTRACT.md)
+4. [`.ai/START_HERE.md`](.ai/START_HERE.md)
+5. [`.ai/PROJECT_MEMORY.md`](.ai/PROJECT_MEMORY.md)
+6. [`.ai/PHASE_STATUS.md`](.ai/PHASE_STATUS.md)
+7. [`.ai/HANDOFF.md`](.ai/HANDOFF.md)
+8. [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md)
+9. [`docs/ACCEPTANCE_MATRIX.md`](docs/ACCEPTANCE_MATRIX.md)
+10. [`docs/EVIDENCE_POLICY.md`](docs/EVIDENCE_POLICY.md)
+11. [`docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md`](docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md)
 
 A ready-to-use instruction is available at [`.ai/AI_START_PROMPT.md`](.ai/AI_START_PROMPT.md).
 
-## Planned repository structure
+## Required repository structure
+
+The repository root is the project root. Do not create a nested project container.
 
 ```text
 OneDrive-Server-Transfer/
 ├── .ai/                         AI context, memory, phase tracking, handoff
-├── .github/                     Review controls
-├── docs/                        Project documentation and execution plan
-├── artifacts/                   Generated validation and publish evidence
-├── src/                         Application source; created during implementation
-├── tests/                       Automated tests; created during implementation
-├── scripts/                     Build and publish scripts; created during implementation
-├── AGENTS.md                    Mandatory rules for implementation agents
-├── IMPLEMENTATION_CONTRACT.md   Binding implementation contract
-├── README.md                    Repository entry point
-└── SECURITY.md                  Security and secret-handling policy
+├── .github/                     Review and workflow controls
+├── artifacts/
+│   ├── evidence/                Small redacted evidence summaries committed to Git
+│   ├── source/                  Generated source-validation output
+│   └── win-x64/                 Generated Windows publish output
+├── docs/                        Project documentation and execution controls
+├── scripts/                     Build, validation, publish, and packaging scripts
+├── src/                         Application source
+├── tests/                       Automated tests and synthetic benchmark
+├── AGENTS.md
+├── IMPLEMENTATION_CONTRACT.md
+├── IMPLEMENTATION_CONTRACT_AMENDMENTS.md
+├── OneDriveServerTransfer.sln
+├── appsettings.example.json
+├── README.md
+└── SECURITY.md
 ```
 
 ## Implementation milestones
 
-The implementation is organized into evidence-based phases:
-
 - M0 — Repository and contract readiness
-- M1 — Solution foundation
+- M1 — Solution foundation and enforceable CI foundation
 - M2 — Authentication and configuration
 - M3 — OneDrive root resolution and validation
-- M4 — Local destination, locking, and path mapping
-- M5 — Enumeration, manifest, and reporting
-- M6 — Transfer, resume, and integrity
+- M4 — Local destination, locking, containment, ACL, and path mapping
+- M5 — Enumeration, disk-based manifest indexing, and reporting
+- M6 — Transfer, resume, local SHA-256, and source integrity
 - M7 — Reconciliation, cancellation, errors, and UI completion
-- M8 — Automated tests and production-pipeline benchmark
-- M9 — Windows build and self-contained publish
-- M10 — Windows Server 2019 production acceptance
+- M8 — Automated tests, adversarial security tests, and production-pipeline benchmark
+- M9 — Windows build, SBOM, signing decision, and self-contained publish
+- M10 — Windows Server 2019 and real-tenant production acceptance
 
-The agent may complete multiple phases in one execution, but every phase must have its own evidence and status update.
+Every milestone must have its own committed redacted evidence summary. A checked PR-template box or an uncommitted local log is not evidence.
 
 ## Required values before production validation
 
-The real tenant and server values are intentionally not stored in this repository. Complete the checklist in [`docs/ENVIRONMENT_AND_INPUTS.md`](docs/ENVIRONMENT_AND_INPUTS.md) before production validation.
+Real tenant and server values are intentionally not stored in this repository. Complete [`docs/ENVIRONMENT_AND_INPUTS.md`](docs/ENVIRONMENT_AND_INPUTS.md) before production validation.
 
 Never commit:
 
 - Microsoft administrator passwords
 - Access or refresh tokens
 - Client secrets
-- Private certificates
+- Private certificates or private keys
 - Employee backup data
 - Temporary Microsoft download URLs
 - Production logs containing sensitive paths or identities
 
 ## Completion labels
 
-- **Documentation Ready:** Contract and project-control files are prepared.
-- **Source Implementation Complete:** Source and supported non-Windows validation are complete.
-- **Production Ready:** All mandatory Windows and real-tenant acceptance steps have passed.
+- **Documentation Ready:** Contract and project-control files are prepared; application implementation has not started.
+- **Source Implementation Complete:** Source and supported validation are complete, with committed evidence summaries.
+- **Production Ready:** All mandatory Windows, security, supply-chain, and real-tenant acceptance steps have passed.
 - **Not Complete:** Required implementation or validation remains unfinished.
 
 The repository is currently **Documentation Ready** only.
