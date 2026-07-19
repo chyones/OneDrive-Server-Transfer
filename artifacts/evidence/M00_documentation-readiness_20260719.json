@@ -1,31 +1,19 @@
 {
   "EvidenceSchemaVersion": 1,
   "Milestone": "M0",
-  "CompletionState": "DOCUMENTATION_COMPLETE",
-  "ExecutedAtUtc": "2026-07-19T00:00:00Z",
-  "SourceBranch": "agent/harden-implementation-contract",
-  "Environment": "GitHub repository documentation review",
-  "OperatingSystem": "Not applicable",
-  "Action": "Reviewed and corrected repository structure, authority order, evidence retention, completion states, security requirements, integrity requirements, access lifecycle, manifest architecture gate, audit requirements, and implementation governance before source implementation.",
-  "Result": "PASS",
-  "ExitCode": 0,
+  "CompletionState": "SUPERSEDED",
+  "OriginalExecutedAtUtc": "2026-07-19T00:00:00Z",
+  "OriginalSourceBranch": "agent/harden-implementation-contract",
+  "OriginalSourceCommit": null,
+  "Result": "INVALID_FOR_COMPLETION",
+  "ExitCode": 1,
+  "Reason": "The original summary did not record an immutable validated source commit as required by the evidence policy. The associated pull request was merged before the review comment identifying this defect was addressed.",
   "ApplicationCodePresent": false,
   "WindowsBuildExecuted": false,
   "WpfExecutionExecuted": false,
   "MicrosoftSignInExecuted": false,
   "RealOneDriveTransferExecuted": false,
-  "BenchmarkExecuted": false,
   "ProductionValidationExecuted": false,
-  "DurableArtifacts": [
-    "IMPLEMENTATION_CONTRACT_AMENDMENTS.md",
-    "docs/EVIDENCE_POLICY.md",
-    "docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md",
-    "docs/IMPLEMENTATION_PLAN.md",
-    "docs/ACCEPTANCE_MATRIX.md"
-  ],
-  "Limitations": [
-    "This evidence covers documentation readiness only.",
-    "No source, Windows, Microsoft 365, benchmark, publish, or production validation is claimed."
-  ],
+  "ReplacementRequirement": "Create a new M0 evidence summary only after the simplified contract correction is reviewed and merged. The replacement must reference the exact merged source commit and list the validation action, result, limitations, and redaction confirmation.",
   "RedactionConfirmation": "No passwords, tokens, cookies, private keys, employee content, temporary download URLs, or production-sensitive paths are included."
 }
