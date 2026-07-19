@@ -134,26 +134,33 @@ The first release does not include:
 - C# and .NET 10 LTS;
 - WPF and MVVM;
 - Microsoft Graph v1.0;
-- MSAL interactive authentication;
+- MSAL interactive delegated authentication;
+- WAM-preferred sign-in with MSAL system-browser fallback;
 - local SQLite transfer state; and
 - self-contained `win-x64` publish.
+
+Version 1 prohibits Microsoft Graph beta, application permissions, Microsoft 365 write permissions, ROPC, device-code flow, client secrets, certificates, and employee authentication.
 
 ## Core archive behavior
 
 - Microsoft Graph delta inventory and reconciliation;
+- opaque next-link and delta-link preservation;
+- supported delta `410 Gone` fresh enumeration and reconciliation;
 - mandatory scan before copy;
 - bounded memory and fixed maximum of three simultaneous downloads;
 - streaming downloads and `.partial` files;
 - safe HTTP Range resume;
-- `Retry-After` handling and bounded retry;
-- local SHA-256 and supported Microsoft source-hash verification kept separate;
+- one automatic retry owner, `Retry-After` handling, and bounded retry;
+- isolated unauthenticated HTTP client for temporary download hosts;
+- supported Microsoft source hashes kept separate from local SHA-256;
+- Microsoft Graph `sha256Hash` ignored because Microsoft documents it as unsupported;
 - source timestamp preservation with explicit warnings;
 - fixed 5 GiB destination-space reserve;
 - deterministic `PathMappingVersion = 1` with collision-suffix expansion;
 - SQLite integrity validation and safe migration recovery; and
 - exact run states: `InProgress`, `Completed`, `CompletedWithWarnings`, `Incomplete`, `Failed`, `Cancelled`, and `Interrupted`.
 
-`Incomplete` means the archive is missing supported content, contains unsupported source items, or could not reach a stable source snapshot. It must never be presented as a successful complete archive.
+`Incomplete` means the archive is missing supported content, contains unsupported or unknown content semantics, or could not reach a stable source snapshot. It must never be presented as a successful complete archive.
 
 ## Security model
 
@@ -174,6 +181,20 @@ The first release does not include:
 - removal and verification of temporary Site Collection Administrator access after it is no longer required.
 
 See `SECURITY.md`, `docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md`, and `docs/REPORT_SCHEMA.md`.
+
+## Microsoft platform controls
+
+Current Microsoft platform implementation controls are defined in:
+
+- `docs/MICROSOFT_PLATFORM_BASELINE.md`;
+- `docs/AUTHENTICATION_AND_TOKEN_POLICY.md`;
+- `docs/GRAPH_ENDPOINT_PERMISSION_MATRIX.md`;
+- `docs/GRAPH_DELTA_AND_RECONCILIATION_POLICY.md`;
+- `docs/GRAPH_RESILIENCY_POLICY.md`;
+- `docs/DOWNLOAD_AND_INTEGRITY_POLICY.md`; and
+- `docs/PATCHING_AND_RELEASE_LIFECYCLE.md`.
+
+These documents operationalize the binding contract without expanding the user workflow. Agents must recheck the current official Microsoft references listed in the baseline before completing affected milestones.
 
 ## Binding source of truth
 
