@@ -17,8 +17,9 @@ Before changing anything, read:
 6. .ai/DECISION_LOG.md
 7. docs/IMPLEMENTATION_PLAN.md
 8. docs/ACCEPTANCE_MATRIX.md
-9. docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md
-10. docs/ENVIRONMENT_AND_INPUTS.md
+9. docs/EVIDENCE_POLICY.md
+10. docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md
+11. docs/ENVIRONMENT_AND_INPUTS.md
 
 IMPLEMENTATION_CONTRACT_AMENDMENTS.md is superseded and must not override IMPLEMENTATION_CONTRACT.md.
 
@@ -32,7 +33,9 @@ Use Microsoft Graph drive delta for initial inventory and reconciliation. Keep p
 
 Microsoft 365 access is read-only. Never add write permissions, a client secret, or source modification behavior. Never log or persist tokens, cookies, authorization headers, temporary download URLs, employee content, or production state databases.
 
-Before marking any phase complete, execute all available checks, commit a redacted evidence summary tied to the exact validated source commit, and update phase status, decision log, project memory, and handoff.
+Windows CI restore, Release build, and automated tests are mandatory before Source Implementation Complete. Real-tenant and interactive production checks remain separate.
+
+Before marking any phase complete, execute all required checks, commit a redacted evidence summary tied to the exact validated source commit, and update phase status, decision log, project memory, and handoff.
 
 Do not claim Windows build, WPF execution, Microsoft sign-in, real OneDrive copy, publish, or Production Ready unless each action was actually executed in a compatible environment with evidence.
 
