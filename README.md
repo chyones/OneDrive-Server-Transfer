@@ -4,9 +4,25 @@ A simple internal Windows desktop application for copying one employee's Microso
 
 ## Current status
 
-**Documentation correction in progress — application implementation has not started.**
+**Documentation Ready — application implementation has not started.**
 
-The repository currently contains the binding implementation contract and project-control documents. It does not yet contain the application source.
+Completed documentation phase:
+
+```text
+M0 — Contract simplification and correction
+```
+
+Evidence:
+
+```text
+artifacts/evidence/M00_contract-correction_20260719T110925Z.json
+```
+
+Next phase:
+
+```text
+M1 — Solution and CI foundation
+```
 
 ## Intended IT workflow
 
@@ -14,10 +30,11 @@ The repository currently contains the binding implementation contract and projec
 2. Sign in with the approved Microsoft administrator account.
 3. Paste the employee's OneDrive for Business root URL.
 4. Select the local destination folder.
-5. Press `Copy Data`.
-6. Monitor progress and review the final report.
+5. Confirm the resolved employee and destination.
+6. Press `Copy Data`.
+7. Monitor progress and review the final report.
 
-The application copies the active files and folders from that employee's OneDrive to the selected local destination. It does not modify Microsoft 365 data.
+The application copies active files and folders to the selected local destination. It does not modify Microsoft 365 data.
 
 ## Destination structure
 
@@ -27,64 +44,62 @@ SelectedDestination\
 └── _TransferReport\
 ```
 
-- `OneDriveData` contains the copied employee files and folders.
-- `_TransferReport` contains the local transfer-state database, reports, and logs.
+- `OneDriveData` contains copied employee files and folders.
+- `_TransferReport` contains SQLite transfer state, reports, and logs.
 
-The destination is bound to one tenant, employee, and OneDrive drive. A destination belonging to another source must be rejected to prevent data mixing.
+The destination is bound to one tenant, employee, and OneDrive drive to prevent data mixing.
 
 ## Supported source
 
-- one employee OneDrive for Business root
-- same configured Microsoft 365 tenant
-- active files and folders
-- nested and empty folders
-- Arabic, English, Unicode, and large files
+- one employee OneDrive for Business root;
+- same configured Microsoft 365 tenant;
+- active files and folders;
+- nested and empty folders; and
+- Arabic, English, Unicode, large, and long-name files.
 
 ## Not included
 
-- Recycle Bin
-- previous versions
-- sharing permissions or links
-- comments or activity history
-- compliance or audit records
-- SharePoint or Teams libraries
-- consumer OneDrive
-- external shortcuts to another drive
-- multiple employees in one run
-- scheduling, dashboard, email notifications, or service mode
-- network, UNC, NAS, SMB, or remote destinations
+- Recycle Bin or previous versions;
+- sharing permissions, links, comments, activity, compliance, or audit records;
+- SharePoint or Teams libraries;
+- consumer OneDrive;
+- external shortcuts to another drive;
+- multiple employees in one run;
+- scheduling, dashboards, email notifications, or service mode; and
+- network, UNC, NAS, SMB, or remote destinations.
 
 ## Technology
 
-- C#
-- .NET 10 LTS
-- WPF and MVVM
-- Microsoft Graph v1.0
-- MSAL interactive authentication
-- local SQLite transfer state
-- self-contained `win-x64` publish
+- C# and .NET 10 LTS;
+- WPF and MVVM;
+- Microsoft Graph v1.0;
+- MSAL interactive authentication;
+- local SQLite transfer state; and
+- self-contained `win-x64` publish.
 
 ## Security model
 
-- read-only Microsoft Graph access
-- no Microsoft password fields
-- no client secret
-- no Microsoft 365 write permissions
-- DPAPI-protected application token cache
-- temporary download URLs are never logged or stored
-- Graph bearer tokens are never sent to temporary download hosts
-- only local attached storage is accepted
-- destination containment and source binding are validated
+- read-only Microsoft Graph access;
+- no Microsoft password fields or client secret;
+- no Microsoft 365 write permissions;
+- DPAPI-protected application token cache;
+- temporary download URLs are never logged or stored;
+- Graph credentials are never sent to temporary download hosts;
+- local attached storage only;
+- destination containment and source binding;
+- restricted NTFS permissions;
+- BitLocker, approved equivalent, or approved documented exception for production storage; and
+- removal and verification of temporary Site Collection Administrator access after it is no longer required.
 
 ## Binding source of truth
 
-`IMPLEMENTATION_CONTRACT.md` is the binding project contract.
+`IMPLEMENTATION_CONTRACT.md` is the single binding project contract.
 
-`IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is retained only as a superseded historical file; its approved corrections are incorporated into the main contract.
+`IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded historical material and does not override the binding contract.
 
 ## Implementation phases
 
-- M0 — Contract simplification and correction
+- M0 — Contract simplification and correction: complete
 - M1 — Solution and CI foundation
 - M2 — Microsoft authentication
 - M3 — Employee OneDrive validation
@@ -93,8 +108,6 @@ The destination is bound to one tenant, employee, and OneDrive drive. A destinat
 - M6 — UI, errors, and reports
 - M7 — Windows and real-tenant acceptance
 - M8 — Internal release
-
-## Required production inputs
 
 Real tenant, Entra application, test employee, and Windows Server values are not committed. Complete `docs/ENVIRONMENT_AND_INPUTS.md` before real-tenant validation.
 
