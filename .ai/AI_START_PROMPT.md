@@ -1,43 +1,40 @@
 # AI Implementation Start Prompt
 
-Use this prompt with an implementation-capable AI agent after granting it access to this repository.
+Use this prompt with an implementation-capable agent after the contract-correction pull request is reviewed and merged.
 
 ```text
 Work on the repository chyones/OneDrive-Server-Transfer.
 
-This repository contains a binding implementation contract, approved amendments, and project-control files. Do not redesign the product and do not add features.
+The product is a simple internal Windows application. An IT administrator signs in, pastes one employee OneDrive for Business root URL, selects a local destination on the same Windows Server, presses Copy Data, and reviews the result.
 
-Before changing anything, read these files completely in this order:
+Before changing anything, read:
 
 1. AGENTS.md
-2. IMPLEMENTATION_CONTRACT_AMENDMENTS.md
-3. IMPLEMENTATION_CONTRACT.md
-4. .ai/START_HERE.md
-5. .ai/PROJECT_MEMORY.md
-6. .ai/PHASE_STATUS.md
-7. .ai/HANDOFF.md
-8. .ai/DECISION_LOG.md
-9. docs/IMPLEMENTATION_PLAN.md
-10. docs/ACCEPTANCE_MATRIX.md
-11. docs/EVIDENCE_POLICY.md
-12. docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md
-13. docs/ENVIRONMENT_AND_INPUTS.md
+2. IMPLEMENTATION_CONTRACT.md
+3. .ai/PROJECT_MEMORY.md
+4. .ai/PHASE_STATUS.md
+5. .ai/HANDOFF.md
+6. .ai/DECISION_LOG.md
+7. docs/IMPLEMENTATION_PLAN.md
+8. docs/ACCEPTANCE_MATRIX.md
+9. docs/SECURITY_AND_INTEGRITY_REQUIREMENTS.md
+10. docs/ENVIRONMENT_AND_INPUTS.md
 
-The amendments prevail when they conflict with the base contract.
+IMPLEMENTATION_CONTRACT_AMENDMENTS.md is superseded and must not override IMPLEMENTATION_CONTRACT.md.
 
-The repository root is the project root. Create ./OneDriveServerTransfer.sln directly in the repository root. Do not create a nested ./OneDriveServerTransfer project directory.
+Implement the current phase only. Do not redesign the product and do not add dashboards, scheduling, batch employee processing, remote destinations, service mode, central reporting, or other unapproved features.
 
-Implement the application milestone by milestone. Before starting the next milestone, complete the current exit criteria, execute available validation, commit a redacted evidence summary under artifacts/evidence, and update .ai/PHASE_STATUS.md, .ai/PROJECT_MEMORY.md, .ai/DECISION_LOG.md, and .ai/HANDOFF.md.
+The repository root is the project root. Create ./OneDriveServerTransfer.sln directly at repository root.
 
-Do not create one unreviewable implementation commit covering all source milestones. Keep milestone changes intentional and reviewable.
+Use C#, .NET 10 LTS, WPF, MVVM, Microsoft Graph v1.0, MSAL, dependency injection, automated tests, and local SQLite state under _TransferReport.
 
-Do not stop at planning, scaffolding, pseudocode, or sample code. Do not add placeholders or fake validation.
+Use Microsoft Graph drive delta for initial inventory and reconciliation. Keep processing bounded in memory. Use a fixed maximum of three downloads, streaming, .partial files, safe Range resume, source metadata revalidation, supported source hashes, and local SHA-256.
 
-The current repository state is Documentation Ready. M0 is DOCUMENTATION_COMPLETE. Application implementation has not started. Begin with M1 — Solution foundation and enforceable CI foundation.
+Microsoft 365 access is read-only. Never add write permissions, a client secret, or source modification behavior. Never log or persist tokens, cookies, authorization headers, temporary download URLs, employee content, or production state databases.
 
-Do not claim Windows build, WPF execution, Microsoft interactive sign-in, real OneDrive transfer, publish, benchmark acceptance, security acceptance, or Production Ready unless each was actually executed in a compatible environment and the required evidence exists.
+Before marking any phase complete, execute all available checks, commit a redacted evidence summary tied to the exact validated source commit, and update phase status, decision log, project memory, and handoff.
 
-Do not request or store passwords, client secrets, access tokens, employee files, temporary download URLs, or sensitive production reports.
+Do not claim Windows build, WPF execution, Microsoft sign-in, real OneDrive copy, publish, or Production Ready unless each action was actually executed in a compatible environment with evidence.
 
-At the end, return the concise implementation report required by the binding contract and AGENTS.md.
+The current phase is M0 contract simplification and correction. Do not start application implementation until M0 is reviewed, merged, and evidenced correctly.
 ```
