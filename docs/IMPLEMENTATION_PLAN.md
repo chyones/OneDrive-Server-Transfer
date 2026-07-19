@@ -4,176 +4,165 @@ This plan implements the simple workflow defined in `IMPLEMENTATION_CONTRACT.md`
 
 ## M0 — Contract simplification and correction
 
-**Status:** `IN_PROGRESS`
+**Status:** `DOCUMENTATION_COMPLETE`
 
-Goals:
+Evidence:
 
-- make `IMPLEMENTATION_CONTRACT.md` the single binding contract
-- align every control document with the actual IT workflow
-- remove the custom five-million-item benchmark and custom index engine as release blockers
-- approve local SQLite state for resume and recovery
-- require Graph delta for initial inventory and reconciliation
-- correct invalid M0 evidence and close the unresolved review concern
+```text
+artifacts/evidence/M00_contract-correction_20260719T110925Z.json
+```
 
-Exit criteria:
+Completed outcomes:
 
-- no binding document contradicts the simple product workflow
-- previous invalid M0 evidence is explicitly superseded
-- corrected documentation is reviewed and merged
-- a valid evidence summary references the exact merged source commit
+- `IMPLEMENTATION_CONTRACT.md` is the single binding contract;
+- all control documents match the real IT workflow;
+- local SQLite state is approved;
+- Graph delta is required for initial inventory and reconciliation;
+- destination source binding prevents employee-data mixing;
+- mandatory Windows CI, access-removal verification, and production storage protection are binding; and
+- obsolete five-million-item custom-index requirements are removed as first-release blockers.
 
 ## M1 — Solution and CI foundation
 
+**Status:** `NOT_STARTED`
+
 Goals:
 
-- create `OneDriveServerTransfer.sln` at repository root
-- create WPF application and test projects
-- configure .NET 10 Windows targeting
-- add MVVM, dependency injection, structured logging, and configuration
-- add deterministic dependency restore
-- add Windows GitHub Actions for restore, Release build, tests, formatting/static analysis, dependency review, and secret detection
+- create `OneDriveServerTransfer.sln` at repository root;
+- create WPF application and automated-test projects;
+- configure .NET 10 Windows targeting;
+- add MVVM, dependency injection, structured logging, and configuration;
+- add SQLite dependency and schema foundation;
+- add deterministic dependency restore; and
+- add Windows GitHub Actions for restore, Release build, tests, static analysis, vulnerability review, and secret detection.
 
 Exit criteria:
 
-- solution structure matches the contract
-- Windows CI builds and tests real source
-- no placeholder production services
-- committed M1 evidence exists
+- solution structure matches the contract;
+- Windows CI builds and tests the real source;
+- no placeholder production services exist; and
+- committed M1 evidence exists.
 
 ## M2 — Microsoft authentication
 
 Goals:
 
-- implement MSAL interactive delegated sign-in
-- support MFA and Conditional Access
-- implement silent token acquisition and renewal
-- implement DPAPI-protected application token cache
-- implement `Remember sign-in` and sign-out accurately
-- prevent secret and token logging
+- implement MSAL interactive sign-in;
+- support MFA and Conditional Access;
+- implement silent token acquisition and renewal;
+- protect persistent cache with Windows DPAPI;
+- implement remember-sign-in and sign-out semantics; and
+- ensure no client secret, write permission, token logging, or false session-clearing claim exists.
 
 Exit criteria:
 
-- authentication logic is isolated from WPF views
-- cache behavior and redaction tests pass
-- no client secret or write permission exists
-- real Microsoft sign-in remains unclaimed until executed
-- committed M2 evidence exists
+- authentication is isolated from UI code;
+- cache and redaction tests pass;
+- Windows CI passes; and
+- committed M2 evidence exists.
 
 ## M3 — Employee OneDrive validation
 
 Goals:
 
-- validate HTTPS and configured tenant host
-- resolve one employee personal-site root URL
-- resolve its default `driveType = business` drive root
-- reject files, subfolders, shared folders, consumer OneDrive, and SharePoint or Teams libraries
-- validate administrator read access
-- show a simple employee and source confirmation
+- validate HTTPS and configured tenant host;
+- resolve employee personal-site root and default Graph drive;
+- require `driveType = business` and actual drive root;
+- reject files, subfolders, consumer OneDrive, shared sources, SharePoint, Teams, and external tenants; and
+- show the resolved employee confirmation without exposing Graph IDs.
 
 Exit criteria:
 
-- URL and source-type tests pass
-- Graph v1.0 only
-- no source modification path exists
-- committed M3 evidence exists
+- source-validation matrix passes;
+- real-tenant behavior remains unclaimed until executed; and
+- committed M3 evidence exists.
 
 ## M4 — Local destination and source binding
 
 Goals:
 
-- accept only local attached storage
-- reject UNC, mapped, NAS, SMB, and remote destinations
-- create `OneDriveData` and `_TransferReport`
-- bind destination to tenant, employee, and drive
-- reject another source or unsafe non-empty destination
-- implement cross-process and cross-session destination locking
-- implement deterministic `PathMappingVersion = 1`
-- validate destination containment and safe file operations
-- check write access and disk-space headroom
+- accept only local fixed or directly attached storage;
+- reject UNC, mapped, NAS, SMB, and remote destinations;
+- create `OneDriveData` and `_TransferReport`;
+- bind the destination to tenant, employee, and drive;
+- reject foreign or unsafe non-empty destinations;
+- implement cross-process and cross-session locking;
+- implement deterministic path mapping; and
+- validate containment, reparse points, hard links, NTFS permissions, and disk headroom.
 
 Exit criteria:
 
-- path, source-binding, lock, and mapping tests pass
-- file operations cannot escape the selected destination
-- unrelated local files cannot be overwritten
-- committed M4 evidence exists
+- destination, binding, locking, and path-safety tests pass;
+- no operation can escape the selected root; and
+- committed M4 evidence exists.
 
-## M5 — Inventory, copy, resume, and verification
+## M5 — Copy, resume, verification, and local state
 
 Goals:
 
-- implement Graph delta initial inventory page by page
-- persist `@odata.deltaLink` safely
-- use bounded queues and fixed concurrency of three
-- create folders and copy files through streaming
-- implement `.partial` handling and Range resume
-- isolate temporary download-host requests from Graph credentials
-- implement bounded retry and throttling
-- implement source metadata revalidation
-- verify supported source hashes
-- calculate local SHA-256
-- implement SQLite transaction state and crash recovery
-- perform up to three bounded delta reconciliation passes
+- implement Graph delta initial inventory and checkpoint recovery;
+- implement bounded queues and streaming downloads;
+- enforce fixed concurrency of three;
+- implement `.partial` files and safe HTTP Range resume;
+- isolate temporary download hosts from Graph credentials;
+- implement retries and throttling;
+- verify source metadata and supported source hashes;
+- calculate local SHA-256;
+- persist transactional SQLite state; and
+- support idempotent restart and rerun.
 
 Exit criteria:
 
-- paging, checkpoint, copy, resume, retry, hash, SQLite recovery, and reconciliation tests pass
-- no complete-drive hierarchy is retained in memory
-- rerun skips verified completed files
-- committed M5 evidence exists
+- inventory, resume, retry, integrity, SQLite, and recovery tests pass;
+- unrelated local files cannot be overwritten; and
+- committed M5 evidence exists.
 
 ## M6 — UI, errors, and reports
 
 Goals:
 
-- complete the single-window WPF interface
-- implement responsive progress and cancellation
-- keep activity history bounded
-- map technical failures to simple reference-coded errors
-- generate `TransferSummary.json`, `TransferReport.csv`, `FailedFiles.csv`, and `TransferLog.log`
-- protect CSV output from formula injection
+- complete the single-window UI;
+- add progress, cancel, bounded activity, and final summary;
+- map failures to simple reference-coded errors;
+- create summary, complete, failed, and log reports; and
+- protect CSV output from encoding and formula-injection problems.
 
 Exit criteria:
 
-- view-model tests pass
-- no technical secrets or Graph internals appear in the UI
-- reports are readable and state remains in SQLite
-- committed M6 evidence exists
+- UI remains responsive;
+- no technical secrets or internals appear in normal errors;
+- reports and cancellation behavior pass tests; and
+- committed M6 evidence exists.
 
 ## M7 — Windows and real-tenant acceptance
 
 Goals:
 
-- run Release build and automated tests on compatible Windows
-- start the WPF application
-- validate real Microsoft sign-in
-- validate a real employee test OneDrive root
-- run a complete test copy
-- test network interruption and resume
-- test source change reconciliation
-- test destination locking across processes or sessions
-- verify local destination permissions and containment
-- publish self-contained `win-x64`
+- run Windows Server 2019 Release build and tests;
+- start the WPF application;
+- complete Microsoft interactive sign-in;
+- validate a real test-employee OneDrive;
+- perform complete copy, interruption, resume, reconciliation, and destination-lock tests;
+- validate production NTFS and BitLocker/equivalent or approved exception;
+- remove and verify temporary Site Collection Administrator access; and
+- publish self-contained `win-x64`.
 
 Exit criteria:
 
-- every mandatory Windows and real-tenant acceptance item passes
-- failures and unexecuted checks are reported explicitly
-- committed M7 evidence exists
+- every binding production-acceptance requirement passes with evidence; and
+- committed M7 evidence exists.
 
 ## M8 — Internal release
 
 Goals:
 
-- prepare the approved self-contained Windows package
-- generate SBOM and dependency scan results where tooling supports them
-- apply Authenticode signing when an approved certificate is available
-- complete installation and operating instructions
-- tie the release to an exact source commit
+- finalize operating instructions and configuration template;
+- tie release output to an exact source commit;
+- generate required supply-chain evidence;
+- sign when an approved certificate is available or document the approved limitation; and
+- place the approved self-contained deliverable under `artifacts/win-x64`.
 
 Exit criteria:
 
-- release package runs on Windows Server 2019
-- signing status or approved unsigned limitation is documented
-- final evidence and handoff are complete
-- project may be marked `Production Ready` only when M7 and M8 acceptance evidence passes
+- internal release package and evidence are complete; and
+- the project may be marked `Production Ready` only when M7 and M8 requirements are satisfied.
