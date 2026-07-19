@@ -239,3 +239,69 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 - Decision: Bind the destination to Tenant ID, employee Entra object ID, and source Drive ID. Record normalized employee UPN and signed-in operator UPN for display and audit. Do not bind the archive permanently to one operator.
 - Recovery impact: Another authorized operator may resume only after tenant, employee, drive, destination, SQLite state, and authorization checks match.
 - Test impact: Add UPN-change, operator-change, allowed-resume, and rejected-resume tests.
+
+### D-033 — WAM-preferred interactive authentication
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Context: Current MSAL.NET guidance supports WAM on Windows Server 2019 and later with browser fallback.
+- Decision: Prefer WAM for version 1 interactive delegated sign-in and support the MSAL system-browser fallback path.
+- Excluded: embedded browser without approved exception, ROPC, device-code flow, client credentials, certificates, managed identity, and employee authentication.
+- Test impact: Add WAM configuration, fallback boundary, MFA, Conditional Access, consent, sign-out, and prohibited-flow tests.
+
+### D-034 — Exact Graph endpoint and delegated-permission control
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Implement Microsoft Graph `v1.0` endpoints only and maintain `docs/GRAPH_ENDPOINT_PERMISSION_MATRIX.md` as the approved endpoint-to-permission inventory.
+- Security impact: Version 1 prohibits Graph beta, application permissions, Microsoft 365 write permissions, and unapproved directory permissions.
+- Test impact: Add endpoint inventory, scope inventory, beta detection, and write-permission absence checks.
+
+### D-035 — Opaque delta links and reset recovery
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Preserve returned next links and delta links as opaque values, process duplicate item occurrences by Drive Item ID, and handle supported `410 Gone` through fresh enumeration and reconciliation.
+- Integrity impact: Delta reset must not silently reset SQLite or delete retained local archive content.
+- Test impact: Add opaque-link, duplicate-item, 410 reset, fresh-enumeration, and no-local-delete tests.
+
+### D-036 — Single retry owner and request correlation
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Exactly one layer owns automatic retry for each HTTP request category. Respect `Retry-After`, use bounded backoff with jitter when required, and generate protected request correlation IDs.
+- Reliability impact: Prevents multiplicative SDK-plus-application retries and supports Microsoft troubleshooting.
+- Test impact: Add retry-owner, actual-attempt-count, cancellation-delay, 401, 403, 429, 503, correlation, and redaction tests.
+
+### D-037 — Temporary download URL and Range isolation
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Treat temporary download URLs as short-lived preauthenticated secrets, use a separate unauthenticated HTTP client, never persist or log them, and never send Graph credentials to their hosts.
+- Resume impact: Apply Range to the actual temporary URL, accept resume only with valid `206` and `Content-Range`, and restart from zero when Range is ignored with `200`.
+- Test impact: Add credential-isolation, URL-expiration, 206, 200-restart, invalid-range, and no-persistence tests.
+
+### D-038 — Supported Microsoft source hashes
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Prefer `quickXorHash` when available, permit other supported Microsoft source hashes when supplied, ignore Microsoft Graph `sha256Hash`, and keep every source hash separate from local SHA-256.
+- Integrity impact: Missing source hash cannot be misrepresented as source cryptographic verification.
+- Test impact: Add quickXorHash, optional hash, missing hash, unsupported sha256Hash, mismatch, and local-SHA-256 tests.
+
+### D-039 — Self-contained servicing and platform lifecycle
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Self-contained releases must be rebuilt and republished to receive later .NET runtime patches. Release evidence records exact SDK, bundled runtime, MSAL, Graph SDK, Windows build, source commit, and artifact hash.
+- Lifecycle impact: Production Ready is invalid when the deployed Windows target or bundled .NET runtime is out of support.
+- Test impact: Add publish-version, artifact-traceability, vulnerability, SBOM, lifecycle, upgrade, and rollback checks.
+
+### D-040 — Microsoft platform M0 evidence supersedes the prior current pointer
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Context: The documentation baseline was expanded with current Microsoft implementation controls while preserving the approved product scope.
+- Decision: Use `artifacts/evidence/M00_microsoft-platform-baseline_20260719T172157Z.json` as the current M0 evidence tied to documentation source commit `50e25cc9501ef22ad05ebe6abc1e7a96603efce2`.
+- History impact: Preserve `M00_workflow-alignment_20260719T124036Z.json` as prior valid historical evidence.
+- Completion impact: Application implementation remains not started and M1 remains `NOT_STARTED` until explicitly marked `IN_PROGRESS`.

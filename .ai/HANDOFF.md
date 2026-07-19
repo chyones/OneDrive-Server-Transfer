@@ -2,9 +2,11 @@
 
 ## Current position
 
-M0 documentation alignment is complete and validated. Application implementation has not started.
+M0 documentation alignment and Microsoft platform hardening are complete and validated. Application implementation has not started.
 
-The validated documentation baseline accepts employee UPN or OneDrive root URL, requires a mandatory scan before copy, prohibits employee passwords and employee impersonation, defines the report schema, introduces `Incomplete` for missing content, defines durable employee identity, and aligns all active startup and control files.
+The validated documentation baseline accepts employee UPN or OneDrive root URL, requires a mandatory scan before copy, prohibits employee passwords and employee impersonation, defines the report schema, introduces `Incomplete` for missing or unsupported content, defines durable employee identity, and aligns all active startup and control files.
+
+It also defines the current Microsoft implementation baseline: Graph `v1.0` only, delegated interactive MSAL, WAM-preferred sign-in with system-browser fallback, an endpoint-permission matrix, opaque delta links and `410 Gone` recovery, one retry owner, temporary-download credential isolation, supported source hashes separate from local SHA-256, and self-contained runtime servicing.
 
 ## Current completion label
 
@@ -18,19 +20,25 @@ This label applies only to the repository contract and controls. It does not cla
 
 Status: `DOCUMENTATION_COMPLETE`
 
-Validated source commit:
+Validated documentation source commit:
 
 ```text
-c93b38b7e41ffbb50c82b4f8389e71ef511ac54d
+50e25cc9501ef22ad05ebe6abc1e7a96603efce2
 ```
 
 Committed evidence:
 
 ```text
+artifacts/evidence/M00_microsoft-platform-baseline_20260719T172157Z.json
+```
+
+Previous workflow-alignment evidence remains historical:
+
+```text
 artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json
 ```
 
-The evidence is documentation-only and records all unexecuted source, Windows, tenant, transfer, publish, and production checks.
+The current evidence is documentation-only and records all unexecuted source, Windows, tenant, authentication, Graph, transfer, publish, and production checks.
 
 ## Approved product boundary
 
@@ -46,7 +54,7 @@ Binding later-phase rules include:
 - mandatory Graph delta dry-run inventory before copy;
 - scan invalidation when source or destination changes;
 - unsupported reporting for OneNote and other package items;
-- `Incomplete` when supported content fails, unsupported content exists, or the source does not stabilize;
+- `Incomplete` when supported content fails, unsupported or unknown content semantics exist, or the source does not stabilize;
 - fixed maximum of three downloads;
 - `Retry-After` handling and bounded retry;
 - fixed 5 GiB destination-space reserve;
@@ -59,6 +67,24 @@ Binding later-phase rules include:
 - `docs/REPORT_SCHEMA.md`; and
 - isolated `_TransferReport/Runs/<RunId>` reports.
 
+Microsoft platform rules additionally include:
+
+- Microsoft Graph `v1.0` only;
+- delegated-only version 1 authentication;
+- WAM-preferred MSAL sign-in and supported system-browser fallback;
+- no ROPC, device-code flow, client secrets, certificates, app-only access, write scopes, or Graph beta;
+- exact endpoint and permission inventory;
+- opaque next links and delta links;
+- supported `410 Gone` fresh enumeration and reconciliation;
+- exactly one automatic retry owner per HTTP request category;
+- protected request correlation IDs;
+- a separate unauthenticated client for temporary download hosts;
+- no temporary download URL persistence or logging;
+- Range resume accepted only with valid `206` and `Content-Range`;
+- Microsoft Graph `sha256Hash` ignored;
+- supported Microsoft source hashes stored separately from local SHA-256; and
+- supported .NET patch and Windows lifecycle evidence for releases.
+
 ## Current phase
 
 `M1 — Solution and CI foundation`
@@ -70,7 +96,7 @@ Start authorization: Granted.
 ## Next exact action
 
 1. Read `AGENTS.md`, `IMPLEMENTATION_CONTRACT.md`, `.ai/START_HERE.md`, and every required control document.
-2. Confirm `.ai/PHASE_STATUS.md` points to the committed M0 evidence and validated commit above.
+2. Confirm `.ai/PHASE_STATUS.md` points to the committed current M0 evidence and validated documentation commit above.
 3. Change M1 status to `IN_PROGRESS` before creating source files.
 4. Implement M1 only:
    - create `OneDriveServerTransfer.sln` at repository root;
@@ -78,8 +104,9 @@ Start authorization: Granted.
    - configure .NET 10 Windows targeting;
    - add MVVM, dependency injection, structured logging, and configuration foundations;
    - add SQLite dependency and schema foundation;
+   - establish separate interfaces for authentication, Graph metadata requests, temporary-host downloads, retry ownership, hashing, local storage, SQLite, and reports;
    - add deterministic restore; and
-   - add mandatory Windows GitHub Actions.
+   - add mandatory Windows GitHub Actions, including beta-Graph, prohibited-auth-flow, vulnerability, and secret checks.
 5. Execute the M1 validation required by the contract and commit M1 evidence tied to the exact validated source commit.
 
 ## M1 prohibitions
@@ -87,12 +114,13 @@ Start authorization: Granted.
 - Do not implement M2 authentication or later source, scan, or copy behavior during M1.
 - Do not create fake successful services or placeholder production behavior.
 - Do not add an employee-password path or employee impersonation.
+- Do not add Graph beta, application permissions, Microsoft 365 write permissions, ROPC, device-code flow, client secrets, or certificates.
 - Do not revive the superseded custom disk index, JSONL engine, or five-million-item benchmark.
 - Do not add dashboards, scheduling, batch employee processing, service mode, remote destinations, central reporting, or email notifications.
-- Do not weaken any binding later-phase security, integrity, state, path, report, or evidence rule.
+- Do not weaken any binding later-phase security, integrity, state, path, report, platform, or evidence rule.
 
 ## Known missing real-world inputs
 
 See `docs/ENVIRONMENT_AND_INPUTS.md`.
 
-Do not assume Tenant ID, Client ID, authorized transfer account, employee identity, administrator access, production destination, Windows build, WPF startup, Microsoft sign-in, source resolution, dry run, OneDrive copy, resume, publish, or production validation has succeeded.
+Do not assume Tenant ID, Client ID, authorized transfer account, employee identity, administrator access, production destination, Windows build, WPF startup, WAM or browser sign-in, Microsoft consent, source resolution, delta scan, OneDrive copy, retry, temporary URL, Range, hash, resume, publish, or production validation has succeeded.

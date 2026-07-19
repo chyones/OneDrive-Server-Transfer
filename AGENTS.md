@@ -15,11 +15,22 @@ When instructions conflict, use this order:
 
 `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded and retained only for historical traceability.
 
+The Microsoft platform documents listed below are mandatory non-conflicting implementation controls. They operationalize the binding contract and do not authorize product-scope expansion:
+
+- `docs/MICROSOFT_PLATFORM_BASELINE.md`
+- `docs/AUTHENTICATION_AND_TOKEN_POLICY.md`
+- `docs/GRAPH_ENDPOINT_PERMISSION_MATRIX.md`
+- `docs/GRAPH_DELTA_AND_RECONCILIATION_POLICY.md`
+- `docs/GRAPH_RESILIENCY_POLICY.md`
+- `docs/DOWNLOAD_AND_INTEGRITY_POLICY.md`
+- `docs/PATCHING_AND_RELEASE_LIFECYCLE.md`
+
 ## Current repository state
 
 - M0 contract simplification and pre-implementation hardening is `DOCUMENTATION_COMPLETE`.
-- Committed M0 evidence: `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json`.
-- Validated documentation source commit: `c93b38b7e41ffbb50c82b4f8389e71ef511ac54d`.
+- Current committed M0 evidence: `artifacts/evidence/M00_microsoft-platform-baseline_20260719T172157Z.json`.
+- Validated documentation source commit: `50e25cc9501ef22ad05ebe6abc1e7a96603efce2`.
+- Prior workflow-alignment evidence is retained for historical traceability.
 - Application implementation has not started.
 - Current phase: `M1 — Solution and CI foundation`.
 - M1 is authorized to start and is currently `NOT_STARTED`.
@@ -49,6 +60,27 @@ The application copies and archives data only. It never deletes or modifies Micr
 - Never add an employee-password UI control, model, configuration key, service input, test fixture, or logging field.
 - The employee is identified only by UPN or OneDrive root URL.
 - The signed-in authorized IT operator remains the authenticated actor.
+
+## Microsoft platform controls
+
+- Use Microsoft Graph `v1.0` only. Do not use Graph beta endpoints, beta SDK models, or preview-only behavior.
+- Use delegated interactive MSAL authentication for a single-tenant public-client desktop application.
+- Prefer WAM and support the MSAL system-browser fallback path.
+- Never add ROPC, device-code flow, client credentials, client secrets, certificates, managed identity, workload identity, application permissions, or Microsoft 365 write permissions.
+- Implement only endpoints and permissions approved in `docs/GRAPH_ENDPOINT_PERMISSION_MATRIX.md`.
+- Do not add directory-wide permissions for convenience.
+- Preserve Graph next links and delta links as opaque values.
+- Handle supported delta `410 Gone` reset through fresh enumeration and reconciliation, not database reset.
+- Configure exactly one automatic retry owner per HTTP request category.
+- Respect `Retry-After`; do not stack SDK and application retries unknowingly.
+- Use a separate unauthenticated HTTP client for temporary download hosts.
+- Never send Graph bearer tokens, cookies, or Graph middleware headers to a temporary download URL.
+- Apply Range requests to the actual temporary URL and validate `206 Partial Content` and `Content-Range`.
+- Ignore Microsoft Graph `sha256Hash`; use supported Microsoft source hashes when available and keep local SHA-256 separate.
+- Tolerate unknown JSON properties and enum values safely; unknown content semantics must not be guessed as copied content.
+- Generate request correlation IDs and keep protected diagnostics free of secrets and raw Graph responses.
+- Keep self-contained releases current on supported .NET servicing patches and record the bundled runtime version.
+- Recheck the current official Microsoft documentation listed in `docs/MICROSOFT_PLATFORM_BASELINE.md` before completing affected milestones.
 
 ## Required implementation behavior
 
@@ -98,6 +130,7 @@ At the start of a phase:
 1. Set the phase to `IN_PROGRESS`.
 2. Record exact scope in `.ai/HANDOFF.md`.
 3. Confirm the previous phase has valid committed evidence.
+4. Revalidate the Microsoft platform documents relevant to the phase.
 
 At the end of a phase:
 
@@ -105,7 +138,7 @@ At the end of a phase:
 2. Commit a redacted evidence summary under `artifacts/evidence`.
 3. Record the exact validated source commit.
 4. Update phase status, decision log, project memory, and handoff.
-5. Review for false claims, placeholders, secrets, stale superseded controls, and out-of-scope work.
+5. Review for false claims, placeholders, secrets, stale superseded controls, out-of-scope work, beta APIs, unapproved permissions, duplicate retry layers, and outdated Microsoft platform assumptions.
 
 Windows CI restore, Release build, and automated tests are mandatory before `Source Implementation Complete`.
 
@@ -121,6 +154,7 @@ Windows CI restore, Release build, and automated tests are mandatory before `Sou
 - A mutable branch name is not immutable evidence.
 - Unsupported package content is not copied content.
 - A missing supported item cannot be hidden as a warning.
+- A platform-document review that was not executed against current official Microsoft documentation is not current validation.
 
 ## Security
 
@@ -128,4 +162,4 @@ Never commit or print passwords, tokens, client secrets, authorization headers, 
 
 ## Final implementation report
 
-Report only the justified completion label, phase status, files changed, evidence paths and validated commits, restore/build/test/Windows/sign-in/source-resolution/scan/copy/resume/publish results, required configuration, unsupported items, incomplete states, warning states, and genuine blockers.
+Report only the justified completion label, phase status, files changed, evidence paths and validated commits, restore/build/test/Windows/sign-in/source-resolution/scan/copy/resume/publish results, required configuration, exact approved Graph scopes and endpoint templates, Microsoft platform versions, unsupported items, incomplete states, warning states, and genuine blockers.
