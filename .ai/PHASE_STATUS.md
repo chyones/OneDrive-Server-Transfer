@@ -7,17 +7,17 @@ Last updated: 2026-07-19 UTC
 - Completion label: `Documentation Ready`
 - Implementation started: No
 - Production ready: No
-- Current phase: `M0 — Contract simplification and correction`
+- Current phase: `M0 — Contract simplification and pre-implementation hardening`
 - Current phase status: `DOCUMENTATION_COMPLETE`
-- Current evidence: `artifacts/evidence/M00_contract-correction_20260719T110925Z.json`
-- Validated source commit: `9a40d6bc9ddf036b61cca3a2432254ccd33f2051`
+- Current evidence: `artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json`
+- Validated source commit: `e9434ff54c373e1d0129ba2583027897f6f3ff25`
 - Next phase: `M1 — Solution and CI foundation`
 
 ## Phase table
 
 | Phase | Status | Evidence | Notes |
 |---|---|---|---|
-| M0 Contract simplification and correction | DOCUMENTATION_COMPLETE | `artifacts/evidence/M00_contract-correction_20260719T110925Z.json` | Application code not started |
+| M0 Contract simplification and pre-implementation hardening | DOCUMENTATION_COMPLETE | `artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json` | Application code not started |
 | M1 Solution and CI foundation | NOT_STARTED | None | Next phase |
 | M2 Microsoft authentication | NOT_STARTED | None |  |
 | M3 Employee OneDrive validation | NOT_STARTED | None |  |
@@ -26,6 +26,16 @@ Last updated: 2026-07-19 UTC
 | M6 UI, errors, and reports | NOT_STARTED | None |  |
 | M7 Windows and real-tenant acceptance | NOT_STARTED | None | Requires compatible Windows and tenant inputs |
 | M8 Internal release | NOT_STARTED | None |  |
+
+## M0 validated outcomes
+
+- one binding implementation contract;
+- active controls no longer require the superseded custom disk index or five-million-item benchmark;
+- authorized transfer-account validation defined;
+- OneNote and other package-item policy defined;
+- disk-space, timestamp, run-state, report-isolation, path-mapping, and SQLite-recovery behavior defined;
+- acceptance, security, evidence, agent, and implementation-plan controls aligned; and
+- exact immutable reviewed source commit recorded.
 
 ## Status rules
 
