@@ -2,35 +2,37 @@
 
 ## Current position
 
-The workflow-alignment documentation changes are implemented on the current branch. Application implementation has not started.
+M0 documentation alignment is complete and validated. Application implementation has not started.
 
-The branch changes the source input to employee UPN or OneDrive root URL, requires a mandatory scan before copy, prohibits employee passwords and employee impersonation, adds a report schema, introduces `Incomplete` for missing content, defines durable employee identity, and closes the stale `.ai/START_HERE.md` evidence reference.
+The validated documentation baseline accepts employee UPN or OneDrive root URL, requires a mandatory scan before copy, prohibits employee passwords and employee impersonation, defines the report schema, introduces `Incomplete` for missing content, defines durable employee identity, and aligns all active startup and control files.
 
 ## Current completion label
 
-`Not Complete` on this branch until the documentation change is reviewed, merged, and replacement M0 evidence is committed.
+`Documentation Ready`
 
-## Current phase
+This label applies only to the repository contract and controls. It does not claim source implementation, Windows validation, Microsoft sign-in, OneDrive access, copy execution, publish, or production readiness.
+
+## Completed phase
 
 `M0 — Contract simplification and pre-implementation hardening`
 
-Status: `IN_PROGRESS`
+Status: `DOCUMENTATION_COMPLETE`
 
-Previous validated main baseline:
-
-```text
-e9434ff54c373e1d0129ba2583027897f6f3ff25
-```
-
-Previous evidence:
+Validated source commit:
 
 ```text
-artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json
+c93b38b7e41ffbb50c82b4f8389e71ef511ac54d
 ```
 
-The previous evidence remains historical proof for the previous main baseline. It does not validate the workflow-alignment changes on this branch.
+Committed evidence:
 
-## Approved product boundary on this branch
+```text
+artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json
+```
+
+The evidence is documentation-only and records all unexecuted source, Windows, tenant, transfer, publish, and production checks.
+
+## Approved product boundary
 
 The authorized IT operator opens one WPF window, signs in with Microsoft, enters one employee UPN or OneDrive for Business root URL, selects a local destination on the same Windows Server, runs a mandatory `Scan`, confirms the resolved employee, operator, destination, counts, known size, unsupported items, path warnings, and storage warnings, presses `Start Copy`, monitors progress, and reviews the result and reports.
 
@@ -53,21 +55,35 @@ Binding later-phase rules include:
 - source timestamp preservation;
 - SQLite operational state, integrity checks, migration backup, and safe corruption failure;
 - exact item and run states;
+- protected Graph identifiers excluded from normal UI and user-facing errors;
 - `docs/REPORT_SCHEMA.md`; and
 - isolated `_TransferReport/Runs/<RunId>` reports.
 
+## Current phase
+
+`M1 — Solution and CI foundation`
+
+Status: `NOT_STARTED`
+
+Start authorization: Granted.
+
 ## Next exact action
 
-1. Review the documentation branch for contradictions and stale controls.
-2. Confirm no source, test, WPF, authentication, Graph, transfer, or production code was added.
-3. Merge the documentation pull request only after review.
-4. Create replacement M0 evidence tied to the exact merged workflow-alignment commit.
-5. Update `.ai/PHASE_STATUS.md`, `.ai/PROJECT_MEMORY.md`, `.ai/HANDOFF.md`, README, and environment readiness to the new validated baseline.
-6. Begin `M1 — Solution and CI foundation` only after those steps complete.
+1. Read `AGENTS.md`, `IMPLEMENTATION_CONTRACT.md`, `.ai/START_HERE.md`, and every required control document.
+2. Confirm `.ai/PHASE_STATUS.md` points to the committed M0 evidence and validated commit above.
+3. Change M1 status to `IN_PROGRESS` before creating source files.
+4. Implement M1 only:
+   - create `OneDriveServerTransfer.sln` at repository root;
+   - create the WPF application and automated-test projects;
+   - configure .NET 10 Windows targeting;
+   - add MVVM, dependency injection, structured logging, and configuration foundations;
+   - add SQLite dependency and schema foundation;
+   - add deterministic restore; and
+   - add mandatory Windows GitHub Actions.
+5. Execute the M1 validation required by the contract and commit M1 evidence tied to the exact validated source commit.
 
 ## M1 prohibitions
 
-- Do not start M1 while this branch remains unreviewed or replacement M0 evidence is absent.
 - Do not implement M2 authentication or later source, scan, or copy behavior during M1.
 - Do not create fake successful services or placeholder production behavior.
 - Do not add an employee-password path or employee impersonation.
