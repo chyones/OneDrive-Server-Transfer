@@ -14,29 +14,30 @@ The tool supports authorized operational backup, employee offboarding, and recov
 
 ## Current status
 
-**Documentation Ready — application implementation has not started.**
+**Workflow alignment in review — application implementation has not started.**
 
-Completed phase:
+Current branch phase:
 
 ```text
 M0 — Contract simplification and pre-implementation hardening
+Status: IN_PROGRESS
 ```
 
-Current evidence:
+Previous validated main evidence:
 
 ```text
 artifacts/evidence/M00_preimplementation-hardening_20260719T113850Z.json
 ```
 
-Current validated documentation baseline:
+Previous validated main baseline:
 
 ```text
 e9434ff54c373e1d0129ba2583027897f6f3ff25
 ```
 
-This branch updates the workflow contract and control documents. A replacement documentation-evidence summary will be added before the branch is presented for merge.
+The previous evidence does not validate this branch. M1 remains blocked until the workflow-alignment documentation is reviewed, merged, and replacement evidence is committed for the exact merged source commit.
 
-Next implementation phase:
+Next implementation phase after that gate:
 
 ```text
 M1 — Solution and CI foundation
@@ -182,8 +183,8 @@ The custom disk-index engine, JSONL state engine, and five-million-item release 
 
 ## Implementation phases
 
-- M0 — Contract simplification and pre-implementation hardening: complete after replacement evidence is committed for this workflow alignment
-- M1 — Solution and CI foundation
+- M0 — Contract simplification and pre-implementation hardening: in progress on this documentation branch
+- M1 — Solution and CI foundation: blocked pending reviewed merged M0 evidence
 - M2 — Microsoft authentication
 - M3 — Employee source resolution and validation
 - M4 — Local destination and source binding
