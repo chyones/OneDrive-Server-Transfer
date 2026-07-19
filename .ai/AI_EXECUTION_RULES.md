@@ -2,33 +2,35 @@
 
 ## Goal
 
-Build the approved application completely while preserving the binding contract and producing durable evidence at each milestone.
+Implement the simple internal OneDrive-to-local-server copy application defined in `IMPLEMENTATION_CONTRACT.md` and produce honest evidence at each milestone.
 
-## Before each work session
+## Before each session
 
-- Read `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` before the base contract.
-- Read current memory, phase status, decision log, handoff, evidence policy, and security requirements.
-- Inspect the repository rather than assuming prior work.
+- Read `AGENTS.md` and `IMPLEMENTATION_CONTRACT.md` first.
+- Read project memory, phase status, handoff, decision log, implementation plan, acceptance matrix, evidence policy, security requirements, and environment inputs.
+- Treat `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` as superseded history.
+- Inspect the repository instead of assuming prior work.
 - Identify the current phase and its exit criteria.
-- Confirm the previous completed phase has a committed evidence summary.
 
 ## During implementation
 
-- Work on one controlled milestone scope at a time.
-- Keep milestone commits or pull requests intentional and reviewable.
-- Keep production code separate from test doubles.
-- Use production components in the synthetic benchmark.
-- Do not simplify away large-scale, resume, integrity, reconciliation, recovery, audit, ACL, or reparse-point requirements.
-- Keep queues and memory bounded.
-- Calculate and store local SHA-256 for every completed file.
-- Revalidate destination containment during file operations, not only at startup.
-- Keep user-facing errors simple and reference coded.
-- Keep technical details in protected logs.
-- Do not add code for future out-of-scope features.
+- Work on one controlled phase scope at a time.
+- Keep commits and pull requests intentional and reviewable.
+- Do not expand the simple user workflow.
+- Keep production code separate from mocks and tests.
+- Use Graph v1.0 drive delta for inventory and reconciliation.
+- Use local SQLite state for reliable resume and recovery.
+- Keep queues, file streams, and metadata bounded in memory.
+- Use fixed concurrency of three, `.partial` files, safe Range resume, and bounded retries.
+- Calculate local SHA-256 and keep it separate from supported source-hash verification.
+- Bind each destination to one tenant, employee, and drive.
+- Revalidate destination containment throughout file operations.
+- Keep user-facing errors simple and technical details in protected logs.
+- Do not add future-scope placeholders.
 
 ## Evidence
 
-Store raw generated source evidence under:
+Store generated raw validation under:
 
 ```text
 artifacts/source
@@ -40,37 +42,35 @@ Store successful Windows publish output under:
 artifacts/win-x64
 ```
 
-Commit small redacted evidence summaries under:
+Commit small redacted summaries under:
 
 ```text
 artifacts/evidence
 ```
 
-Generated evidence must identify environment, source commit, command, result, time, exit code, relevant thresholds, raw artifact location, and limitations.
+Every completion summary must identify the exact validated source commit, environment, command or action, UTC time, result, exit code, relevant counts, raw artifact location where applicable, limitations, and redaction confirmation.
 
-A phase is not complete when its evidence exists only in an ignored local directory.
+A mutable branch name, checked box, verbal statement, ignored local file, or unexecuted command is not completion evidence.
 
 ## Memory updates
 
-After meaningful progress:
+After meaningful progress update:
 
-- `PROJECT_MEMORY.md`: durable facts only
-- `PHASE_STATUS.md`: status and exact committed evidence path
-- `DECISION_LOG.md`: material decisions and approved operational corrections
-- `HANDOFF.md`: exact current state and next action
+- `.ai/PROJECT_MEMORY.md` with durable facts only
+- `.ai/PHASE_STATUS.md` with justified status and evidence path
+- `.ai/DECISION_LOG.md` with material approved decisions
+- `.ai/HANDOFF.md` with exact current state and next action
 
-Do not use memory files to override the binding contract.
+Memory files do not override the current owner instruction or binding contract.
 
 ## Stop conditions
 
-Do not stop at planning or scaffolding.
+A phase may stop only for a genuine blocker such as:
 
-A genuine blocker may stop progress only when:
+- missing credentials or real tenant inputs
+- required compatible Windows validation
+- unresolved contract contradiction
+- security-sensitive change requiring owner approval
+- external Microsoft or environment behavior that cannot be validated safely
 
-- required credentials or real tenant values are absent
-- a compatible Windows environment is required for the next validation
-- a contract contradiction cannot be resolved safely
-- a security-sensitive change requires user approval
-- the required five-million-item manifest-index design cannot be implemented correctly under the current no-database rule
-
-When blocked, complete every unblocked task, record the blocker precisely, and never substitute fake evidence.
+Complete all unblocked work, record the blocker precisely, and never substitute fake evidence.
