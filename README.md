@@ -23,17 +23,19 @@ M0 — Contract simplification and pre-implementation hardening
 Status: DOCUMENTATION_COMPLETE
 ```
 
-Committed M0 evidence:
+Current committed M0 evidence:
 
 ```text
-artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json
+artifacts/evidence/M00_microsoft-platform-baseline_20260719T172157Z.json
 ```
 
 Validated documentation source commit:
 
 ```text
-c93b38b7e41ffbb50c82b4f8389e71ef511ac54d
+50e25cc9501ef22ad05ebe6abc1e7a96603efce2
 ```
+
+Previous workflow-alignment evidence remains in the repository for historical traceability.
 
 Current implementation phase:
 
