@@ -17,10 +17,13 @@ When instructions conflict, use this order:
 
 ## Current repository state
 
-- M0 contract simplification and pre-implementation hardening remains documentation-only.
+- M0 contract simplification and pre-implementation hardening is `DOCUMENTATION_COMPLETE`.
+- Committed M0 evidence: `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json`.
+- Validated documentation source commit: `c93b38b7e41ffbb50c82b4f8389e71ef511ac54d`.
 - Application implementation has not started.
-- The workflow-alignment documentation is being tied to replacement committed evidence before M1 starts.
-- Next phase: `M1 — Solution and CI foundation`.
+- Current phase: `M1 — Solution and CI foundation`.
+- M1 is authorized to start and is currently `NOT_STARTED`.
+- Mark M1 `IN_PROGRESS` before creating or changing source files.
 - Do not claim source code, Windows build, WPF execution, Microsoft sign-in, employee source resolution, dry run, OneDrive copy, resume, publish, or production validation without executed evidence.
 
 ## Product boundary

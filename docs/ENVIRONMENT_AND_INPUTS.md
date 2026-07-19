@@ -125,8 +125,9 @@ Temporary Microsoft download hosts vary. Requests to them must not include Graph
 |---|---:|---|
 | Original contract correction reviewed and merged | Before M1 | Complete — PR #2 |
 | Pre-implementation hardening reviewed and merged | Before M1 | Complete — PR #3, commit `e9434ff54c373e1d0129ba2583027897f6f3ff25` |
-| Workflow alignment reviewed and merged | Before M1 | In progress on documentation branch |
-| Replacement M0 evidence tied to workflow-alignment commit | Before M1 | Not yet committed |
+| Workflow alignment reviewed and merged | Before M1 | Complete — PR #5, commit `c93b38b7e41ffbb50c82b4f8389e71ef511ac54d` |
+| Replacement M0 evidence tied to workflow-alignment commit | Before M1 | Complete — `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json` |
+| M1 start authorization | Before source changes | Granted; mark M1 `IN_PROGRESS` before implementation |
 | Windows GitHub Actions workflows | Before source completion | Not started |
 | Main-branch required checks | Before protected implementation merges | Not confirmed |
 | Deterministic dependency restore | Yes | Not started |

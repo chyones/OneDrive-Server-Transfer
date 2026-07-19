@@ -12,8 +12,13 @@ This file contains durable project facts. Do not place transient logs, secrets, 
 - UI language: English
 - Application implementation started: No
 - Production ready: No
-- Current documentation amendment: UPN-or-URL source input, mandatory dry run, employee-password prohibition, report schema, and exact incomplete-result behavior
-- M1 may not start until the amendment is reviewed, merged, and replacement M0 evidence is committed
+- Documentation status: `Documentation Ready`
+- Completed documentation phase: `M0 — Contract simplification and pre-implementation hardening`
+- M0 evidence: `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json`
+- Validated documentation source commit: `c93b38b7e41ffbb50c82b4f8389e71ef511ac54d`
+- Current implementation phase: `M1 — Solution and CI foundation`
+- M1 status: `NOT_STARTED`
+- M1 start authorization: Granted; mark M1 `IN_PROGRESS` before creating source files
 
 ## Binding authority
 
