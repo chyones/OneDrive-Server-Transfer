@@ -122,22 +122,26 @@ FinalRunState
 IsArchiveComplete
 ```
 
+`SourceDriveId` is a protected audit field in the report file. It must not be shown as a raw identifier in the normal application UI.
+
 `IsArchiveComplete` is `true` only when `FinalRunState` is `Completed` or `CompletedWithWarnings`. It is always `false` for `Incomplete`, `Failed`, `Cancelled`, `Interrupted`, or `InProgress`.
 
 ## Dry-run summary
 
 The mandatory scan must produce the values needed for the UI preflight summary:
 
-- resolved employee;
-- signed-in operator;
+- resolved employee display name and UPN;
+- signed-in operator display identity;
 - source input mode;
-- source drive identity;
+- a safe source display identity, never the raw Microsoft Graph Drive ID or another protected Graph identifier;
 - file and folder counts;
 - known total bytes;
 - unsupported count;
 - path warnings;
 - destination and storage warnings; and
 - whether `Start Copy` may be enabled.
+
+Raw `SourceDriveId`, `SourceItemId`, tenant IDs, and other protected Graph identifiers remain in protected SQLite state and protected audit reports only. They must not appear in the normal scan screen, progress view, or user-facing error messages.
 
 The dry-run result must never claim that files were copied.
 
