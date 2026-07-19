@@ -17,11 +17,10 @@ When instructions conflict, use this order:
 
 ## Current repository state
 
-- M0 contract correction is `DOCUMENTATION_COMPLETE`.
-- Completion label: `Documentation Ready`.
+- M0 contract simplification and pre-implementation hardening is `DOCUMENTATION_COMPLETE` only after the current evidence file is tied to the reviewed baseline commit.
+- Completion label: `Documentation Ready` only when all control files and evidence agree.
 - Application implementation has not started.
 - Next phase: `M1 — Solution and CI foundation`.
-- M0 evidence: `artifacts/evidence/M00_contract-correction_20260719T110925Z.json`.
 - Do not claim source code, Windows build, WPF execution, Microsoft sign-in, OneDrive transfer, publish, or production validation without executed evidence.
 
 ## Product boundary
@@ -31,7 +30,7 @@ Implement one simple internal WPF application used by an IT administrator to:
 1. sign in with Microsoft;
 2. paste one employee OneDrive root URL;
 3. select a local destination on the same Windows Server;
-4. confirm the resolved employee and destination;
+4. confirm the resolved employee, authorized transfer account, and destination;
 5. press `Copy Data`; and
 6. monitor progress and review the result.
 
@@ -41,13 +40,21 @@ Do not add dashboards, multiple pages, scheduling, batch employee import, user m
 
 - Use C#, .NET 10 LTS, WPF, MVVM, Microsoft Graph v1.0, MSAL, dependency injection, local SQLite state, and automated tests.
 - Keep Microsoft 365 access strictly read-only.
+- Validate the configured tenant and authorized transfer-account object-ID allowlist when configured.
 - Use Graph drive delta for initial inventory and reconciliation.
 - Keep file and metadata processing bounded in memory.
+- Classify OneNote and other Graph package items as `Unsupported`; report them and never silently claim they were copied.
 - Use a fixed maximum of three simultaneous downloads.
 - Use `.partial` files, safe Range resume, source metadata revalidation, supported source hashes, and local SHA-256.
+- Preserve supported source timestamps and report failures as warnings.
 - Bind every destination to one tenant, employee, and drive.
 - Reject UNC, mapped, NAS, SMB, and remote destinations.
+- Require known remaining bytes plus the fixed 5 GiB destination reserve and fail safely on disk-full.
+- Implement the exact binding `PathMappingVersion = 1` rules and persist mappings.
 - Prevent traversal, unsafe reparse-point redirection, hard-link overwrite, and writes outside the selected destination.
+- Validate SQLite integrity before resume, back up before migration, migrate transactionally, and never silently reset corrupt state.
+- Use the approved item states and run states exactly.
+- Store every run's reports under `_TransferReport/Runs/<RunId>` without overwriting earlier reports.
 - Keep technical details in protected logs and show simple reference-coded errors in the UI.
 - Require removal and verification of temporary Site Collection Administrator access after it is no longer required.
 - Require BitLocker, approved equivalent, or documented approved exception for production storage.
@@ -68,7 +75,7 @@ At the end of a phase:
 2. Commit a redacted evidence summary under `artifacts/evidence`.
 3. Record the exact validated source commit.
 4. Update phase status, decision log, project memory, and handoff.
-5. Review for false claims, placeholders, secrets, and out-of-scope work.
+5. Review for false claims, placeholders, secrets, stale superseded controls, and out-of-scope work.
 
 Windows CI restore, Release build, and automated tests are mandatory before `Source Implementation Complete`.
 
@@ -80,6 +87,9 @@ Windows CI restore, Release build, and automated tests are mandatory before `Sou
 - A publish command is not a successful publish.
 - Source completion is not production readiness.
 - An unexecuted check is not passed.
+- A mutable branch name is not immutable evidence.
+- Unsupported package content is not copied content.
+- A warning state must not be reported as clean completion.
 
 ## Security
 
@@ -87,4 +97,4 @@ Never commit or print passwords, tokens, client secrets, authorization headers, 
 
 ## Final implementation report
 
-Report only the justified completion label, phase status, files changed, evidence paths and validated commits, restore/build/test/Windows/sign-in/transfer/resume/publish results, required configuration, and genuine blockers.
+Report only the justified completion label, phase status, files changed, evidence paths and validated commits, restore/build/test/Windows/sign-in/transfer/resume/publish results, required configuration, unsupported items, warning states, and genuine blockers.
