@@ -14,8 +14,9 @@ This file contains durable project facts. Do not place transient logs, secrets, 
 - Production ready: No
 - Documentation status: `Documentation Ready`
 - Completed documentation phase: `M0 — Contract simplification and pre-implementation hardening`
-- M0 evidence: `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json`
-- Validated documentation source commit: `c93b38b7e41ffbb50c82b4f8389e71ef511ac54d`
+- Current M0 evidence: `artifacts/evidence/M00_microsoft-platform-baseline_20260719T172157Z.json`
+- Validated documentation source commit: `50e25cc9501ef22ad05ebe6abc1e7a96603efce2`
+- Prior M0 workflow evidence: `artifacts/evidence/M00_workflow-alignment_20260719T124036Z.json`
 - Current implementation phase: `M1 — Solution and CI foundation`
 - M1 status: `NOT_STARTED`
 - M1 start authorization: Granted; mark M1 `IN_PROGRESS` before creating source files
@@ -29,6 +30,7 @@ This file contains durable project facts. Do not place transient logs, secrets, 
 - Required solution path: `./OneDriveServerTransfer.sln`.
 - The custom disk-index engine, JSONL state engine, and five-million-item release benchmark are not active first-release requirements.
 - Exact current phase status and evidence are recorded in `.ai/PHASE_STATUS.md`.
+- The Microsoft platform documents referenced by `AGENTS.md` are mandatory non-conflicting controls and do not expand version 1 scope.
 
 ## Product purpose and terminology
 
@@ -58,15 +60,40 @@ Changing the source or destination invalidates the previous scan and disables `S
 - WPF
 - MVVM
 - Microsoft Graph v1.0
-- MSAL
+- MSAL.NET
+- WAM-preferred authentication with MSAL system-browser fallback
 - dependency injection
 - structured logging
 - automated tests
 - embedded local SQLite transfer state
+- self-contained `win-x64` publish
+
+## Microsoft platform baseline
+
+- Microsoft Graph `v1.0` only; beta endpoints and beta SDK models are prohibited.
+- Version 1 uses delegated interactive authentication only.
+- Application permissions and Microsoft 365 write permissions are prohibited.
+- ROPC, device-code flow, client credentials, client secrets, certificates, managed identity, workload identity, and employee authentication are prohibited.
+- Implement only endpoints and permissions approved in `docs/GRAPH_ENDPOINT_PERMISSION_MATRIX.md`.
+- Request only required properties with `$select` where supported.
+- Preserve unknown JSON properties and enum values safely; do not guess unknown content as copied content.
+- Generate Graph request correlation IDs and retain Microsoft request IDs only in protected logs.
+- Preserve returned next links and delta links as opaque values.
+- Handle supported delta `410 Gone` through fresh enumeration and reconciliation, not SQLite reset.
+- Exactly one layer owns automatic retry for each HTTP request category.
+- Respect `Retry-After`; use bounded exponential backoff with jitter only when appropriate.
+- Use a separate unauthenticated HTTP client for temporary download hosts.
+- Never send Graph credentials to temporary download hosts and never persist temporary download URLs.
+- Apply Range requests to the actual temporary URL and resume only after valid `206 Partial Content` and `Content-Range`.
+- Ignore Microsoft Graph `sha256Hash`; use supported Microsoft source hashes when available and keep local SHA-256 separate.
+- Self-contained releases must be republished to receive later .NET runtime security patches.
+- Record exact .NET SDK, bundled runtime, MSAL, Graph SDK, Windows build, source commit, and artifact hash for releases.
+- Do not retain Production Ready status when the target Windows or bundled .NET runtime is out of support.
 
 ## Authentication rules
 
 - Interactive delegated MSAL for the authorized IT operator only.
+- WAM is preferred on supported Windows systems; system-browser fallback must remain supported.
 - Single configured tenant.
 - Public-client application with no client secret.
 - Read permissions only.
@@ -75,6 +102,8 @@ Changing the source or destination invalidates the previous scan and disables `S
 - Do not authorize by display name or mutable email address alone.
 - Never request, collect, store, log, transmit, or process an employee password.
 - Never authenticate as the employee.
+- Support MFA and Conditional Access through the official Microsoft sign-in experience.
+- Sign-out clears application-owned cache only and must not claim to sign out every Windows, WAM, or browser session.
 
 ## Source rules
 
@@ -86,15 +115,17 @@ Changing the source or destination invalidates the previous scan and disables `S
 - Do not traverse external `remoteItem` or shortcut content belonging to another drive.
 - Copy supported active file items, nested folders, and empty folders.
 - Classify OneNote notebooks and other Graph package items as `Unsupported`, report them, and mark the archive `Incomplete`.
+- Treat unknown content-affecting facets safely and do not claim them as copied.
 - Exclude Recycle Bin, previous versions, sharing metadata, comments, activity, compliance, and audit records.
 
 ## Mandatory dry run
 
 - A successful `Scan` is required before `Start Copy` is enabled.
-- Scan uses Microsoft Graph delta page by page.
+- Scan uses Microsoft Graph drive delta page by page.
 - Scan does not download employee file content.
 - Scan resolves source identity, inventories items, applies path mapping, calculates counts and known bytes, identifies unsupported items and warnings, validates destination binding and lock availability, and checks storage reserve.
 - Scan output is preflight information and is not evidence that content was copied.
+- Partial delta enumeration cannot enable `Start Copy`.
 
 ## Destination rules
 
@@ -113,7 +144,9 @@ Changing the source or destination invalidates the previous scan and disables `S
 ## Inventory, copy, and recovery
 
 - Use Microsoft Graph drive delta for dry-run inventory and reconciliation.
-- Persist the delta checkpoint.
+- Persist opaque delta checkpoints.
+- Process duplicate delta item occurrences by Drive Item ID and use the last occurrence in the completed sequence.
+- Handle source delta reset with fresh enumeration and reconciliation.
 - Keep pages, queues, hashing, and memory bounded.
 - Fixed maximum of three simultaneous downloads.
 - Use streaming and `.partial` files.
@@ -133,6 +166,8 @@ Changing the source or destination invalidates the previous scan and disables `S
 ## Integrity, timestamps, and path safety
 
 - Separate supported Microsoft source-hash verification from local SHA-256.
+- Prefer `quickXorHash` when available.
+- Do not use Microsoft Graph `sha256Hash`.
 - Calculate local SHA-256 for every completed file.
 - Preserve source creation and modification timestamps where Windows supports the values.
 - Timestamp failure is a non-content warning without invalidating verified bytes.
@@ -172,7 +207,7 @@ Interrupted
 
 - `Completed` requires a complete stable archive with no warning.
 - `CompletedWithWarnings` requires every supported item copied or validly skipped and only non-content warnings.
-- `Incomplete` means supported content failed, unsupported content exists, or the source did not stabilize.
+- `Incomplete` means supported content failed, unsupported or unknown content semantics exist, or the source did not stabilize.
 - Store each run under `_TransferReport/Runs/<RunId>`.
 - Implement `docs/REPORT_SCHEMA.md`.
 - Never overwrite or append to another run's reports.
@@ -183,11 +218,11 @@ Interrupted
 - Restricted NTFS permissions for archive data and token cache.
 - BitLocker, approved equivalent, or documented approved exception for production storage.
 - Temporary Site Collection Administrator access must be removed, verified, and externally recorded after it is no longer required.
-- Production Ready requires real Windows Server, authorized Microsoft sign-in, UPN and URL source resolution, mandatory dry run, employee OneDrive copy, correct incomplete reporting, resume, reconciliation, locking, disk-space, timestamp, report, security, and publish evidence.
+- Production Ready requires real Windows Server, authorized Microsoft sign-in, approved permission inventory, UPN and URL source resolution, mandatory dry run, employee OneDrive copy, delta reset, correct incomplete reporting, resume, reconciliation, retry, temporary URL isolation, Range behavior, hash behavior, locking, disk-space, timestamp, report, security, lifecycle, and publish evidence.
 
 ## Out of scope
 
-No dashboards, scheduling, batch employee processing, user management, service mode, central reporting, email notifications, remote destinations, employee-password collection, employee impersonation, OneNote/package export, custom disk-index engine, JSONL state engine, or five-million-item release benchmark.
+No dashboards, scheduling, batch employee processing, user management, service mode, central reporting, email notifications, remote destinations, employee-password collection, employee impersonation, application permissions, Graph beta, Microsoft 365 write access, OneNote/package export, custom disk-index engine, JSONL state engine, or five-million-item release benchmark.
 
 ## Values not yet provided
 
@@ -197,10 +232,13 @@ No dashboards, scheduling, batch employee processing, user management, service m
 - allowed OneDrive host
 - authorized transfer-account Entra object ID or IDs
 - dedicated transfer administrator email
+- approved exact MSAL.NET and Microsoft Graph SDK versions
+- approved .NET 10 SDK and servicing patch
 - test employee Entra object ID
 - test employee UPN and OneDrive root URL
 - Windows Server name, build, and execution account
 - local production destination
-- proxy status
+- proxy and TLS inspection status
 - production NTFS and BitLocker status
 - Authenticode certificate availability
+- secondary Windows Server 2022 or 2025 compatibility environment
