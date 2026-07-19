@@ -35,11 +35,22 @@ Only placeholder configuration and redacted evidence may be committed.
 - single-tenant public-client registration
 - MFA and Conditional Access support
 - `User.Read`, `Files.Read.All`, `Sites.Read.All`, `offline_access`, `openid`, and `profile`
+- configured-tenant validation
+- authorized transfer-account Entra object-ID allowlist when configured
+- no display-name or mutable-email-only authorization
 - no client secret
 - no write permission
 - Microsoft Graph v1.0 only
 
 Use a dedicated transfer administrator account where practical. Grant and remove employee OneDrive administrative access outside the application.
+
+## Source-content boundary
+
+- copy supported active file and folder items only
+- classify OneNote notebooks and other Graph package items as `Unsupported` in version 1
+- report unsupported items and never silently claim they were copied
+- reject external shortcut content belonging to another drive
+- exclude previous versions, Recycle Bin, sharing, compliance, and audit content
 
 ## Local destination security
 
@@ -47,20 +58,28 @@ Use a dedicated transfer administrator account where practical. Grant and remove
 - reject UNC, mapped drives, NAS, SMB, and remote destinations
 - bind each destination to one tenant, employee, and drive
 - reject another source or unsafe non-empty destination
+- use deterministic `PathMappingVersion = 1`
 - restrict NTFS access to authorized accounts
+- require known remaining bytes plus the fixed 5 GiB safety reserve
+- fail safely on disk-full without false completion
 - use BitLocker or an approved organizational equivalent or exception for production storage
 - do not broadly disable antivirus, EDR, firewall, or application-control protections
 
-## Integrity and containment
+## Integrity, state, and containment
 
 - use Graph delta inventory and persist checkpoints safely
 - use SQLite transactions for application state
+- validate SQLite integrity before resume
+- create protected backups before schema migrations
+- fail without silent reset when state is corrupt or migration fails
 - calculate local SHA-256 for completed files
 - distinguish local SHA-256 from supported Microsoft source-hash verification
+- preserve source timestamps where supported and report failures
 - prevent path traversal and unsafe reparse-point redirection
 - revalidate destination containment during file operations
 - do not follow or overwrite untrusted hard-linked destination files
 - never send Graph credentials to temporary download hosts
+- isolate reports by `_TransferReport\Runs\<RunId>`
 
 ## Reporting a security issue
 

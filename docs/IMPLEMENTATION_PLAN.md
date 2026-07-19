@@ -2,14 +2,14 @@
 
 This plan implements the simple workflow defined in `IMPLEMENTATION_CONTRACT.md`. It does not expand product scope.
 
-## M0 — Contract simplification and correction
+## M0 — Contract simplification and pre-implementation hardening
 
 **Status:** `DOCUMENTATION_COMPLETE`
 
-Evidence:
+Evidence is maintained under:
 
 ```text
-artifacts/evidence/M00_contract-correction_20260719T110925Z.json
+artifacts/evidence/
 ```
 
 Completed outcomes:
@@ -19,6 +19,9 @@ Completed outcomes:
 - local SQLite state is approved;
 - Graph delta is required for initial inventory and reconciliation;
 - destination source binding prevents employee-data mixing;
+- authorized transfer-account validation is defined;
+- OneNote and other package items have an explicit unsupported-and-report policy;
+- disk headroom, disk-full behavior, timestamp preservation, run states, per-run reports, path mapping, and SQLite corruption recovery are defined;
 - mandatory Windows CI, access-removal verification, and production storage protection are binding; and
 - obsolete five-million-item custom-index requirements are removed as first-release blockers.
 
@@ -49,15 +52,17 @@ Goals:
 
 - implement MSAL interactive sign-in;
 - support MFA and Conditional Access;
+- validate the configured tenant;
+- enforce the deployment allowlist of authorized transfer-account Entra object IDs when configured;
 - implement silent token acquisition and renewal;
 - protect persistent cache with Windows DPAPI;
 - implement remember-sign-in and sign-out semantics; and
-- ensure no client secret, write permission, token logging, or false session-clearing claim exists.
+- ensure no client secret, write permission, token logging, mutable-email-only authorization, or false session-clearing claim exists.
 
 Exit criteria:
 
 - authentication is isolated from UI code;
-- cache and redaction tests pass;
+- tenant, allowlist, cache, and redaction tests pass;
 - Windows CI passes; and
 - committed M2 evidence exists.
 
@@ -68,12 +73,13 @@ Goals:
 - validate HTTPS and configured tenant host;
 - resolve employee personal-site root and default Graph drive;
 - require `driveType = business` and actual drive root;
-- reject files, subfolders, consumer OneDrive, shared sources, SharePoint, Teams, and external tenants; and
-- show the resolved employee confirmation without exposing Graph IDs.
+- reject files, subfolders, consumer OneDrive, shared sources, SharePoint, Teams, and external tenants;
+- classify Microsoft Graph package items, including OneNote notebooks, as `Unsupported` rather than file or folder content; and
+- show the resolved employee and authorized transfer-account confirmation without exposing Graph IDs.
 
 Exit criteria:
 
-- source-validation matrix passes;
+- source-validation and package-classification matrices pass;
 - real-tenant behavior remains unclaimed until executed; and
 - committed M3 evidence exists.
 
@@ -84,16 +90,17 @@ Goals:
 - accept only local fixed or directly attached storage;
 - reject UNC, mapped, NAS, SMB, and remote destinations;
 - create `OneDriveData` and `_TransferReport`;
-- bind the destination to tenant, employee, and drive;
+- bind the destination to tenant, employee, drive, and authenticated transfer-account identity where required;
 - reject foreign or unsafe non-empty destinations;
 - implement cross-process and cross-session locking;
-- implement deterministic path mapping; and
-- validate containment, reparse points, hard links, NTFS permissions, and disk headroom.
+- implement the exact deterministic `PathMappingVersion = 1` rules;
+- validate containment, reparse points, hard links, and NTFS permissions; and
+- enforce known-byte headroom, the fixed 5 GiB reserve, and safe disk-full behavior.
 
 Exit criteria:
 
-- destination, binding, locking, and path-safety tests pass;
-- no operation can escape the selected root; and
+- destination, binding, locking, path-safety, and storage-capacity tests pass;
+- no operation can escape the selected root or overwrite unrelated content; and
 - committed M4 evidence exists.
 
 ## M5 — Copy, resume, verification, and local state
@@ -108,13 +115,17 @@ Goals:
 - implement retries and throttling;
 - verify source metadata and supported source hashes;
 - calculate local SHA-256;
-- persist transactional SQLite state; and
+- preserve source creation and modification timestamps with warning behavior;
+- persist transactional SQLite state;
+- implement integrity checks, protected pre-migration backup, transactional migrations, and safe corruption failure;
+- implement exact item and run states; and
 - support idempotent restart and rerun.
 
 Exit criteria:
 
-- inventory, resume, retry, integrity, SQLite, and recovery tests pass;
-- unrelated local files cannot be overwritten; and
+- inventory, resume, retry, integrity, timestamp, run-state, SQLite, migration, and recovery tests pass;
+- unrelated local files cannot be overwritten;
+- corrupt or unsupported state cannot be silently reset; and
 - committed M5 evidence exists.
 
 ## M6 — UI, errors, and reports
@@ -122,15 +133,17 @@ Exit criteria:
 Goals:
 
 - complete the single-window UI;
-- add progress, cancel, bounded activity, and final summary;
+- add progress, cancel, bounded activity, unsupported count, and final summary;
 - map failures to simple reference-coded errors;
-- create summary, complete, failed, and log reports; and
+- create one unique `Runs/<RunId>` report directory per run;
+- report failed and unsupported items, timestamp warnings, storage failures, reconciliation warnings, and terminal run state; and
 - protect CSV output from encoding and formula-injection problems.
 
 Exit criteria:
 
 - UI remains responsive;
-- no technical secrets or internals appear in normal errors;
+- no technical secrets or protected identifiers appear in normal errors;
+- earlier run reports cannot be overwritten;
 - reports and cancellation behavior pass tests; and
 - committed M6 evidence exists.
 
@@ -140,9 +153,10 @@ Goals:
 
 - run Windows Server 2019 Release build and tests;
 - start the WPF application;
-- complete Microsoft interactive sign-in;
+- complete Microsoft interactive sign-in with an authorized transfer account;
 - validate a real test-employee OneDrive;
-- perform complete copy, interruption, resume, reconciliation, and destination-lock tests;
+- perform complete copy, interruption, resume, reconciliation, destination-lock, disk-space, disk-full, timestamp, and report-isolation tests;
+- verify unsupported package-item reporting when a package item is present;
 - validate production NTFS and BitLocker/equivalent or approved exception;
 - remove and verify temporary Site Collection Administrator access; and
 - publish self-contained `win-x64`.

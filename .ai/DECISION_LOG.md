@@ -94,7 +94,7 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 - Context: The repository had accumulated controls that exceeded the actual operational need.
 - Decision: The administrator signs in, pastes one employee OneDrive root URL, selects a local destination, presses `Copy Data`, monitors progress, and reviews the result in one window.
 - Excluded: dashboards, scheduling, batch employee processing, service mode, remote destinations, central reporting, and advanced user-facing controls.
-- Approval: Repository owner explicitly restated the required workflow in the current conversation.
+- Approval: Repository owner explicitly restated the required workflow.
 
 ### D-016 — Local SQLite transfer state
 
@@ -123,10 +123,67 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 - Security impact: Prevents mixing data from different employees.
 - Test impact: Add mismatch and recovery tests.
 
-### D-019 — Previous M0 evidence is invalid
+### D-019 — Former M0 evidence invalidation
 
 - Date: 2026-07-19 UTC
 - Status: `APPROVED`
 - Context: The former M0 evidence recorded a mutable branch but no immutable source commit and was merged with an unresolved review comment.
-- Decision: Mark the former evidence `SUPERSEDED`, reset M0 to `IN_PROGRESS`, and create corrected evidence only after the contract correction is reviewed and merged.
+- Decision: Preserve the former evidence as historical only and require corrected evidence tied to an exact reviewed commit.
 - Test impact: Documentation evidence validation must reject summaries without an exact validated commit.
+
+### D-020 — Authorized transfer-account validation
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Verify the configured tenant after sign-in and support a deployment allowlist of authorized transfer-account Entra object IDs. Do not authorize by display name or mutable email address alone.
+- Security impact: Prevents operation under an unintended Microsoft account.
+- Test impact: Add tenant, object-ID allowlist, guest, and wrong-account rejection tests.
+
+### D-021 — Package items are reported as unsupported in version 1
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Context: Microsoft Graph package items, including OneNote notebooks, are neither ordinary file nor folder items.
+- Decision: Classify package items as `Unsupported`, include them in reports, and force `CompletedWithWarnings` unless a more severe terminal state applies. Never silently claim they were copied.
+- Scope impact: Exporting or reconstructing package content remains out of scope.
+- Test impact: Add package classification, reporting, and run-state tests.
+
+### D-022 — Fixed destination-space reserve
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Require known remaining bytes plus a fixed 5 GiB free-space reserve and recheck before each file when totals are incomplete or change.
+- Integrity impact: Disk-full or reserve failure stops new scheduling, preserves safe state, and cannot return `Completed`.
+- Test impact: Add preflight, changing-total, mid-run disk-full, partial preservation, and terminal-state tests.
+
+### D-023 — Preserve source timestamps
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Preserve source creation and modification timestamps on local files when Windows supports the values and apply directory timestamps after child processing.
+- Result impact: Timestamp failure is reported and produces `CompletedWithWarnings` without invalidating verified bytes.
+- Test impact: Add file, directory, unsupported-value, and warning tests.
+
+### D-024 — Exact run states and isolated reports
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Use `InProgress`, `Completed`, `CompletedWithWarnings`, `Failed`, `Cancelled`, and `Interrupted` run states. Store each run's reports under `_TransferReport/Runs/<RunId>` and never overwrite another run.
+- Audit impact: Preserves historical evidence and prevents ambiguous final outcomes.
+- Test impact: Add terminal-state truth-table and report-isolation tests.
+
+### D-025 — Deterministic `PathMappingVersion = 1`
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Use Unicode Form C, `_xHHHH_` encoding for unsafe characters and trailing dots or spaces, reserved-name prefixing, ordinal case-insensitive collision checks, a source-item-ID SHA-256 suffix, a 200 UTF-16-unit component limit, persistent mapping, and explicit failure when the final path remains unsupported.
+- Compatibility impact: Any mapping-rule change requires a new path-mapping version and migration decision.
+- Test impact: Add golden compatibility vectors and collision, length, Unicode, reserved-name, and resume tests.
+
+### D-026 — SQLite integrity and migration failure safety
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Validate SQLite integrity before resume, create a protected backup before schema migration, migrate transactionally, reject future schemas, and fail without silent reset or adoption when corruption or migration failure occurs.
+- Integrity impact: Existing employee content cannot be overwritten based on missing or untrusted state.
+- Test impact: Add integrity-check, backup, rollback, corruption, future-schema, and no-silent-reset tests.
