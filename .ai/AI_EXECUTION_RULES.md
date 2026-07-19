@@ -2,29 +2,42 @@
 
 ## Goal
 
-Implement the simple internal OneDrive-to-local-server copy application defined in `IMPLEMENTATION_CONTRACT.md` and produce honest evidence at each milestone.
+Implement the simple internal OneDrive-to-local-server archival-copy application defined in `IMPLEMENTATION_CONTRACT.md` and produce honest evidence at each milestone.
 
 ## Before each session
 
 - Read `AGENTS.md` and `IMPLEMENTATION_CONTRACT.md` first.
-- Read project memory, phase status, handoff, decision log, implementation plan, acceptance matrix, evidence policy, security requirements, and environment inputs.
+- Read project memory, phase status, handoff, decision log, implementation plan, acceptance matrix, evidence policy, security requirements, environment inputs, and report schema.
 - Treat `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` as superseded history.
 - Inspect the repository instead of assuming prior work.
 - Identify the current phase and its exit criteria.
+- Confirm the previous completed phase has committed evidence tied to an exact immutable commit.
 
 ## During implementation
 
 - Work on one controlled phase scope at a time.
 - Keep commits and pull requests intentional and reviewable.
-- Do not expand the simple user workflow.
+- Do not expand the simple one-window user workflow.
 - Keep production code separate from mocks and tests.
-- Use Graph v1.0 drive delta for inventory and reconciliation.
-- Use local SQLite state for reliable resume and recovery.
+- Never request, collect, store, log, transmit, or process an employee password.
+- Never authenticate as the employee.
+- Authenticate only the authorized IT operator through delegated MSAL.
+- Accept one employee UPN or OneDrive root URL as source-identification input.
+- Require a successful current `Scan` before enabling `Start Copy`.
+- Invalidate the scan when source or destination input changes.
+- Use Graph v1.0 drive delta for dry-run inventory and reconciliation.
+- Use local SQLite state as the operational source for scan, resume, recovery, and source binding.
+- Keep CSV and JSON as audit reports only and implement `docs/REPORT_SCHEMA.md`.
 - Keep queues, file streams, and metadata bounded in memory.
-- Use fixed concurrency of three, `.partial` files, safe Range resume, and bounded retries.
+- Use fixed concurrency of three, `.partial` files, safe Range resume, `Retry-After`, and bounded retries.
 - Calculate local SHA-256 and keep it separate from supported source-hash verification.
-- Bind each destination to one tenant, employee, and drive.
+- Bind each destination to one tenant, employee Entra object ID, and source drive.
+- Record operator identity for audit without permanently binding the archive to one operator.
 - Revalidate destination containment throughout file operations.
+- Preserve source item identity across rename and move.
+- Do not delete retained local archive content because the source item was deleted.
+- Return `Incomplete` when supported content fails, unsupported content exists, or the source does not stabilize.
+- Reserve `CompletedWithWarnings` for non-content warnings after every supported item was copied or validly skipped.
 - Keep user-facing errors simple and technical details in protected logs.
 - Do not add future-scope placeholders.
 

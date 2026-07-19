@@ -31,7 +31,7 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 ### D-004 — One employee OneDrive root per run
 
 - Status: `APPROVED`
-- Decision: Copy the active content of one employee OneDrive for Business root.
+- Decision: Copy the supported active content of one employee OneDrive for Business root.
 
 ### D-005 — Fixed concurrency
 
@@ -87,31 +87,30 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 
 ## Current approved decisions
 
-### D-015 — Simple IT workflow is the product boundary
+### D-015 — Original simple URL-only workflow
 
 - Date: 2026-07-19 UTC
-- Status: `APPROVED`
-- Context: The repository had accumulated controls that exceeded the actual operational need.
-- Decision: The administrator signs in, pastes one employee OneDrive root URL, selects a local destination, presses `Copy Data`, monitors progress, and reviews the result in one window.
-- Excluded: dashboards, scheduling, batch employee processing, service mode, remote destinations, central reporting, and advanced user-facing controls.
-- Approval: Repository owner explicitly restated the required workflow.
+- Status: `SUPERSEDED`
+- Former decision: The administrator signs in, pastes one employee OneDrive root URL, selects a local destination, presses `Copy Data`, monitors progress, and reviews the result in one window.
+- Replaced by: D-027.
+- Reason: The revised workflow keeps the same one-window simplicity while accepting employee UPN or root URL and requiring a safety scan before copy.
 
 ### D-016 — Local SQLite transfer state
 
 - Date: 2026-07-19 UTC
 - Status: `APPROVED`
-- Context: Reliable resume, crash recovery, source binding, and lookup are required, but a custom JSONL database engine is unnecessary.
+- Context: Reliable scan, resume, crash recovery, source binding, and lookup are required, but a custom JSONL database engine is unnecessary.
 - Decision: Use one local SQLite file at `_TransferReport/TransferState.db`. SQLite is embedded and requires no database server.
 - Security impact: State database must not contain tokens, passwords, temporary URLs, or employee file contents and must be protected by NTFS permissions.
 - Compatibility impact: Replaces the custom five-million-item index requirement.
-- Test impact: Add transaction, recovery, schema-version, and corruption-handling tests.
+- Test impact: Add transaction, scan-state, recovery, schema-version, and corruption-handling tests.
 
 ### D-017 — Graph delta inventory and reconciliation
 
 - Date: 2026-07-19 UTC
 - Status: `APPROVED`
 - Context: The application needs a complete page-by-page initial inventory and reliable detection of changes without retaining the full hierarchy in memory.
-- Decision: Use Microsoft Graph v1.0 drive delta for initial inventory, persist the delta checkpoint, and use up to three bounded reconciliation passes.
+- Decision: Use Microsoft Graph v1.0 drive delta for dry-run inventory, persist the delta checkpoint, and use up to three bounded reconciliation passes.
 - Security impact: Read-only Graph calls only.
 - Test impact: Add paging, checkpoint, restart, deletion, move, rename, and continued-change tests.
 
@@ -119,7 +118,7 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 
 - Date: 2026-07-19 UTC
 - Status: `APPROVED`
-- Decision: Bind each destination to Tenant ID, source Drive ID, and protected employee identity. Reject another source or an unsafe non-empty destination.
+- Decision: Bind each destination to Tenant ID, source Drive ID, and employee Entra object ID. Reject another source or an unsafe non-empty destination.
 - Security impact: Prevents mixing data from different employees.
 - Test impact: Add mismatch and recovery tests.
 
@@ -139,12 +138,13 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 - Security impact: Prevents operation under an unintended Microsoft account.
 - Test impact: Add tenant, object-ID allowlist, guest, and wrong-account rejection tests.
 
-### D-021 — Package items are reported as unsupported in version 1
+### D-021 — Package items are unsupported in version 1
 
 - Date: 2026-07-19 UTC
 - Status: `APPROVED`
 - Context: Microsoft Graph package items, including OneNote notebooks, are neither ordinary file nor folder items.
-- Decision: Classify package items as `Unsupported`, include them in reports, and force `CompletedWithWarnings` unless a more severe terminal state applies. Never silently claim they were copied.
+- Decision: Classify package items as `Unsupported`, include them in reports, and never silently claim they were copied.
+- Result impact: Superseded by D-029; package items now require final run state `Incomplete` unless a more severe state applies.
 - Scope impact: Exporting or reconstructing package content remains out of scope.
 - Test impact: Add package classification, reporting, and run-state tests.
 
@@ -153,7 +153,7 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 - Date: 2026-07-19 UTC
 - Status: `APPROVED`
 - Decision: Require known remaining bytes plus a fixed 5 GiB free-space reserve and recheck before each file when totals are incomplete or change.
-- Integrity impact: Disk-full or reserve failure stops new scheduling, preserves safe state, and cannot return `Completed`.
+- Integrity impact: Disk-full or reserve failure stops new scheduling, preserves safe state, and cannot return `Completed` or `CompletedWithWarnings`.
 - Test impact: Add preflight, changing-total, mid-run disk-full, partial preservation, and terminal-state tests.
 
 ### D-023 — Preserve source timestamps
@@ -161,16 +161,16 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 - Date: 2026-07-19 UTC
 - Status: `APPROVED`
 - Decision: Preserve source creation and modification timestamps on local files when Windows supports the values and apply directory timestamps after child processing.
-- Result impact: Timestamp failure is reported and produces `CompletedWithWarnings` without invalidating verified bytes.
+- Result impact: Timestamp failure is reported and produces `CompletedWithWarnings` only when every supported item was copied or validly skipped.
 - Test impact: Add file, directory, unsupported-value, and warning tests.
 
-### D-024 — Exact run states and isolated reports
+### D-024 — Original run-state set
 
 - Date: 2026-07-19 UTC
-- Status: `APPROVED`
-- Decision: Use `InProgress`, `Completed`, `CompletedWithWarnings`, `Failed`, `Cancelled`, and `Interrupted` run states. Store each run's reports under `_TransferReport/Runs/<RunId>` and never overwrite another run.
-- Audit impact: Preserves historical evidence and prevents ambiguous final outcomes.
-- Test impact: Add terminal-state truth-table and report-isolation tests.
+- Status: `SUPERSEDED`
+- Former decision: Use `InProgress`, `Completed`, `CompletedWithWarnings`, `Failed`, `Cancelled`, and `Interrupted` run states.
+- Replaced by: D-029.
+- Reason: Missing or unsupported content must not be represented as a successful completion with a warning.
 
 ### D-025 — Deterministic `PathMappingVersion = 1`
 
@@ -187,3 +187,55 @@ Use UTC dates. Do not delete historical decisions. Mark changed decisions as `SU
 - Decision: Validate SQLite integrity before resume, create a protected backup before schema migration, migrate transactionally, reject future schemas, and fail without silent reset or adoption when corruption or migration failure occurs.
 - Integrity impact: Existing employee content cannot be overwritten based on missing or untrusted state.
 - Test impact: Add integrity-check, backup, rollback, corruption, future-schema, and no-silent-reset tests.
+
+### D-027 — UPN-or-URL source input with mandatory dry run
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Context: IT needs a simpler and more reliable source identifier than a URL-only workflow, while copy must not begin before scope and storage are understood.
+- Decision: Use one source field that accepts employee UPN or OneDrive for Business root URL. Require `Scan` before `Start Copy`. The scan resolves the employee and drive, completes delta inventory, calculates counts and known bytes, applies path mapping, reports unsupported items and warnings, and validates destination and storage without downloading employee file content.
+- UI impact: One window remains; changing source or destination invalidates the scan.
+- Test impact: Add UPN, URL, scan, stale-scan, and preflight-summary tests.
+
+### D-028 — Employee credentials are prohibited
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Never request, collect, store, log, transmit, or process an employee password and never authenticate as the employee. The authorized IT operator remains the authenticated actor.
+- Security impact: Preserves accountable IT activity and avoids employee impersonation.
+- Test impact: Add UI, configuration, model, logging, and static checks for prohibited employee-password paths.
+
+### D-029 — Exact run states include `Incomplete`
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Use `InProgress`, `Completed`, `CompletedWithWarnings`, `Incomplete`, `Failed`, `Cancelled`, and `Interrupted`.
+- `Completed`: all supported content copied or validly skipped, no warning, stable reconciliation.
+- `CompletedWithWarnings`: all supported content copied or validly skipped and only non-content warnings remain.
+- `Incomplete`: supported content failed, unsupported content exists, or the source did not stabilize.
+- Audit impact: Prevents an incomplete archive from appearing successful.
+- Test impact: Add terminal-state truth-table and archive-completeness tests.
+
+### D-030 — Deterministic residual-collision fallback
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Start the path collision suffix with the first 10 SHA-256 hexadecimal characters of the source Drive Item ID. If a collision remains, expand to 20 characters and then the complete hash. Never use random or order-dependent suffixes.
+- Compatibility impact: This behavior is part of `PathMappingVersion = 1` before implementation begins.
+- Test impact: Add forced residual-collision vectors.
+
+### D-031 — Report schema and operational authority
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Implement `docs/REPORT_SCHEMA.md`. SQLite remains the operational source for scan, resume, recovery, and source binding. CSV and JSON are protected human-readable audit reports only.
+- Security impact: Reports require UTF-8, CSV formula-injection protection, sanitized errors, and secret redaction.
+- Test impact: Add schema, encoding, escaping, redaction, and authority tests.
+
+### D-032 — Durable employee identity and operator audit
+
+- Date: 2026-07-19 UTC
+- Status: `APPROVED`
+- Decision: Bind the destination to Tenant ID, employee Entra object ID, and source Drive ID. Record normalized employee UPN and signed-in operator UPN for display and audit. Do not bind the archive permanently to one operator.
+- Recovery impact: Another authorized operator may resume only after tenant, employee, drive, destination, SQLite state, and authorization checks match.
+- Test impact: Add UPN-change, operator-change, allowed-resume, and rejected-resume tests.
