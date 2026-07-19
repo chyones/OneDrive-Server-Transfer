@@ -1,31 +1,39 @@
 # Project Memory
 
-This file contains durable project facts for future AI sessions. Do not place transient logs, secrets, or speculative ideas here.
+This file contains durable project facts. Do not place transient logs, secrets, or speculative ideas here.
 
 ## Identity
 
 - Project: OneDrive Server Transfer
 - Repository: `chyones/OneDrive-Server-Transfer`
-- Product type: Native Windows desktop application
-- Primary operator: IT employee
+- Product type: Internal Windows desktop application
+- Primary operator: Authorized IT administrator
 - Runtime target: Windows Server 2019 x64 with Desktop Experience
 - UI language: English
-- Current state: Documentation Ready; implementation not started
-- M0 state: `DOCUMENTATION_COMPLETE`
+- Current state: M0 contract correction in progress; application implementation not started
 
 ## Binding authority
 
-- `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` has highest repository-contract authority.
-- `IMPLEMENTATION_CONTRACT.md` remains binding except where explicitly amended.
-- The repository root is the project root.
+- Current explicit repository-owner instructions have highest project authority.
+- `IMPLEMENTATION_CONTRACT.md` is the single binding repository contract.
+- `IMPLEMENTATION_CONTRACT_AMENDMENTS.md` is superseded and retained only for history.
+- Repository root is the project root.
 - Required solution path: `./OneDriveServerTransfer.sln`.
-- Do not create a nested `./OneDriveServerTransfer` project container.
 
-## Fixed product purpose
+## Product purpose and workflow
 
-Create a complete local file-and-folder backup of the active in-scope content of one employee's Microsoft 365 OneDrive.
+Copy the active files and folders from one employee's Microsoft 365 OneDrive for Business root to a local destination selected by the IT administrator on the same Windows Server.
 
-The administrator manually receives Site Collection Administrator access outside the application. The application validates the employee OneDrive root and copies data to local storage attached to the same Windows Server.
+The user workflow is:
+
+1. Open the application.
+2. Sign in with Microsoft.
+3. Paste the employee OneDrive root URL.
+4. Select the local destination.
+5. Press `Copy Data`.
+6. Monitor progress and review the result.
+
+The application remains read-only against Microsoft 365.
 
 ## Fixed technology
 
@@ -35,102 +43,84 @@ The administrator manually receives Site Collection Administrator access outside
 - MVVM
 - Microsoft Graph v1.0
 - MSAL
-- Dependency injection
-- Structured logging
-- Automated tests
+- dependency injection
+- structured logging
+- automated tests
+- embedded local SQLite transfer state
 
-## Fixed security decisions
+## Source rules
 
-- Read-only against Microsoft 365
-- Delegated interactive sign-in
-- No client secret
-- No password storage
-- No Graph beta
-- No SharePoint REST or CSOM fallback
-- Temporary download URLs receive no Graph bearer token
-- Secrets and employee content never enter GitHub
-- Local SHA-256 is stored for every completed file
-- Destination containment is revalidated during file operations
-- Production destination and reports require a restricted NTFS ACL baseline
-- Production storage requires BitLocker or an approved documented equivalent or exception
-- Site Collection Administrator access is removed and externally recorded after it is no longer required
+- Accept one employee OneDrive for Business root in the configured tenant.
+- Require `driveType = business` and the actual drive root.
+- Reject consumer OneDrive, files, subfolders, shared-folder sources, SharePoint libraries, Teams libraries, and external tenants.
+- Do not traverse external `remoteItem` or shortcut content belonging to another drive.
+- Copy active files, nested folders, and empty folders.
+- Exclude Recycle Bin, previous versions, sharing metadata, comments, activity, compliance, and audit records.
 
-## Fixed source rules
+## Destination rules
 
-- Accept employee personal OneDrive site root URL
-- Resolve default Graph drive root
-- Require OneDrive for Business `driveType = business`
-- Reject consumer `personal`
-- Reject SharePoint/Teams `documentLibrary`
-- Reject file, subfolder, shared-folder, and external-tenant sources
-- Do not traverse external `remoteItem` content
+- Administrator selects any local attached destination on the same Windows Server.
+- Reject UNC, mapped drives, NAS, SMB, remote storage, and unsafe redirection.
+- Create `OneDriveData` and `_TransferReport`.
+- Bind destination to Tenant ID, source Drive ID, and protected employee identity.
+- Reject a destination associated with another source.
+- Lock destination across processes and Windows sessions.
 
-## Fixed destination rules
+## Inventory, transfer, and recovery
 
-- Local attached storage only
-- Reject UNC, mapped drives, NAS, SMB, remote storage, and unsafe reparse points
-- Destination structure:
-  - `OneDriveData`
-  - `_TransferReport`
-- Lock destination across processes and Windows sessions
-- Prevent reparse-point time-of-check/time-of-use redirection throughout transfer operations
+- Use Microsoft Graph drive delta for initial complete inventory and reconciliation.
+- Persist the delta checkpoint.
+- Process pages and queues with bounded memory.
+- Fixed maximum of three simultaneous downloads.
+- Use streaming and `.partial` files.
+- Resume with valid HTTP Range responses and restart safely when Range is ignored or invalid.
+- Never send Graph credentials to temporary download hosts.
+- Retry transient failures up to five attempts per file.
+- Use up to three bounded reconciliation passes and return warnings when the source does not stabilize.
+- Store state in `_TransferReport/TransferState.db` using SQLite transactions.
+- Recovery must be idempotent.
 
-## Fixed transfer and integrity rules
+## Integrity and path safety
 
-- Bounded page-by-page enumeration
-- Fixed maximum of three simultaneous file downloads
-- Streaming downloads
-- `.partial` files
-- Byte-range resume where supported
-- Post-download metadata revalidation
-- Source hash verification when Graph provides a supported hash
-- Streaming local SHA-256 for every completed file
-- Three reconciliation passes maximum
-- Backup behavior, not synchronization
-- Never delete local backup solely because source changed or disappeared
-- Retry attempts must remain between 1 and 5 inclusive
+- Separate supported Microsoft source-hash verification from local SHA-256.
+- Calculate local SHA-256 for every completed file.
+- Never overwrite an unrelated local file.
+- Use deterministic `PathMappingVersion = 1`.
+- Prevent traversal, unsafe reparse-point redirection, and untrusted hard-link overwrite behavior.
+- Validate containment throughout file operations.
 
-## Manifest architecture
+## User interface
 
-- `ManifestVersion = 1`
-- `PathMappingVersion = 1`
-- A small list of JSONL segments is not sufficient as the five-million-item lookup index.
-- Before M5, record an approved disk-based index design covering lookup keys, crash safety, recovery, complexity, and benchmark behavior.
-- The no-database rule remains binding unless explicitly amended by the user.
+One WPF window only:
 
-## Evidence rules
+- Microsoft sign-in controls
+- employee OneDrive URL
+- destination selector
+- `Copy Data` and `Cancel`
+- simple progress counts and progress bar
+- bounded recent activity
+- simple reference-coded errors
 
-- Raw generated source evidence: `artifacts/source`
-- Generated Windows publish output: `artifacts/win-x64`
-- Small redacted committed evidence summaries: `artifacts/evidence`
-- A phase-status claim without its required committed evidence summary is not valid completion evidence.
+No dashboards, scheduling, batch employee processing, user management, service mode, central reporting, email notifications, or remote destinations.
 
-## Scale target
+## Evidence and completion truth
 
-- At least 5,000,000 files and folders
-- Several terabytes
-- Multi-day runs
-- Peak managed heap below 1 GiB under the default compatible-Windows benchmark configuration
-- Production components must be used by the synthetic benchmark
-
-## Completion truth
-
-- macOS can support source preparation only.
-- Production Ready requires actual Windows, security, supply-chain, and real-tenant validation.
-- Current label: `Documentation Ready`.
+- Former M0 evidence is superseded because it omitted an immutable validated source commit.
+- M0 remains `IN_PROGRESS` until corrected documents are reviewed, merged, and evidenced against the exact merged commit.
+- Cross-platform checks are not Windows validation.
+- Source implementation is not Production Ready.
+- Production Ready requires actual Windows Server, Microsoft sign-in, real OneDrive copy, resume, reconciliation, locking, security, and publish evidence.
 
 ## Values not yet provided
 
-- Tenant name
-- Tenant domain
+- tenant name and domain
 - Tenant ID
-- Client ID
-- Allowed OneDrive host
-- Administrator email
-- Test employee email and OneDrive root URL
-- Windows Server name/build/account
-- Local destination root
-- Proxy status
-- Production ACL baseline confirmation
-- Production volume-encryption status
+- Entra Client ID
+- allowed OneDrive host
+- dedicated transfer administrator email
+- test employee identity and OneDrive root URL
+- Windows Server name, build, and execution account
+- local production destination
+- proxy status
+- production NTFS and BitLocker status
 - Authenticode certificate availability
