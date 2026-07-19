@@ -9,13 +9,14 @@ Last updated: 2026-07-19 UTC
 - Production ready: No
 - Current phase: `M0 — Repository and contract readiness`
 - Current phase status: `DOCUMENTATION_COMPLETE`
+- Current evidence: `artifacts/evidence/M00_documentation-readiness_20260719.json`
 - Next phase: `M1 — Solution foundation and enforceable CI foundation`
 
 ## Phase table
 
 | Phase | Status | Evidence | Notes |
 |---|---|---|---|
-| M0 Repository and contract readiness | DOCUMENTATION_COMPLETE | Repository contract, amendments, security controls, and project-control documents | No application code |
+| M0 Repository and contract readiness | DOCUMENTATION_COMPLETE | `artifacts/evidence/M00_documentation-readiness_20260719.json` | No application code |
 | M1 Solution foundation and enforceable CI foundation | NOT_STARTED | None | Next phase; solution belongs at repository root |
 | M2 Authentication and configuration | NOT_STARTED | None |  |
 | M3 OneDrive root resolution and validation | NOT_STARTED | None |  |
