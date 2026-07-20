@@ -1,0 +1,160 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M2 — Microsoft authentication",
+  "completionState": "SOURCE_COMPLETE",
+  "validatedSourceCommit": "a1afd839e79f86e01e44a9f40a46b4b46363a988",
+  "executedAtUtc": "2026-07-20T09:54:37Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/m2-microsoft-authentication",
+    "authoritativeValidation": "GitHub Actions Windows CI",
+    "windowsCiRunnerImage": "windows-2025-vs2026 (20260714.173.1)",
+    "dotnetSdk": "10.0.301 (pinned by global.json, rollForward latestPatch)",
+    "supplementaryLocalChecks": "macOS arm64, .NET SDK 10.0.301, EnableWindowsTargeting=true; local test execution not possible because the WPF test assembly requires the Windows Desktop runtime"
+  },
+  "microsoftPlatformReview": {
+    "reviewedAtUtc": "2026-07-20",
+    "documentsReviewed": [
+      "https://learn.microsoft.com/entra/msal/dotnet/acquiring-tokens/desktop-mobile/wam"
+    ],
+    "confirmedBehavior": [
+      "WAM is supported on Windows Server 2019 and later; MSAL automatically falls back to a browser when WAM cannot be used.",
+      "WithBroker(BrokerOptions) with a parent window handle is the required WAM integration; interactive sign-in is user-initiated; silent acquisition is attempted before interactive.",
+      "Microsoft.Identity.Client 4.61.0 and later requires the Microsoft.Identity.Client.Broker package for net-windows targets; this build uses Microsoft.Identity.Client and Microsoft.Identity.Client.Broker 4.86.1.",
+      "WAM requires an interactive Windows user session; this application has no service or scheduled mode.",
+      "The broker redirect URI (ms-appx-web://microsoft.aad.brokerplugin/{client_id}) is an app-registration deployment value and remains external to this repository."
+    ],
+    "packageApiVerification": "The exact MSAL 4.86.1 API surface (IsBrokerAvailable, WithBroker, MsalUiRequiredException.Classification, SubErrorForLogging, AccountId.TenantId/ObjectId) was verified against the restored package assemblies, not assumed from memory."
+  },
+  "validatedActions": [
+    {
+      "action": "Deterministic dependency restore on Windows",
+      "command": "dotnet restore OneDriveServerTransfer.sln --locked-mode",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "action": "Release build and static analysis on Windows",
+      "command": "dotnet build OneDriveServerTransfer.sln --configuration Release --no-restore",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "0 warnings, 0 errors. .NET analyzers enabled; warnings treated as errors in CI."
+    },
+    {
+      "action": "Automated tests on Windows",
+      "command": "dotnet test OneDriveServerTransfer.sln --configuration Release --no-build",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": {
+        "total": 136,
+        "passed": 136,
+        "failed": 0,
+        "skipped": 0
+      },
+      "details": "Coverage: configuration validation, tenant match/mismatch, guest-account rejection, operator allowlist success/rejection/empty, WAM-preferred selection, system-browser fallback, silent-token success and interaction-required, cancellation and consent classification, 401/403 classification, truthful sign-out semantics, DPAPI cache round-trip/tamper/corruption/reset-safety, cache-file ACL restriction, persistence-disabled behavior, log redaction, DI registration including absence of later-phase services, view-model sign-in/sign-out/remember/loading/error states, no employee-password surface, no prohibited authentication flows, and no M3+ employee-resolution or transfer behavior."
+    },
+    {
+      "action": "Dependency vulnerability review",
+      "command": "dotnet list OneDriveServerTransfer.sln package --vulnerable --include-transitive",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "No vulnerable packages detected."
+    },
+    {
+      "action": "Prohibited authentication and API checks",
+      "command": "./scripts/Test-ProhibitedContent.ps1",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "47 source and build files scanned for 15 prohibited patterns (Graph beta, application permissions, write permissions, ROPC-style acquisition, device-code flow, client secrets, certificates, employee-password UI). No matches."
+    },
+    {
+      "action": "Secret detection",
+      "command": "gitleaks/gitleaks-action@v2 (full history)",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "Gitleaks reported: no leaks found. No real tenant values, client IDs, account IDs, or credentials were committed; appsettings.example.json contains placeholders only."
+    },
+    {
+      "action": "No M3 or later-phase behavior",
+      "command": "dotnet test (NoLaterPhaseBehaviorTests) plus source scans",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "The only Microsoft Graph endpoint referenced in source is the approved operator /me endpoint (GRAPH-AUTH-001). No employee UPN resolution, drive resolution, delta inventory, scan, transfer, destination binding, resume, or report behavior exists."
+    }
+  ],
+  "ciEvidence": {
+    "workflow": ".github/workflows/windows-ci.yml",
+    "passingRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29732929639",
+    "passingRunConclusion": "success",
+    "passingRunHeadSha": "a1afd839e79f86e01e44a9f40a46b4b46363a988",
+    "earlierFailedRuns": [
+      {
+        "run": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29725968178",
+        "note": "Commit e15b78d failed restore: NU1510 warning-as-error for the redundant System.Security.Cryptography.ProtectedData package (inbox in .NET 10). Removed in a95bbd2."
+      },
+      {
+        "run": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29731912697",
+        "note": "Commit a95bbd2 failed 2 tests: an obsolete M1 lock-file assertion (MSAL is the approved M2 dependency) and a test harness that bypassed options validation. Fixed in a1afd83."
+      }
+    ]
+  },
+  "packageVersions": {
+    "Microsoft.Identity.Client": "4.86.1",
+    "Microsoft.Identity.Client.Broker": "4.86.1",
+    "Microsoft.Extensions.Http": "10.0.10",
+    "System.IO.FileSystem.AccessControl": "5.0.0",
+    "Microsoft.Data.Sqlite": "10.0.10",
+    "Microsoft.Extensions.Hosting": "10.0.10",
+    "Microsoft.Extensions.Options.DataAnnotations": "10.0.10",
+    "Serilog.Extensions.Hosting": "10.0.0",
+    "Serilog.Settings.Configuration": "10.0.1",
+    "Serilog.Sinks.File": "7.0.0",
+    "SQLitePCLRaw.bundle_e_sqlite3": "2.1.12",
+    "Microsoft.NET.Test.Sdk": "18.8.1",
+    "xunit": "2.9.3",
+    "xunit.runner.visualstudio": "3.1.5"
+  },
+  "approvedScopeSet": [
+    "User.Read",
+    "Files.Read.All",
+    "Sites.Read.All",
+    "offline_access",
+    "openid",
+    "profile"
+  ],
+  "exercisedEndpointTemplates": [
+    "GET https://graph.microsoft.com/v1.0/me?$select=id,userPrincipalName,displayName (validated via stubbed HTTP handler; no live tenant call)"
+  ],
+  "result": "PASS",
+  "exitCode": 0,
+  "statusConclusion": {
+    "completionLabel": "Source Implementation Complete remains unearned (later milestones pending)",
+    "m2Status": "SOURCE_COMPLETE",
+    "applicationImplementationStarted": true,
+    "productionReady": false
+  },
+  "unexecutedChecks": [
+    "actual Microsoft interactive sign-in with a real authorized transfer account (M7)",
+    "WAM behavior and controlled browser fallback on Windows Server 2019 (M7)",
+    "MFA and Conditional Access challenge handling against a real tenant (M7)",
+    "employee UPN and OneDrive-root resolution (M3)",
+    "scan, copy, resume, verification (M5)",
+    "reports (M6)",
+    "self-contained win-x64 publish (M7/M8)"
+  ],
+  "limitations": [
+    "All sign-in flows are unit-tested behind a test double for the MSAL boundary; no live tenant authentication was performed or claimed.",
+    "The DPAPI cache protector is exercised on the Windows CI runner; interactive WAM and system-browser experiences remain M7 production-acceptance checks.",
+    "The broker redirect URI and approved app registration are deployment values external to this repository (docs/ENVIRONMENT_AND_INPUTS.md).",
+    "Local macOS checks were supplementary only; mandatory evidence comes from Windows CI on the exact validated commit."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}

@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OneDriveServerTransfer.Abstractions;
+using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.DependencyInjection;
 using OneDriveServerTransfer.State;
@@ -11,16 +12,24 @@ using OneDriveServerTransfer.ViewModels;
 namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
-/// Verifies the dependency-injection composition root: M1 services resolve, and no
-/// later-phase abstraction has a registered implementation (fake production services
+/// Verifies the dependency-injection composition root: M1 and M2 services resolve, and
+/// no later-phase abstraction has a registered implementation (fake production services
 /// are prohibited).
 /// </summary>
 public class DependencyRegistrationTests
 {
+    private static readonly (string Key, string Value)[] ValidAuthConfiguration =
+    [
+        ("Authentication:TenantId", "11111111-1111-1111-1111-111111111111"),
+        ("Authentication:ClientId", "22222222-2222-2222-2222-222222222222"),
+        ("Authentication:RedirectUri", "http://localhost"),
+    ];
+
     private static ServiceProvider BuildProvider()
     {
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection()
+            .AddInMemoryCollection(ValidAuthConfiguration.Select(pair =>
+                new KeyValuePair<string, string?>(pair.Key, pair.Value)))
             .Build();
 
         var services = new ServiceCollection();
@@ -29,7 +38,7 @@ public class DependencyRegistrationTests
     }
 
     [Fact]
-    public void ResolvesM1FoundationServices()
+    public void ResolvesFoundationServices()
     {
         using var provider = BuildProvider();
 
@@ -41,9 +50,23 @@ public class DependencyRegistrationTests
             provider.GetRequiredService<ITransferStateSchemaInitializer>());
     }
 
+    [Fact]
+    public void ResolvesRealM2AuthenticationServices()
+    {
+        using var provider = BuildProvider();
+
+        Assert.IsType<MsalAuthenticationService>(provider.GetRequiredService<IAuthenticationService>());
+        Assert.IsType<MsalIdentityClient>(provider.GetRequiredService<IIdentityClient>());
+        Assert.IsType<OperatorValidator>(provider.GetRequiredService<IOperatorValidator>());
+        Assert.IsType<WamPreferredBrokerSelector>(provider.GetRequiredService<IBrokerSelector>());
+        Assert.IsType<DpapiTokenCacheProtector>(provider.GetRequiredService<ITokenCacheProtector>());
+        Assert.NotNull(provider.GetRequiredService<ITokenCacheStore>());
+        Assert.NotNull(provider.GetRequiredService<PersistentTokenCacheBinder>());
+        Assert.NotNull(provider.GetRequiredService<IOperatorProfileProvider>());
+    }
+
     public static TheoryData<Type> LaterPhaseInterfaces => new()
     {
-        typeof(IAuthenticationService),
         typeof(IGraphMetadataClient),
         typeof(ITemporaryDownloadClient),
         typeof(IRetryCoordinator),
