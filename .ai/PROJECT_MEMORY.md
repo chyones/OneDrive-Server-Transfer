@@ -49,6 +49,18 @@ The one-window workflow is:
 - SQLite schema foundation is `State/SqliteTransferStateSchemaInitializer` (metadata only); `Microsoft.Data.Sqlite` pools connections, so tests must clear the pool before deleting database files.
 - Mandatory Windows CI is `.github/workflows/windows-ci.yml`; the prohibited-content guard is `scripts/Test-ProhibitedContent.ps1`.
 
+## Authentication foundation (established in M2)
+
+- MSAL is `Microsoft.Identity.Client` + `Microsoft.Identity.Client.Broker` 4.86.1; single-tenant public client built lazily in `Authentication/MsalIdentityClient.cs` with `WithBroker(BrokerOptions)`; MSAL itself falls back to the system browser when WAM cannot be used.
+- MSAL 4.86 API notes: `PublicClientApplication.IsBrokerAvailable()` (no `IsBrokerAvailableAndInvokable`), `MsalServiceException.SubErrorForLogging` (no `SubError`), `MsalUiRequiredException.Classification` carries `ConsentRequired`, `AccountId` exposes `ObjectId` and `TenantId`, `AuthenticationResult.ClaimsPrincipal` may be absent so ID-token claims are parsed manually.
+- The orchestrator is `Authentication/MsalAuthenticationService.cs`; the testable MSAL boundary is `IIdentityClient` (production: `MsalIdentityClient`; test doubles live only in the test assembly).
+- The only Graph endpoint called is GRAPH-AUTH-001 `/me?$select=id,userPrincipalName,displayName` via a typed HttpClient (`OperatorProfileProvider`); no Graph SDK is referenced.
+- The persistent token cache is DPAPI (CurrentUser, `System.Security.Cryptography.ProtectedData` is inbox in .NET 10 — do not re-add the package) at `%LOCALAPPDATA%/OneDriveServerTransfer/TokenCache/msal-token-cache.bin`, ACL-restricted to the current user and local Administrators; corruption clears the file and requires reauthentication.
+- Operator validation (`OperatorValidator`) rejects tenant mismatch, guest/external accounts (home-tenant mismatch or `#EXT#` UPN), non-allowlisted object IDs, and missing `User.Read`; options are read lazily so DI resolution never throws on bad configuration.
+- Every user-facing auth error is a `UserFacingAuthException` built by `AuthenticationErrors` with a stable `AuthenticationErrorCodes` reference code; sign-out wording (`AuthenticationErrors.SignOutDescription`) is application-only and must not overclaim.
+- Log sanitization lives in `AuthErrorSanitizer`; MSAL callbacks log only sanitized non-PII text; structured auth logs carry only reference code, failure kind, MSAL error code, correlation ID, and HTTP status.
+- `appsettings.example.json` authentication values are placeholders (`CONFIGURE_TENANT_ID`, `CONFIGURE_CLIENT_ID`); the approved system-browser redirect URI is `http://localhost`; the broker redirect URI is an external app-registration value.
+
 ## Fixed controls
 
 - No employee-password collection or employee authentication.

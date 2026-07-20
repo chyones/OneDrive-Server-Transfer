@@ -3,40 +3,41 @@
 ## Current position
 
 - Documentation baseline: complete.
-- Application source: M1 solution and CI foundation complete; later-phase behavior not implemented.
-- Current phase: `M2 — Microsoft authentication`.
-- Status: `IN_PROGRESS` on implementation branch `agent/m2-microsoft-authentication`.
-- Start authorization: granted (owner instruction, 2026-07-20).
-- M1 evidence: `artifacts/evidence/M01_solution-foundation_20260720T055700Z.json` on validated source commit `6940eb7b43d868c419bfa814724b5d2a9316dcbc` (Windows CI run 29720061002, all checks passed, 26/26 tests).
+- Application source: M1 foundation and M2 authentication complete; later-phase behavior not implemented.
+- Current phase: `M3 — Employee source resolution`.
+- Status: `NOT_STARTED`. M3 requires explicit owner instruction before work begins.
+- M2 evidence: `artifacts/evidence/M02_authentication_20260720T095437Z.json` on validated source commit `a1afd839e79f86e01e44a9f40a46b4b46363a988` (Windows CI run 29732929639, all checks passed, 136/136 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
 
-## M1 outcome (completed)
+## M2 outcome (completed)
 
-Implemented on branch `agent/m1-solution-foundation`:
+Implemented on branch `agent/m2-microsoft-authentication`:
 
-- root `OneDriveServerTransfer.sln` with `src/OneDriveServerTransfer.App` (WPF, net10.0-windows) and `tests/OneDriveServerTransfer.Tests` (xunit, net10.0-windows);
-- MVVM shell, generic-host dependency injection, Serilog structured file logging, validated `appsettings.example.json`;
-- SQLite schema foundation (metadata only, `StateSchemaVersion = 1`, `PathMappingVersion = 1`);
-- later-phase interfaces for authentication, Graph metadata, temporary downloads, retry ownership, hashing, local storage, transfer state, and reports (no implementations, no fakes);
-- central package management with committed lock files; `global.json` pins the 10.0.3xx SDK band;
-- Windows CI (`.github/workflows/windows-ci.yml`): locked restore, Release build with analyzers and warnings as errors, tests, vulnerability review, prohibited authentication/API checks (`scripts/Test-ProhibitedContent.ps1`), and gitleaks secret detection.
+- delegated interactive MSAL sign-in (Microsoft.Identity.Client and Microsoft.Identity.Client.Broker 4.86.1), single-tenant public client, WAM preferred with MSAL system-browser fallback;
+- tenant validation, guest-account rejection, optional operator object-ID allowlist, approved-scope check, Graph `/me` operator validation (GRAPH-AUTH-001 only);
+- silent token acquisition with controlled reauthentication; consent, cancellation, `401`, `403`, tenant-mismatch, unauthorized-operator, cache-corruption, and broker-unavailable handling;
+- DPAPI-protected persistent token cache for the current Windows user, ACL-restricted, with corruption fail-safe; accurate remember-sign-in and truthful application-only sign-out;
+- reference-coded user errors and sanitized structured auth logging;
+- WPF shell sign-in, operator display, remember sign-in, and sign-out (MVVM);
+- `appsettings.example.json` placeholders only; startup configuration validation fails safely.
 
-## M2 task (not started)
+## M3 task (not started)
 
-Before changing source files, mark M2 `IN_PROGRESS`. Read `docs/AUTHENTICATION_AND_TOKEN_POLICY.md` and `docs/MICROSOFT_PLATFORM_BASELINE.md` first.
+Before changing source files, mark M3 `IN_PROGRESS`. Read `docs/GRAPH_ENDPOINT_PERMISSION_MATRIX.md` and `docs/MICROSOFT_PLATFORM_BASELINE.md` first.
 
-Implement M2 only:
+Implement M3 only:
 
-- delegated interactive MSAL sign-in for the authorized IT operator, WAM preferred with system-browser fallback;
-- MFA and Conditional Access support;
-- tenant and optional operator object-ID allowlist validation;
-- silent token renewal and DPAPI-protected application token cache;
-- truthful sign-out semantics and correct consent, `401`, and `403` handling.
+- accept employee UPN or OneDrive root URL;
+- use approved Graph `v1.0` endpoints and delegated scopes only;
+- resolve tenant, employee object ID, and business drive ID;
+- reject invalid, unprovisioned, consumer, shared, file, subfolder, SharePoint, Teams, and external-tenant sources;
+- classify package and unknown content semantics safely;
+- generate protected request correlation data.
 
-## M2 boundaries
+## M3 boundaries
 
-Do not implement employee resolution, Graph inventory, Scan, file transfer, resume, reports, or production behavior during M2. Prohibited paths remain: Graph beta, application permissions, write permissions, ROPC, device-code flow, client secrets, certificates, employee-password handling.
+Do not implement destination binding, Scan, file transfer, resume, reports, or production behavior during M3. Prohibited paths remain: Graph beta, application permissions, write permissions, ROPC, device-code flow, client secrets, certificates, employee-password handling.
 
 ## Completion
 
