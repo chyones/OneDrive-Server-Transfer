@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using OneDriveServerTransfer.Abstractions;
 using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Configuration;
+using OneDriveServerTransfer.SourceResolution;
 using OneDriveServerTransfer.State;
 using OneDriveServerTransfer.ViewModels;
 using Serilog;
@@ -12,11 +13,11 @@ using Serilog;
 namespace OneDriveServerTransfer.DependencyInjection;
 
 /// <summary>
-/// Composition root for application services. M1 foundations and the real M2
-/// authentication services are registered here. Later-phase abstractions (Microsoft
-/// Graph metadata, temporary downloads, retry, hashing, local storage, transfer state,
-/// and reports) remain intentionally unregistered: no production implementation exists
-/// yet, and no fake service may take their place.
+/// Composition root for application services. M1 foundations, M2 authentication, and
+/// M3 employee source resolution are registered here. Later-phase abstractions
+/// (Microsoft Graph metadata inventory, temporary downloads, hashing, local storage,
+/// transfer state, and reports) remain intentionally unregistered: no production
+/// implementation exists yet, and no fake service may take their place.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
@@ -39,6 +40,12 @@ public static class ServiceCollectionExtensions
             .ValidateOnStart();
         services.AddSingleton<IValidateOptions<AuthenticationOptions>, AuthenticationOptionsValidator>();
 
+        services
+            .AddOptions<SourceResolutionOptions>()
+            .Bind(configuration.GetSection(SourceResolutionOptions.SectionName))
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<SourceResolutionOptions>, SourceResolutionOptionsValidator>();
+
         services.AddLogging();
         services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
             .ReadFrom.Configuration(configuration)
@@ -54,6 +61,13 @@ public static class ServiceCollectionExtensions
         services.AddHttpClient<IOperatorProfileProvider, OperatorProfileProvider>();
         services.AddSingleton<IIdentityClient, MsalIdentityClient>();
         services.AddSingleton<IAuthenticationService, MsalAuthenticationService>();
+
+        // M3 employee source resolution (real implementations; no fakes). The retry
+        // coordinator is the single retry owner for Graph metadata requests.
+        services.AddHttpClient("graph");
+        services.AddSingleton<IRetryCoordinator, GraphRetryCoordinator>();
+        services.AddSingleton<IGraphRequestChannel, GraphRequestChannel>();
+        services.AddSingleton<IEmployeeSourceResolver, EmployeeSourceResolver>();
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<ITransferStateSchemaInitializer, SqliteTransferStateSchemaInitializer>();

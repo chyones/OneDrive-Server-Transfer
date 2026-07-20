@@ -61,6 +61,16 @@ The one-window workflow is:
 - Log sanitization lives in `AuthErrorSanitizer`; MSAL callbacks log only sanitized non-PII text; structured auth logs carry only reference code, failure kind, MSAL error code, correlation ID, and HTTP status.
 - `appsettings.example.json` authentication values are placeholders (`CONFIGURE_TENANT_ID`, `CONFIGURE_CLIENT_ID`); the approved system-browser redirect URI is `http://localhost`; the broker redirect URI is an external app-registration value.
 
+## Source resolution foundation (established in M3)
+
+- Every Microsoft Graph URL used by the application lives in `SourceResolution/GraphEndpoints.cs` (v1.0 base + GRAPH-AUTH-001 and GRAPH-SRC-001/002/003); a guard test fails if any other file contains a Graph URL.
+- `GraphRetryCoordinator` (implements `IRetryCoordinator`) is the single Graph retry owner: 3 attempts, Retry-After honored, bounded exponential backoff with jitter, delay/jitter injectable for deterministic tests.
+- `GraphRequestChannel` is the only authenticated Graph GET path: unique client-request-id per request, logs endpoint templates and correlation IDs only (never URLs, tokens, or raw bodies), and performs one controlled silent renewal on 401.
+- `isPersonalSite` is a confirmed v1.0 site property (verified 2026-07-20); URL mode requires `isPersonalSite = true`, matching site-collection host, `driveType = business`, and a non-empty drive owner user ID.
+- In URL mode the approved endpoints do not expose the employee UPN, so `ResolvedEmployeeSource.UserPrincipalName` is null there by design.
+- The tenant OneDrive host is configured in `SourceResolution:TenantOneDriveHost` (placeholder in the example file); URL-mode hosts outside it are rejected as tenant mismatch.
+- `InternalsVisibleTo` exposes internal test seams (e.g., the deterministic retry-coordinator constructor) to the test project.
+
 ## Fixed controls
 
 - No employee-password collection or employee authentication.

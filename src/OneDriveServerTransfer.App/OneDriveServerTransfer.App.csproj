@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="OneDriveServerTransfer.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="appsettings.example.json" />
   </ItemGroup>
 
