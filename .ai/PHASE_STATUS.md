@@ -1,19 +1,19 @@
 # Phase Status
 
-Last updated: 2026-07-19 UTC
+Last updated: 2026-07-20 UTC
 
 ## Current status
 
 - Completion label: `Documentation Ready`
 - Application implementation started: No
 - Production ready: No
-- Current evidence: `artifacts/evidence/M00_ai-context-cleanup_20260719T174900Z.json`
-- Validated documentation source commit: `35fa808a26f2de16c45e1b9da6faa01638d10d1e`
+- Current evidence: `artifacts/evidence/M00_preimplementation-baseline_20260720T044940Z.json`
+- Validated documentation source commit: `ba5ba5a6fb60c21dbd1491656b67468b8c7d72c7`
 - Current phase: `M1 — Solution and CI foundation`
 - M1 status: `NOT_STARTED`
 - M1 start authorized: Yes
 
-Before creating source files, change M1 to `IN_PROGRESS`.
+Before creating source files, change M1 to `IN_PROGRESS` in the implementation branch. Do not claim source, Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
 
 ## Phase table
 

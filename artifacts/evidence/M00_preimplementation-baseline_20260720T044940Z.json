@@ -1,0 +1,84 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M0 — Documentation and controls",
+  "documentationScope": "Pre-implementation baseline correction before M1",
+  "completionState": "DOCUMENTATION_COMPLETE",
+  "validatedSourceCommit": "ba5ba5a6fb60c21dbd1491656b67468b8c7d72c7",
+  "executedAtUtc": "2026-07-20T04:49:40Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchValidated": "main",
+    "validationMethod": "Connected GitHub repository inspection",
+    "applicationCodePresent": false
+  },
+  "validatedActions": [
+    {
+      "action": "Confirmed the current main commit before implementation",
+      "result": "PASS",
+      "details": "Validated main at ba5ba5a6fb60c21dbd1491656b67468b8c7d72c7."
+    },
+    {
+      "action": "Confirmed the application solution has not been created",
+      "result": "PASS",
+      "details": "OneDriveServerTransfer.sln was not found on main."
+    },
+    {
+      "action": "Confirmed the WPF application project has not been created",
+      "result": "PASS",
+      "details": "src/OneDriveServerTransfer.App/OneDriveServerTransfer.App.csproj was not found on main."
+    },
+    {
+      "action": "Confirmed the automated test project has not been created",
+      "result": "PASS",
+      "details": "tests/OneDriveServerTransfer.Tests/OneDriveServerTransfer.Tests.csproj was not found on main."
+    },
+    {
+      "action": "Confirmed mandatory Windows CI has not been created",
+      "result": "PASS",
+      "details": ".github/workflows/windows-ci.yml was not found on main."
+    },
+    {
+      "action": "Confirmed the approved operator workflow remains unchanged",
+      "result": "PASS",
+      "details": "Sign in, enter employee UPN or OneDrive root URL, select destination, run Scan, review results, confirm, run Start Copy, and review reports."
+    }
+  ],
+  "result": "PASS",
+  "exitCode": 0,
+  "statusConclusion": {
+    "completionLabel": "Documentation Ready",
+    "applicationImplementationStarted": false,
+    "m1Status": "NOT_STARTED",
+    "m1StartAuthorized": true,
+    "productionReady": false
+  },
+  "unexecutedChecks": [
+    "dotnet restore",
+    "Windows Release build",
+    "automated application tests",
+    "WPF startup",
+    "Microsoft sign-in",
+    "Microsoft Graph access",
+    "employee source resolution",
+    "Scan",
+    "Start Copy",
+    "resume",
+    "report generation",
+    "self-contained publish",
+    "production validation"
+  ],
+  "limitations": [
+    "This evidence validates the current documentation-only pre-implementation state.",
+    "It does not prove application source, Windows execution, tenant behavior, transfer behavior, release readiness, or production readiness.",
+    "M1 must be changed to IN_PROGRESS before any application source file is created."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}
