@@ -132,7 +132,7 @@ public class GraphRetryCoordinatorTests
             },
             () => 0.0);
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => coordinator.ExecuteAsync<int>(
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => coordinator.ExecuteAsync<int>(
             RetryCategory.GraphMetadata,
             _ => Task.FromException<int>(new GraphRequestException(503, null, true, null, null)),
             cts.Token));

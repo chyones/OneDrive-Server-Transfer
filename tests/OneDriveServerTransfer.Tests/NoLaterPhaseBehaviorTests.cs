@@ -43,15 +43,15 @@ public class NoLaterPhaseBehaviorTests
         var inventory = File.ReadAllText(
             Path.Combine(SourceRoot, "OneDriveServerTransfer.App", "SourceResolution", "GraphEndpoints.cs"));
 
-        // Literal URLs: the v1.0 base and the operator /me endpoint only.
+        // The only literal URL is the v1.0 base; every endpoint is composed from it.
         var literalUrls = Regex.Matches(inventory, @"https://graph\.microsoft\.com/[^\s""']+")
             .Select(match => match.Value.TrimEnd('"', ';'))
             .ToArray();
 
-        Assert.Equal(2, literalUrls.Length);
-        Assert.All(literalUrls, url => Assert.StartsWith("https://graph.microsoft.com/v1.0", url, StringComparison.Ordinal));
+        Assert.Equal(["https://graph.microsoft.com/v1.0"], literalUrls);
 
-        // Resolution templates from the approved endpoint matrix.
+        // Approved endpoint paths from the matrix, all composed from V1Base.
+        Assert.Contains("/me?$select=id,userPrincipalName,displayName", inventory, StringComparison.Ordinal);
         Assert.Contains("/users/{0}/drive", inventory, StringComparison.Ordinal);
         Assert.Contains("/sites/{0}:/{1}", inventory, StringComparison.Ordinal);
         Assert.Contains("/sites/{0}/drive", inventory, StringComparison.Ordinal);
