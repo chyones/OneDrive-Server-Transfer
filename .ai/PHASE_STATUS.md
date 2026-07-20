@@ -10,10 +10,10 @@ Last updated: 2026-07-20 UTC
 - Current evidence: `artifacts/evidence/M01_solution-foundation_20260720T055700Z.json`
 - Validated M1 source commit: `6940eb7b43d868c419bfa814724b5d2a9316dcbc`
 - Current phase: `M2 — Microsoft authentication`
-- M2 status: `NOT_STARTED`
-- M2 start authorized: No (owner instruction required)
+- M2 status: `IN_PROGRESS`
+- M2 start authorized: Yes (owner instruction, 2026-07-20)
 
-M1 was changed to `IN_PROGRESS` on implementation branch `agent/m1-solution-foundation` before any source file was created. M1 completed with Windows CI passing on the exact validated source commit above (run 29720061002). Do not claim source, Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
+M1 was changed to `IN_PROGRESS` on implementation branch `agent/m1-solution-foundation` before any source file was created. M1 completed with Windows CI passing on the exact validated source commit above (run 29720061002). M2 was changed to `IN_PROGRESS` on implementation branch `agent/m2-microsoft-authentication` before any M2 source file was created or modified. Do not claim source, Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
 
 ## Phase table
 
@@ -21,7 +21,7 @@ M1 was changed to `IN_PROGRESS` on implementation branch `agent/m1-solution-foun
 |---|---|
 | M0 Documentation and controls | DOCUMENTATION_COMPLETE |
 | M1 Solution and CI foundation | SOURCE_COMPLETE |
-| M2 Microsoft authentication | NOT_STARTED |
+| M2 Microsoft authentication | IN_PROGRESS |
 | M3 Employee source resolution | NOT_STARTED |
 | M4 Destination and source binding | NOT_STARTED |
 | M5 Scan, copy, resume, verification, and state | NOT_STARTED |

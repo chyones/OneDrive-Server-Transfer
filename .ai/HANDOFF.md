@@ -5,7 +5,8 @@
 - Documentation baseline: complete.
 - Application source: M1 solution and CI foundation complete; later-phase behavior not implemented.
 - Current phase: `M2 — Microsoft authentication`.
-- Status: `NOT_STARTED`. M2 requires explicit owner instruction before work begins.
+- Status: `IN_PROGRESS` on implementation branch `agent/m2-microsoft-authentication`.
+- Start authorization: granted (owner instruction, 2026-07-20).
 - M1 evidence: `artifacts/evidence/M01_solution-foundation_20260720T055700Z.json` on validated source commit `6940eb7b43d868c419bfa814724b5d2a9316dcbc` (Windows CI run 29720061002, all checks passed, 26/26 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
