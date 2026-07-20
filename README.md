@@ -6,9 +6,9 @@ The application copies only. It never modifies or deletes Microsoft 365 source c
 
 ## Status
 
-- Completion label: `Documentation Ready`
-- Application implementation: not started
-- Current phase: `M1 — Solution and CI foundation`
+- Completion label: `Documentation Ready` (Source Implementation Complete requires M1–M6)
+- Application implementation: M1 solution and CI foundation complete
+- Current phase: `M2 — Microsoft authentication` (not started)
 
 The exact status and evidence pointer are maintained only in `.ai/PHASE_STATUS.md`.
 
