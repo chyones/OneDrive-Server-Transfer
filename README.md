@@ -71,6 +71,19 @@ Not included:
 
 Graph beta, application permissions, Microsoft 365 write permissions, ROPC, device-code flow, client secrets, certificates, and employee authentication are prohibited.
 
+## Development
+
+Prerequisites: the .NET SDK pinned in `global.json` (10.0.3xx band). Building and testing the Windows-targeted solution requires Windows; the mandatory gate is the Windows CI workflow.
+
+```text
+dotnet restore OneDriveServerTransfer.sln --locked-mode
+dotnet build OneDriveServerTransfer.sln --configuration Release --no-restore
+dotnet test OneDriveServerTransfer.sln --configuration Release --no-build
+```
+
+Dependency versions are pinned centrally in `Directory.Packages.props` and locked per project in `packages.lock.json`; restore runs in locked mode. Static analysis runs through .NET analyzers with warnings as errors in CI. The Windows CI workflow (`.github/workflows/windows-ci.yml`) additionally executes a dependency vulnerability review, the prohibited authentication/API check (`scripts/Test-ProhibitedContent.ps1`), and secret detection.
+
+
 ## Source of truth
 
 - Binding requirements: `IMPLEMENTATION_CONTRACT.md`
