@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.State;
 using OneDriveServerTransfer.ViewModels;
@@ -28,6 +29,7 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services.AddLogging();
         services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
             .ReadFrom.Configuration(configuration)
             .ReadFrom.Services(serviceProvider)

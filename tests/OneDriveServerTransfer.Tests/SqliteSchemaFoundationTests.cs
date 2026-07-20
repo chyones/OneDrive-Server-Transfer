@@ -61,6 +61,10 @@ public class SqliteSchemaFoundationTests : IDisposable
 
     public void Dispose()
     {
+        // Microsoft.Data.Sqlite pools connections; clear the pool so the pooled
+        // connections release their file handles before the temp file is deleted.
+        SqliteConnection.ClearAllPools();
+
         if (File.Exists(_databasePath))
         {
             File.Delete(_databasePath);
