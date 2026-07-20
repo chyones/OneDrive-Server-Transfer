@@ -1,0 +1,128 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M3 — Employee source resolution",
+  "completionState": "SOURCE_COMPLETE",
+  "validatedSourceCommit": "eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9",
+  "executedAtUtc": "2026-07-20T11:04:11Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/m3-employee-source-resolution",
+    "authoritativeValidation": "GitHub Actions Windows CI",
+    "windowsCiRunnerImage": "windows-2025-vs2026 (20260714.173.1)",
+    "dotnetSdk": "10.0.301 (pinned by global.json, rollForward latestPatch)",
+    "supplementaryLocalChecks": "macOS arm64, .NET SDK 10.0.301, EnableWindowsTargeting=true; local test execution not possible because the WPF test assembly requires the Windows Desktop runtime"
+  },
+  "microsoftPlatformReview": {
+    "reviewedAtUtc": "2026-07-20",
+    "documentsReviewed": [
+      "https://learn.microsoft.com/graph/api/resources/site?view=graph-rest-1.0"
+    ],
+    "confirmedBehavior": [
+      "isPersonalSite is a real Microsoft Graph v1.0 site property, so the approved GRAPH-SRC-002 select ($select=id,webUrl,isPersonalSite,siteCollection) is valid as written.",
+      "Graph v1.0 only is used; no beta endpoint, SDK, or undocumented property is referenced."
+    ]
+  },
+  "approvedScopeSet": [
+    "User.Read",
+    "Files.Read.All",
+    "Sites.Read.All",
+    "offline_access",
+    "openid",
+    "profile"
+  ],
+  "exercisedEndpointTemplates": [
+    "GET https://graph.microsoft.com/v1.0/users/{upn}/drive?$select=id,driveType,webUrl,owner,quota (GRAPH-SRC-001, stubbed)",
+    "GET https://graph.microsoft.com/v1.0/sites/{hostname}:/{path}?$select=id,webUrl,isPersonalSite,siteCollection (GRAPH-SRC-002, stubbed)",
+    "GET https://graph.microsoft.com/v1.0/sites/{site-id}/drive?$select=id,driveType,webUrl,owner,quota (GRAPH-SRC-003, stubbed)"
+  ],
+  "validatedActions": [
+    {
+      "action": "Deterministic dependency restore on Windows",
+      "command": "dotnet restore OneDriveServerTransfer.sln --locked-mode",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "action": "Release build and static analysis on Windows",
+      "command": "dotnet build OneDriveServerTransfer.sln --configuration Release --no-restore",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "0 warnings, 0 errors."
+    },
+    {
+      "action": "Automated tests on Windows",
+      "command": "dotnet test OneDriveServerTransfer.sln --configuration Release --no-build",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": {
+        "total": 209,
+        "passed": 209,
+        "failed": 0,
+        "skipped": 0
+      },
+      "details": "M3 coverage: valid/invalid UPN parsing, valid/malformed/unsupported OneDrive URLs, tenant-host mismatch, user not found, OneDrive not provisioned, operator 403, non-business drive rejection, missing owner identity, successful UPN and URL resolution, Retry-After honoring, bounded backoff with jitter bounds, three-attempt budget, cancellation during delay, one controlled 401 silent renewal, correlation logging without URLs or tokens, configuration validation, DI registration, and proof that no inventory, delta, download, transfer, destination, or report behavior exists."
+    },
+    {
+      "action": "Dependency vulnerability review",
+      "command": "dotnet list OneDriveServerTransfer.sln package --vulnerable --include-transitive",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "No vulnerable packages detected."
+    },
+    {
+      "action": "Prohibited authentication and API checks",
+      "command": "./scripts/Test-ProhibitedContent.ps1",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "60 source and build files scanned for 15 prohibited patterns. No matches."
+    },
+    {
+      "action": "Secret detection",
+      "command": "gitleaks/gitleaks-action@v2 (full history)",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "Gitleaks reported: no leaks found. Configuration example contains placeholders only."
+    }
+  ],
+  "ciEvidence": {
+    "workflow": ".github/workflows/windows-ci.yml",
+    "passingRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29737013050",
+    "passingRunConclusion": "success",
+    "passingRunHeadSha": "eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9",
+    "earlierFailedRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29736695532",
+    "earlierFailedRunNote": "Commit fdd83e1 failed 2 guard tests (exact-type cancellation assertion and an endpoint literal count). Fixed in eba82ff; the failed run is retained as history and is not used as evidence."
+  },
+  "retryOwner": "GraphRetryCoordinator is the single retry owner for Graph metadata requests (no Graph SDK retry handler exists in this build). Budget: 3 attempts per request, Retry-After honored, bounded exponential backoff with jitter.",
+  "result": "PASS",
+  "exitCode": 0,
+  "statusConclusion": {
+    "completionLabel": "Source Implementation Complete remains unearned (later milestones pending)",
+    "m3Status": "SOURCE_COMPLETE",
+    "applicationImplementationStarted": true,
+    "productionReady": false
+  },
+  "unexecutedChecks": [
+    "real-tenant UPN and OneDrive-root URL resolution (M7)",
+    "expected 403 behavior when the operator lacks employee OneDrive access (M7)",
+    "proof that UPN and URL modes resolve to the same tenant, employee object, and drive ID against a live tenant (M7)",
+    "scan, copy, resume, verification (M5)",
+    "destination binding and locking (M4)",
+    "reports (M6)",
+    "self-contained win-x64 publish (M7/M8)"
+  ],
+  "limitations": [
+    "All Graph responses were stubbed; no live tenant call was performed or claimed.",
+    "In OneDrive-root URL mode the approved endpoints do not expose the employee UPN, so ResolvedEmployeeSource.UserPrincipalName is null there; the durable identity is tenant ID, employee object ID, and drive ID.",
+    "The user-not-found versus OneDrive-not-provisioned distinction uses the Graph error hint text for classification only; exact live-tenant error codes remain an M7 verification item.",
+    "Local macOS checks were supplementary only; mandatory evidence comes from Windows CI on the exact validated commit."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}
