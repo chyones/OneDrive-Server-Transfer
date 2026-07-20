@@ -5,14 +5,14 @@
 - Documentation baseline: complete.
 - Application source: not started.
 - Current phase: `M1 — Solution and CI foundation`.
-- Status: `NOT_STARTED`.
+- Status: `IN_PROGRESS` on implementation branch `agent/m1-solution-foundation`.
 - Start authorization: granted.
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
 
 ## M1 task
 
-Before changing source files, mark M1 `IN_PROGRESS`.
+M1 is `IN_PROGRESS` on branch `agent/m1-solution-foundation` (marked before the first source file).
 
 Implement M1 only:
 

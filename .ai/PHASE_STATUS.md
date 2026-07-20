@@ -10,17 +10,17 @@ Last updated: 2026-07-20 UTC
 - Current evidence: `artifacts/evidence/M00_preimplementation-baseline_20260720T044940Z.json`
 - Validated documentation source commit: `ba5ba5a6fb60c21dbd1491656b67468b8c7d72c7`
 - Current phase: `M1 — Solution and CI foundation`
-- M1 status: `NOT_STARTED`
+- M1 status: `IN_PROGRESS`
 - M1 start authorized: Yes
 
-Before creating source files, change M1 to `IN_PROGRESS` in the implementation branch. Do not claim source, Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
+M1 was changed to `IN_PROGRESS` on implementation branch `agent/m1-solution-foundation` before any source file was created. Do not claim source, Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
 
 ## Phase table
 
 | Phase | Status |
 |---|---|
 | M0 Documentation and controls | DOCUMENTATION_COMPLETE |
-| M1 Solution and CI foundation | NOT_STARTED |
+| M1 Solution and CI foundation | IN_PROGRESS |
 | M2 Microsoft authentication | NOT_STARTED |
 | M3 Employee source resolution | NOT_STARTED |
 | M4 Destination and source binding | NOT_STARTED |
