@@ -1,0 +1,119 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M1 — Solution and CI foundation",
+  "completionState": "SOURCE_COMPLETE",
+  "validatedSourceCommit": "6940eb7b43d868c419bfa814724b5d2a9316dcbc",
+  "executedAtUtc": "2026-07-20T05:57:00Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/m1-solution-foundation",
+    "authoritativeValidation": "GitHub Actions Windows CI",
+    "windowsCiRunnerImage": "windows-2025-vs2026 (20260714.173.1)",
+    "dotnetSdk": "10.0.301 (pinned by global.json, rollForward latestPatch)",
+    "secretDetectionRunnerImage": "ubuntu-24.04",
+    "supplementaryLocalChecks": "macOS arm64, .NET SDK 10.0.301, EnableWindowsTargeting=true; local test execution not possible because the WPF test assembly requires the Windows Desktop runtime"
+  },
+  "validatedActions": [
+    {
+      "action": "Deterministic dependency restore on Windows",
+      "command": "dotnet restore OneDriveServerTransfer.sln --locked-mode",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "Central package management (Directory.Packages.props) with committed per-project packages.lock.json; locked mode succeeded against the committed lock graph."
+    },
+    {
+      "action": "Release build and static analysis on Windows",
+      "command": "dotnet build OneDriveServerTransfer.sln --configuration Release --no-restore",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "0 warnings, 0 errors. .NET analyzers enabled (AnalysisLevel latest); warnings treated as errors in CI. WPF application and test assemblies produced."
+    },
+    {
+      "action": "Automated tests on Windows",
+      "command": "dotnet test OneDriveServerTransfer.sln --configuration Release --no-build",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": {
+        "total": 26,
+        "passed": 26,
+        "failed": 0,
+        "skipped": 0
+      },
+      "details": "Coverage: project structure, deterministic-restore inputs, CI workflow presence, dependency registration including absence of later-phase service registrations, configuration loading and version-1 validation rejection, prohibited authentication/API patterns, no employee-password surface, SQLite schema foundation creation and idempotency, and a Windows-only WPF window construction smoke test."
+    },
+    {
+      "action": "Dependency vulnerability review",
+      "command": "dotnet list OneDriveServerTransfer.sln package --vulnerable --include-transitive",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "No vulnerable packages detected. NuGet audit (NU1901-NU1904) is enforced as errors on every restore; the transitive SQLitePCLRaw 2.1.11 advisory GHSA-2m69-gcr7-jv3q was remediated by pinning SQLitePCLRaw.bundle_e_sqlite3 2.1.12."
+    },
+    {
+      "action": "Prohibited authentication and API checks",
+      "command": "./scripts/Test-ProhibitedContent.ps1",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "27 source and build files scanned for 15 prohibited patterns covering Graph beta, application permissions, write permissions, resource-owner password credentials, device-code flow, client secrets, certificates, and employee-password UI. No matches."
+    },
+    {
+      "action": "Secret detection",
+      "command": "gitleaks/gitleaks-action@v2 (full history)",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "Gitleaks reported: no leaks found."
+    }
+  ],
+  "ciEvidence": {
+    "workflow": ".github/workflows/windows-ci.yml",
+    "passingRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29720061002",
+    "passingRunConclusion": "success",
+    "passingRunHeadSha": "6940eb7b43d868c419bfa814724b5d2a9316dcbc",
+    "earlierFailedRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29719819778",
+    "earlierFailedRunNote": "The first run (commit c3c5ec5) failed 3 tests: missing Microsoft logging abstraction registration and SQLite connection-pool file locks in test cleanup. Both were fixed in the validated commit; the failed run is retained as history and is not used as evidence."
+  },
+  "packageVersions": {
+    "Microsoft.Data.Sqlite": "10.0.10",
+    "Microsoft.Extensions.Hosting": "10.0.10",
+    "Microsoft.Extensions.Options.DataAnnotations": "10.0.10",
+    "Serilog.Extensions.Hosting": "10.0.0",
+    "Serilog.Settings.Configuration": "10.0.1",
+    "Serilog.Sinks.File": "7.0.0",
+    "SQLitePCLRaw.bundle_e_sqlite3": "2.1.12",
+    "Microsoft.NET.Test.Sdk": "18.8.1",
+    "xunit": "2.9.3",
+    "xunit.runner.visualstudio": "3.1.5"
+  },
+  "result": "PASS",
+  "exitCode": 0,
+  "statusConclusion": {
+    "completionLabel": "Source Implementation Complete remains unearned (later milestones pending)",
+    "m1Status": "SOURCE_COMPLETE",
+    "applicationImplementationStarted": true,
+    "productionReady": false
+  },
+  "unexecutedChecks": [
+    "interactive WPF startup on Windows Server 2019 (M7)",
+    "Microsoft sign-in (M2)",
+    "Microsoft Graph access and employee source resolution (M3)",
+    "destination binding and locking (M4)",
+    "scan, copy, resume, verification (M5)",
+    "UI workflow and report generation (M6)",
+    "real-tenant acceptance (M7)",
+    "self-contained win-x64 publish (M7/M8)"
+  ],
+  "limitations": [
+    "M1 delivers structure and foundations only: interfaces for later phases have no implementations, and no fake or placeholder production services were registered.",
+    "The Windows CI run validates build, tests, and scans on a GitHub-hosted Windows runner; it does not prove real-tenant, interactive sign-in, transfer, or Windows Server 2019 behavior.",
+    "Local macOS checks were supplementary only; mandatory evidence comes from Windows CI on the exact validated commit.",
+    "The WPF smoke test constructs the window on Windows CI; full interactive startup on Windows Server 2019 remains an M7 production-acceptance check."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}

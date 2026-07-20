@@ -38,6 +38,17 @@ The one-window workflow is:
 - embedded SQLite operational state
 - self-contained `win-x64` publish
 
+## Source foundation (established in M1)
+
+- `OneDriveServerTransfer.sln`, `src/OneDriveServerTransfer.App` (WPF), and `tests/OneDriveServerTransfer.Tests` (xunit) exist; root namespace `OneDriveServerTransfer`.
+- `global.json` pins the .NET SDK 10.0.3xx band; CI installs from it.
+- Package versions are pinned centrally in `Directory.Packages.props`; every project commits `packages.lock.json` and restores in locked mode.
+- `SQLitePCLRaw.bundle_e_sqlite3` is pinned to 2.1.12 because 2.1.11 carries GHSA-2m69-gcr7-jv3q; NuGet audit NU1901–NU1904 warnings are errors on restore.
+- DI composition root is `DependencyInjection/ServiceCollectionExtensions.AddApplicationServices`; later-phase service interfaces (`Abstractions/`) are intentionally unregistered until their milestone implements them.
+- Structured logging is Serilog configured from the `Serilog` configuration section; the WPF implicit-using set omits `System.IO`, so IO types need explicit usings.
+- SQLite schema foundation is `State/SqliteTransferStateSchemaInitializer` (metadata only); `Microsoft.Data.Sqlite` pools connections, so tests must clear the pool before deleting database files.
+- Mandatory Windows CI is `.github/workflows/windows-ci.yml`; the prohibited-content guard is `scripts/Test-ProhibitedContent.ps1`.
+
 ## Fixed controls
 
 - No employee-password collection or employee authentication.

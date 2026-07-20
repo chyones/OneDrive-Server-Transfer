@@ -1,0 +1,68 @@
+name: Windows CI
+
+on:
+  push:
+    branches: [main, 'agent/**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  windows-build-test:
+    name: Windows restore, Release build, tests, and static analysis
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install .NET SDK from global.json
+        uses: actions/setup-dotnet@v4
+
+      - name: Deterministic restore (locked mode)
+        run: dotnet restore OneDriveServerTransfer.sln --locked-mode
+
+      - name: Release build with analyzers and warnings as errors
+        run: dotnet build OneDriveServerTransfer.sln --configuration Release --no-restore
+
+      - name: Automated tests (Release)
+        run: dotnet test OneDriveServerTransfer.sln --configuration Release --no-build --logger "console;verbosity=normal"
+
+      - name: Dependency vulnerability review
+        shell: pwsh
+        run: |
+          $output = dotnet list OneDriveServerTransfer.sln package --vulnerable --include-transitive 2>&1 | Out-String
+          $output
+          if ($output -match 'has the following vulnerable packages') {
+            Write-Host 'Vulnerable NuGet packages detected.'
+            exit 1
+          }
+          Write-Host 'No vulnerable NuGet packages detected.'
+
+      - name: Prohibited authentication and API checks
+        shell: pwsh
+        run: ./scripts/Test-ProhibitedContent.ps1
+
+      - name: Upload diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-ci-diagnostics
+          path: |
+            **/*.trx
+          if-no-files-found: ignore
+
+  secret-detection:
+    name: Secret detection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

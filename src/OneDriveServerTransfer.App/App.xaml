@@ -1,0 +1,10 @@
+<Application x:Class="OneDriveServerTransfer.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        StartupUri is intentionally absent: the main window is resolved from the
+        dependency-injection container in App.OnStartup after the host is built.
+    -->
+    <Application.Resources>
+    </Application.Resources>
+</Application>
