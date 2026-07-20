@@ -3,9 +3,11 @@
 ## Current position
 
 - Documentation baseline: complete.
-- Application source: M1 foundation, M2 authentication, and M3 employee source resolution complete; later-phase behavior not implemented.
+- Application source: M1 foundation, M2 authentication, and M3 employee source resolution complete and merged into `main`.
+- M3 integration: PR #12 merged; `main` baseline `fa1b81190b481a4dc4bf3f029a407b59da117ff4`; merge CI run 29742411955 succeeded.
+- Development state: paused after M3 integration.
 - Current phase: `M4 — Destination and source binding`.
-- Status: `NOT_STARTED`. M4 requires explicit owner instruction before work begins.
+- Status: `NOT_STARTED`. M4 requires a new explicit owner instruction before any work begins. No M4 functionality exists.
 - M3 evidence: `artifacts/evidence/M03_onedrive-resolution_20260720T110411Z.json` on validated source commit `eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9` (Windows CI run 29737013050, all checks passed, 209/209 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
@@ -23,7 +25,7 @@ Implemented on branch `agent/m3-employee-source-resolution`:
 
 ## M4 task (not started)
 
-Before changing source files, mark M4 `IN_PROGRESS`.
+Development is paused. Do not begin M4 until the repository owner issues a new explicit instruction for it. Before changing source files, mark M4 `IN_PROGRESS`.
 
 Implement M4 only:
 
