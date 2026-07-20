@@ -7,8 +7,9 @@ The application copies only. It never modifies or deletes Microsoft 365 source c
 ## Status
 
 - Completion label: `Documentation Ready` (Source Implementation Complete requires M1–M6)
-- Application implementation: M1 solution/CI foundation, M2 authentication, and M3 employee source resolution complete
-- Current phase: `M4 — Destination and source binding` (not started)
+- Application implementation: M1 solution/CI foundation, M2 authentication, and M3 employee source resolution complete and merged (PR #12, `main` baseline `fa1b811`)
+- Development state: paused after M3 integration
+- Current phase: `M4 — Destination and source binding` (not started; requires a new explicit owner instruction)
 
 The exact status and evidence pointer are maintained only in `.ai/PHASE_STATUS.md`.
 
