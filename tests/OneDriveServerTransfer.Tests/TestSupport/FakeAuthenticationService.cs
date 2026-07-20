@@ -44,8 +44,15 @@ internal sealed class FakeAuthenticationService : IAuthenticationService
         return Task.CompletedTask;
     }
 
-    public Task<string> AcquireGraphAccessTokenAsync(CancellationToken cancellationToken) =>
-        Task.FromResult("test-access-token");
+    public Task<string> AcquireGraphAccessTokenAsync(CancellationToken cancellationToken)
+    {
+        AcquireTokenCallCount++;
+        return AcquireTokenHandler?.Invoke(cancellationToken) ?? Task.FromResult("test-access-token");
+    }
+
+    public int AcquireTokenCallCount { get; private set; }
+
+    public Func<CancellationToken, Task<string>>? AcquireTokenHandler { get; set; }
 
     public void SetSignedInOperator(OperatorIdentity identity) => _currentOperator = identity;
 }

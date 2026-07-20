@@ -6,6 +6,7 @@ using OneDriveServerTransfer.Abstractions;
 using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.DependencyInjection;
+using OneDriveServerTransfer.SourceResolution;
 using OneDriveServerTransfer.State;
 using OneDriveServerTransfer.ViewModels;
 
@@ -23,6 +24,7 @@ public class DependencyRegistrationTests
         ("Authentication:TenantId", "11111111-1111-1111-1111-111111111111"),
         ("Authentication:ClientId", "22222222-2222-2222-2222-222222222222"),
         ("Authentication:RedirectUri", "http://localhost"),
+        ("SourceResolution:TenantOneDriveHost", "contoso-my.sharepoint.com"),
     ];
 
     private static ServiceProvider BuildProvider()
@@ -65,11 +67,20 @@ public class DependencyRegistrationTests
         Assert.NotNull(provider.GetRequiredService<IOperatorProfileProvider>());
     }
 
+    [Fact]
+    public void ResolvesRealM3SourceResolutionServices()
+    {
+        using var provider = BuildProvider();
+
+        Assert.IsType<GraphRetryCoordinator>(provider.GetRequiredService<IRetryCoordinator>());
+        Assert.IsType<GraphRequestChannel>(provider.GetRequiredService<IGraphRequestChannel>());
+        Assert.IsType<EmployeeSourceResolver>(provider.GetRequiredService<IEmployeeSourceResolver>());
+    }
+
     public static TheoryData<Type> LaterPhaseInterfaces => new()
     {
         typeof(IGraphMetadataClient),
         typeof(ITemporaryDownloadClient),
-        typeof(IRetryCoordinator),
         typeof(IHashingService),
         typeof(ILocalStorageService),
         typeof(ITransferStateStore),

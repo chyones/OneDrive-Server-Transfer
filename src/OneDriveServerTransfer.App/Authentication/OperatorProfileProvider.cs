@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using OneDriveServerTransfer.SourceResolution;
 
 namespace OneDriveServerTransfer.Authentication;
 
@@ -48,8 +49,7 @@ public interface IOperatorProfileProvider
 
 public sealed class OperatorProfileProvider : IOperatorProfileProvider
 {
-    public const string MeEndpoint =
-        "https://graph.microsoft.com/v1.0/me?$select=id,userPrincipalName,displayName";
+    public const string MeEndpoint = GraphEndpoints.Me;
 
     private readonly HttpClient _httpClient;
 

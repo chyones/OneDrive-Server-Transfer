@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.DependencyInjection;
+using OneDriveServerTransfer.SourceResolution;
 
 namespace OneDriveServerTransfer.Tests;
 
@@ -134,5 +135,46 @@ public class ConfigurationLoadingTests
         Assert.Equal([operatorObjectId], options.AuthorizedOperatorObjectIds);
         Assert.False(options.RememberSignInDefault);
         Assert.Equal("http://localhost", options.RedirectUri);
+    }
+
+    [Fact]
+    public void ExampleSourceResolutionHostIsPlaceholderOnly()
+    {
+        var configuration = LoadExampleConfiguration();
+
+        var host = configuration.GetValue<string>("SourceResolution:TenantOneDriveHost");
+
+        Assert.Equal("CONFIGURE_TENANT_ONEDRIVE_HOST", host);
+    }
+
+    [Fact]
+    public void ExampleSourceResolutionPlaceholderFailsValidationSafely()
+    {
+        var configuration = LoadExampleConfiguration();
+
+        var services = new ServiceCollection();
+        services.AddApplicationServices(configuration);
+        using var provider = services.BuildServiceProvider();
+
+        Assert.Throws<OptionsValidationException>(
+            () => provider.GetRequiredService<IOptions<SourceResolutionOptions>>().Value);
+    }
+
+    [Fact]
+    public void ValidSourceResolutionConfigurationBinds()
+    {
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["SourceResolution:TenantOneDriveHost"] = "contoso-my.sharepoint.com",
+            })
+            .Build();
+
+        var services = new ServiceCollection();
+        services.AddApplicationServices(configuration);
+        using var provider = services.BuildServiceProvider();
+
+        var options = provider.GetRequiredService<IOptions<SourceResolutionOptions>>().Value;
+        Assert.Equal("contoso-my.sharepoint.com", options.TenantOneDriveHost);
     }
 }
