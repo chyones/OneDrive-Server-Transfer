@@ -5,7 +5,8 @@
 - Documentation baseline: complete.
 - Application source: M1 foundation and M2 authentication complete; later-phase behavior not implemented.
 - Current phase: `M3 — Employee source resolution`.
-- Status: `NOT_STARTED`. M3 requires explicit owner instruction before work begins.
+- Status: `IN_PROGRESS` on implementation branch `agent/m3-employee-source-resolution`.
+- Start authorization: granted (owner instruction, 2026-07-20).
 - M2 evidence: `artifacts/evidence/M02_authentication_20260720T095437Z.json` on validated source commit `a1afd839e79f86e01e44a9f40a46b4b46363a988` (Windows CI run 29732929639, all checks passed, 136/136 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
