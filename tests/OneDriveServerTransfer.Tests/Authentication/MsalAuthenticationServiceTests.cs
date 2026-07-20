@@ -18,6 +18,29 @@ public class MsalAuthenticationServiceTests : IDisposable
 
     private string CachePath => Path.Combine(_directory, "msal-token-cache.bin");
 
+    /// <summary>
+    /// Options wrapper that runs the real AuthenticationOptionsValidator on Value
+    /// access, mirroring the production options pipeline (Options.Create skips
+    /// validation).
+    /// </summary>
+    private sealed class ValidatingOptions(AuthenticationOptions options) : IOptions<AuthenticationOptions>
+    {
+        public AuthenticationOptions Value
+        {
+            get
+            {
+                var result = new AuthenticationOptionsValidator().Validate(null, options);
+                if (result.Failed)
+                {
+                    throw new OptionsValidationException(
+                        nameof(AuthenticationOptions), typeof(AuthenticationOptions), result.Failures ?? []);
+                }
+
+                return options;
+            }
+        }
+    }
+
     private sealed class Harness
     {
         public required FakeIdentityClient IdentityClient { get; init; }
@@ -50,10 +73,10 @@ public class MsalAuthenticationServiceTests : IDisposable
         var service = new MsalAuthenticationService(
             identityClient,
             profileProvider,
-            new OperatorValidator(Microsoft.Extensions.Options.Options.Create(options)),
+            new OperatorValidator(new ValidatingOptions(options)),
             new WamPreferredBrokerSelector(),
             binder,
-            Microsoft.Extensions.Options.Options.Create(options),
+            new ValidatingOptions(options),
             NullLogger<MsalAuthenticationService>.Instance);
 
         return new Harness

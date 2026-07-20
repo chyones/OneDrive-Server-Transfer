@@ -69,9 +69,9 @@ public class ProhibitedFeaturesTests
     }
 
     [Fact]
-    public void SolutionReferencesNoMicrosoftIdentityOrGraphPackagesInM1()
+    public void SolutionReferencesMsalButNoGraphSdkPackages()
     {
-        // MSAL and Graph SDK adoption is evaluated in later milestones; M1 ships neither.
+        // MSAL is the approved M2 authentication library; the Graph SDK is not adopted.
         var lockFile = Path.Combine(
             TestRepository.Root, "src", "OneDriveServerTransfer.App", "packages.lock.json");
 
@@ -81,7 +81,7 @@ public class ProhibitedFeaturesTests
         }
 
         var content = File.ReadAllText(lockFile);
-        Assert.DoesNotContain("Microsoft.Identity.Client", content, StringComparison.Ordinal);
+        Assert.Contains("Microsoft.Identity.Client", content, StringComparison.Ordinal);
         Assert.DoesNotContain("Microsoft.Graph", content, StringComparison.Ordinal);
     }
 
