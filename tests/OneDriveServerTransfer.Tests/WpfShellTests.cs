@@ -1,3 +1,7 @@
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
+using OneDriveServerTransfer.Authentication;
+using OneDriveServerTransfer.Tests.TestSupport;
 using OneDriveServerTransfer.ViewModels;
 
 namespace OneDriveServerTransfer.Tests;
@@ -22,9 +26,13 @@ public class WpfShellTests
         {
             try
             {
-                var window = new MainWindow(new MainViewModel());
+                var viewModel = new MainViewModel(
+                    new FakeAuthenticationService(),
+                    Options.Create(new AuthenticationOptions()),
+                    NullLogger<MainViewModel>.Instance);
+                var window = new MainWindow(viewModel);
                 Assert.Equal("OneDrive Server Transfer", window.Title);
-                Assert.IsType<MainViewModel>(window.DataContext);
+                Assert.Same(viewModel, window.DataContext);
             }
             catch (Exception exception)
             {

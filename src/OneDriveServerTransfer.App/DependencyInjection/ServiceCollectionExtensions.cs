@@ -1,6 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using OneDriveServerTransfer.Abstractions;
+using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.State;
 using OneDriveServerTransfer.ViewModels;
@@ -9,10 +12,11 @@ using Serilog;
 namespace OneDriveServerTransfer.DependencyInjection;
 
 /// <summary>
-/// Composition root for application services. Later-phase abstractions (authentication,
-/// Microsoft Graph metadata, temporary downloads, retry, hashing, local storage, transfer
-/// state, and reports) are intentionally not registered here: no production
-/// implementation exists in M1, and no fake service may take their place.
+/// Composition root for application services. M1 foundations and the real M2
+/// authentication services are registered here. Later-phase abstractions (Microsoft
+/// Graph metadata, temporary downloads, retry, hashing, local storage, transfer state,
+/// and reports) remain intentionally unregistered: no production implementation exists
+/// yet, and no fake service may take their place.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
@@ -29,11 +33,27 @@ public static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        services
+            .AddOptions<AuthenticationOptions>()
+            .Bind(configuration.GetSection(AuthenticationOptions.SectionName))
+            .ValidateOnStart();
+        services.AddSingleton<IValidateOptions<AuthenticationOptions>, AuthenticationOptionsValidator>();
+
         services.AddLogging();
         services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
             .ReadFrom.Configuration(configuration)
             .ReadFrom.Services(serviceProvider)
             .Enrich.FromLogContext());
+
+        // M2 authentication services (real implementations; no fakes).
+        services.AddSingleton<ITokenCacheProtector, DpapiTokenCacheProtector>();
+        services.AddSingleton<ITokenCacheStore>(_ => TokenCacheFileStore.CreateDefault());
+        services.AddSingleton<PersistentTokenCacheBinder>();
+        services.AddSingleton<IBrokerSelector, WamPreferredBrokerSelector>();
+        services.AddSingleton<IOperatorValidator, OperatorValidator>();
+        services.AddHttpClient<IOperatorProfileProvider, OperatorProfileProvider>();
+        services.AddSingleton<IIdentityClient, MsalIdentityClient>();
+        services.AddSingleton<IAuthenticationService, MsalAuthenticationService>();
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<ITransferStateSchemaInitializer, SqliteTransferStateSchemaInitializer>();
