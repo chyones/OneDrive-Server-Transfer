@@ -2,8 +2,8 @@ namespace OneDriveServerTransfer.State;
 
 /// <summary>
 /// Creates the SQLite schema foundation for the application-owned operational state
-/// database. M1 creates only schema metadata; operational tables for inventory, mapping,
-/// resume, and checkpoints are added by milestone M5.
+/// database. Version 1 covers schema metadata plus the M4 destination source-binding
+/// tables; inventory, mapping, resume, and checkpoint tables are added by milestone M5.
 /// </summary>
 public interface ITransferStateSchemaInitializer
 {

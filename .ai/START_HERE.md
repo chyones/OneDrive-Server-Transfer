@@ -1,6 +1,6 @@
 # Start Here
 
-Application implementation has not started. The current phase and valid evidence are defined only in `.ai/PHASE_STATUS.md`.
+This is the short entry point for every implementation agent in this repository.
 
 ## Read first
 
@@ -17,16 +17,18 @@ Application implementation has not started. The current phase and valid evidence
 
 There is no separate AI prompt or alternate contract. Do not use deleted files, old pull requests, or Git history as active instructions.
 
+## Authoritative current state
+
+`.ai/PHASE_STATUS.md` and `.ai/HANDOFF.md` are the authoritative current-state files. They record which phase is active, its status, whether an explicit owner instruction has authorized starting it, the exact validated source commits, and the current evidence pointer. This file deliberately does not duplicate phase details; always read those two files before deciding what to do.
+
 ## Current action
 
-Begin M1 only after confirming `.ai/PHASE_STATUS.md` records M0 as `DOCUMENTATION_COMPLETE` with current committed evidence.
+Determine the active phase and its authorization state from `.ai/PHASE_STATUS.md` and `.ai/HANDOFF.md`, then:
 
-1. Mark M1 `IN_PROGRESS`.
-2. Create `OneDriveServerTransfer.sln` at repository root.
-3. Create the WPF application and automated-test projects.
-4. Configure .NET 10 Windows targeting, MVVM, dependency injection, logging, configuration, SQLite foundation, and deterministic restore.
-5. Define clean interfaces required by later phases without implementing later-phase behavior.
-6. Add mandatory Windows CI.
-7. Complete M1 validation and evidence before starting M2.
+1. Confirm the active phase is authorized by an explicit owner instruction; if not, stop.
+2. Mark the phase `IN_PROGRESS` before changing source files.
+3. Implement only that phase's scope and exit criteria from `docs/IMPLEMENTATION_PLAN.md`, the binding contract, and the acceptance matrix.
+4. Run the required validations, commit redacted evidence under `artifacts/evidence`, and record the exact validated source commit.
+5. Update `.ai/PHASE_STATUS.md` and `.ai/HANDOFF.md` at completion.
 
 Never claim Windows execution, Microsoft sign-in, OneDrive access, copy, resume, publish, or production readiness without executed evidence.

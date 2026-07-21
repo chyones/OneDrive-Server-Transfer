@@ -4,9 +4,10 @@ using Microsoft.Data.Sqlite;
 namespace OneDriveServerTransfer.State;
 
 /// <summary>
-/// Initializes the empty M1 schema foundation: a metadata table recording the supported
-/// state-schema and path-mapping versions, plus the SQLite user_version pragma. The
-/// initializer is idempotent and never drops or rebuilds existing data.
+/// Initializes the version-1 state schema: a metadata table recording the supported
+/// state-schema and path-mapping versions, the SQLite user_version pragma, and the M4
+/// destination source-binding tables. The initializer is idempotent and never drops or
+/// rebuilds existing data.
 /// </summary>
 public sealed class SqliteTransferStateSchemaInitializer : ITransferStateSchemaInitializer
 {
@@ -41,6 +42,29 @@ public sealed class SqliteTransferStateSchemaInitializer : ITransferStateSchemaI
             INSERT OR IGNORE INTO schema_metadata (key, value) VALUES
                 ('StateSchemaVersion', '{StateSchemaVersion}'),
                 ('PathMappingVersion', '{PathMappingVersion}');
+            """, cancellationToken).ConfigureAwait(false);
+
+        await ExecuteNonQueryAsync(connection, transaction, """
+            CREATE TABLE IF NOT EXISTS destination_binding (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                tenant_id TEXT NOT NULL,
+                drive_id TEXT NOT NULL,
+                employee_object_id TEXT NOT NULL,
+                employee_upn TEXT NULL,
+                bound_by_operator_object_id TEXT NOT NULL,
+                bound_by_operator_upn TEXT NULL,
+                bound_utc TEXT NOT NULL
+            );
+            """, cancellationToken).ConfigureAwait(false);
+
+        await ExecuteNonQueryAsync(connection, transaction, """
+            CREATE TABLE IF NOT EXISTS destination_operator_audit (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                operator_object_id TEXT NOT NULL,
+                operator_upn TEXT NULL,
+                action TEXT NOT NULL,
+                recorded_utc TEXT NOT NULL
+            );
             """, cancellationToken).ConfigureAwait(false);
 
         await ExecuteNonQueryAsync(connection, transaction,

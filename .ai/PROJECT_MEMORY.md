@@ -71,6 +71,18 @@ The one-window workflow is:
 - The tenant OneDrive host is configured in `SourceResolution:TenantOneDriveHost` (placeholder in the example file); URL-mode hosts outside it are rejected as tenant mismatch.
 - `InternalsVisibleTo` exposes internal test seams (e.g., the deterministic retry-coordinator constructor) to the test project.
 
+## Destination foundation (established in M4)
+
+- The `Destination/` module owns local-destination behavior with reference-coded `DST-*` user-facing errors (`DestinationErrors`/`DestinationErrorCodes`, M3-style pattern).
+- Destinations must be local `DriveType.Fixed` paths; UNC, network, removable, relative, system/application directories, and reparse points in the chain are rejected. `ResolvedDestination` exposes `ContentRootPath` (`OneDriveData`) and `StateRootPath` (`_TransferReport`) and is the only way to reach those roots.
+- The SQLite state schema (still `StateSchemaVersion = 1`) now includes `destination_binding` (single row: tenant/drive/employee object IDs + bound-by operator audit) and `destination_operator_audit`. `SqliteDestinationBindingStore` runs with `Pooling = false` so a rejected corrupt database never retains an OS file lock on Windows.
+- Exclusive locking is a `FileShare.None` lock file under `_TransferReport`, acquired before any state write (`DestinationSessionService`) and released on failure/dispose.
+- `PathMapperV1` (contract §11, all ten rules) is pure and deterministic; collision state lives behind `IPathCollisionRegistry` (in-memory in M4 — M5 substitutes the SQLite-backed registry on the same interface). `MaxCanonicalPathUtf16Units = 32767`; `PathTooLongException` maps to stable `DST-PATH-006`, never to containment.
+- `DestinationPathGuard` performs canonical containment plus reparse/hard-link overwrite refusal via the `IFileSystemProbe` seam (`GetFileInformationByHandle` is Windows-gated).
+- `DestinationCapacityService` uses a fixed 5 GiB reserve with strictly-greater comparison (boundary-exact fails) for both total and per-file checks.
+- NTFS broad-exposure evaluation (`DestinationSecurityEvaluator`) uses `System.IO.FileSystem.AccessControl` 5.0.0 (already pinned; same package as M2), Windows-gated behind a pure evaluation core.
+- Windows CI gotcha proven in M4: pooled SQLite connections keep file locks on Windows, and `Path.GetFullPath` can throw `PathTooLongException` for >32767-unit paths on Windows but not macOS.
+
 ## Fixed controls
 
 - No employee-password collection or employee authentication.
