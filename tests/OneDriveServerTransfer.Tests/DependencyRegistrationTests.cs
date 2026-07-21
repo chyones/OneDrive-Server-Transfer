@@ -6,6 +6,7 @@ using OneDriveServerTransfer.Abstractions;
 using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.DependencyInjection;
+using OneDriveServerTransfer.Destination;
 using OneDriveServerTransfer.SourceResolution;
 using OneDriveServerTransfer.State;
 using OneDriveServerTransfer.ViewModels;
@@ -13,9 +14,9 @@ using OneDriveServerTransfer.ViewModels;
 namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
-/// Verifies the dependency-injection composition root: M1 and M2 services resolve, and
-/// no later-phase abstraction has a registered implementation (fake production services
-/// are prohibited).
+/// Verifies the dependency-injection composition root: M1, M2, M3, and M4 services
+/// resolve, and no later-phase abstraction has a registered implementation (fake
+/// production services are prohibited).
 /// </summary>
 public class DependencyRegistrationTests
 {
@@ -77,12 +78,30 @@ public class DependencyRegistrationTests
         Assert.IsType<EmployeeSourceResolver>(provider.GetRequiredService<IEmployeeSourceResolver>());
     }
 
+    [Fact]
+    public void ResolvesRealM4DestinationServices()
+    {
+        using var provider = BuildProvider();
+
+        Assert.IsType<DestinationValidator>(provider.GetRequiredService<IDestinationValidator>());
+        Assert.IsType<DestinationLayoutService>(provider.GetRequiredService<IDestinationLayoutService>());
+        Assert.IsType<DestinationLockService>(provider.GetRequiredService<IDestinationLockService>());
+        Assert.IsType<SqliteDestinationBindingStore>(provider.GetRequiredService<IDestinationBindingStore>());
+        Assert.IsType<DestinationBindingService>(provider.GetRequiredService<IDestinationBindingService>());
+        Assert.IsType<DestinationSessionService>(provider.GetRequiredService<IDestinationSessionService>());
+        Assert.IsType<InMemoryPathCollisionRegistry>(provider.GetRequiredService<IPathCollisionRegistry>());
+        Assert.IsType<PathMapperV1>(provider.GetRequiredService<IPathMapper>());
+        Assert.IsType<DestinationPathGuard>(provider.GetRequiredService<IDestinationPathGuard>());
+        Assert.IsType<DestinationCapacityService>(provider.GetRequiredService<IDestinationCapacityService>());
+        Assert.IsType<DestinationSecurityEvaluator>(provider.GetRequiredService<IDestinationSecurityEvaluator>());
+        Assert.IsType<LocalStorageService>(provider.GetRequiredService<ILocalStorageService>());
+    }
+
     public static TheoryData<Type> LaterPhaseInterfaces => new()
     {
         typeof(IGraphMetadataClient),
         typeof(ITemporaryDownloadClient),
         typeof(IHashingService),
-        typeof(ILocalStorageService),
         typeof(ITransferStateStore),
         typeof(IReportWriter),
     };

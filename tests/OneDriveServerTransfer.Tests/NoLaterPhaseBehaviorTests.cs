@@ -3,9 +3,10 @@ using System.Text.RegularExpressions;
 namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
-/// Guards the M3 boundary: employee source resolution may use only the approved v1.0
-/// endpoints in GraphEndpoints.cs; no inventory, delta, download, transfer,
-/// destination, or report behavior may exist yet.
+/// Guards the milestone boundary: employee source resolution may use only the approved
+/// v1.0 endpoints in GraphEndpoints.cs, and no inventory, delta, download, transfer,
+/// or report behavior may exist yet. M4 destination and source binding exists and is
+/// covered by its own tests.
 /// </summary>
 public class NoLaterPhaseBehaviorTests
 {
