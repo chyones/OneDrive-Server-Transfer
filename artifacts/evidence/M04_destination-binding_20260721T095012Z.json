@@ -1,0 +1,123 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M4 — Destination and source binding",
+  "completionState": "SOURCE_COMPLETE",
+  "validatedSourceCommit": "2861f8549e9c48b09a8336b8f48b700005f058b4",
+  "executedAtUtc": "2026-07-21T09:33:33Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/m4-destination-source-binding",
+    "authoritativeValidation": "GitHub Actions Windows CI",
+    "windowsCiRunnerImage": "windows-2025-vs2026 (20260714.240.1)",
+    "dotnetSdk": "10.0.301 (pinned by global.json, rollForward latestPatch); test runtime .NET 10.0.10",
+    "supplementaryLocalChecks": "macOS arm64, .NET SDK 10.0.301, EnableWindowsTargeting=true Release build (0 warnings, 0 errors) and a scratch net10.0 xunit run of the M4 sources (143/143 passed); local execution of the WPF test assembly is not possible because it requires the Windows Desktop runtime"
+  },
+  "validatedActions": [
+    {
+      "action": "Deterministic dependency restore on Windows",
+      "command": "dotnet restore OneDriveServerTransfer.sln --locked-mode",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "action": "Release build and static analysis on Windows",
+      "command": "dotnet build OneDriveServerTransfer.sln --configuration Release --no-restore",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "0 warnings, 0 errors."
+    },
+    {
+      "action": "Automated tests on Windows",
+      "command": "dotnet test OneDriveServerTransfer.sln --configuration Release --no-build",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": {
+        "total": 350,
+        "passed": 350,
+        "failed": 0,
+        "skipped": 0
+      },
+      "details": "M4 coverage (141 new tests): destination rejection matrix (UNC, network and non-fixed drive types, relative paths, Windows system and application-install directories, reparse points in the path chain); OneDriveData/_TransferReport layout creation and foreign-content detection; SQLite destination binding (bind new, same-operator and other-authorized-operator resume, foreign tenant/drive/employee rejection, non-empty destination without valid state, unsupported future schema version, corrupt database rejected and never reset with original bytes preserved); exclusive lock contention and release; session orchestration with lock-before-state-write and lock release on failed binding; PathMappingVersion=1 vectors (NFC normalization, _xHHHH_ encoding, reserved device names, _empty_ token, ordinal case-insensitive and file-versus-folder collisions, deterministic 10/20/full SHA-256 suffix expansion, 200 UTF-16 code-unit truncation retaining suffix and extension without splitting surrogates, determinism across runs, parent scoping); canonical containment, traversal and rooted-path rejection, stable path-length failure beyond 32767 UTF-16 code units, reparse-point and multi-hard-link overwrite refusal; capacity service with the fixed 5 GiB reserve and strictly-greater boundary; NTFS broad-exposure ACL evaluation logic; user-facing error shape and reference-code uniqueness; DI registration of all M4 services."
+    },
+    {
+      "action": "Dependency vulnerability review",
+      "command": "dotnet list OneDriveServerTransfer.sln package --vulnerable --include-transitive",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "No vulnerable NuGet packages detected."
+    },
+    {
+      "action": "Prohibited authentication and API checks",
+      "command": "./scripts/Test-ProhibitedContent.ps1",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "78 files scanned for 15 prohibited patterns. No matches."
+    },
+    {
+      "action": "Secret detection",
+      "command": "gitleaks/gitleaks-action@v2 (full history)",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "Gitleaks reported: no leaks found."
+    }
+  ],
+  "ciEvidence": {
+    "workflow": ".github/workflows/windows-ci.yml",
+    "passingRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29818672841",
+    "passingRunConclusion": "success",
+    "passingRunHeadSha": "2861f8549e9c48b09a8336b8f48b700005f058b4",
+    "earlierFailedRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29817716588",
+    "earlierFailedRunNote": "Commit 83c2f6b failed 2 Windows-only tests (SQLite pooled connection kept a file lock on the corrupt-database test; PathTooLongException was mapped to the containment error instead of the stable path-length error). Fixed in 2861f85; the failed run is retained as history and is not used as evidence."
+  },
+  "scopeBoundaries": {
+    "implemented": [
+      "local fixed-drive destination validation and OneDriveData/_TransferReport layout",
+      "SQLite destination binding to tenant ID, source drive ID, and employee Entra object ID with operator audit only (D-018, D-032)",
+      "OS-backed exclusive destination locking (FileShare.None lock file)",
+      "authorized-resume validation seam: same tenant/employee/drive/state checks required; operator identity is audit data",
+      "deterministic PathMappingVersion=1 with collision-registry seam for M5 persistence",
+      "canonical containment, traversal, reparse-point, hard-link, and path-length write guards (D-011)",
+      "capacity service: known remaining bytes plus fixed 5 GiB reserve, strictly-greater boundary, per-file recheck",
+      "NTFS broad-exposure evaluation (Everyone, Authenticated Users, BUILTIN\\Users) behind a testable seam"
+    ],
+    "notImplemented": [
+      "scan, delta inventory, or dry-run summary (M5)",
+      "file transfer, downloads, verification, or copy resume (M5)",
+      "run-state machine and terminal states (M5)",
+      "reports, CSV/JSON outputs, or per-run report directories (M6)",
+      "UI wiring of destination selection (M6)",
+      "production or real-tenant behavior (M7)"
+    ]
+  },
+  "result": "PASS",
+  "exitCode": 0,
+  "statusConclusion": {
+    "completionLabel": "Source Implementation Complete remains unearned (later milestones pending)",
+    "m4Status": "SOURCE_COMPLETE",
+    "applicationImplementationStarted": true,
+    "productionReady": false
+  },
+  "unexecutedChecks": [
+    "cross-process and cross-session destination locking on Windows Server (production-level acceptance, M7)",
+    "real DriveInfo network/removable drive rejection and real NTFS ACL reading (validated through seams in unit tests; Windows Server verification in M7)",
+    "GetFileInformationByHandle multi-hard-link detection on Windows runtime (gated Windows-only code path; M7)",
+    "scan, copy, resume, verification, run states (M5)",
+    "reports and UI (M6)",
+    "self-contained win-x64 publish (M7/M8)"
+  ],
+  "limitations": [
+    "Drive-type, reparse-point, hard-link, and ACL checks are validated through test seams; live Windows Server filesystem behavior remains an M7 acceptance item.",
+    "Destination locking is unit-tested for in-process contention and release; cross-process/cross-session evidence is production-level and remains unexecuted.",
+    "The path-mapping collision registry registered in DI is in-memory; SQLite persistence of mappings is the M5 integration point against the same interface.",
+    "Local macOS checks were supplementary only; mandatory evidence comes from Windows CI on the exact validated commit."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}
