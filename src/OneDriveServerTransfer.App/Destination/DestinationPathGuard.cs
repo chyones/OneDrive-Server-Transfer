@@ -60,8 +60,14 @@ public sealed class DestinationPathGuard : IDestinationPathGuard
         {
             canonical = Path.GetFullPath(Path.Combine(rootWithSeparator, mappedRelativePath));
         }
-        catch (Exception exception) when (exception is ArgumentException or NotSupportedException
-            or PathTooLongException)
+        catch (PathTooLongException exception)
+        {
+            _logger.LogWarning(
+                "Content path rejected; code={ReferenceCode}; reason=PathTooLong",
+                DestinationErrorCodes.PathTooLong);
+            throw DestinationErrors.PathTooLong(exception);
+        }
+        catch (Exception exception) when (exception is ArgumentException or NotSupportedException)
         {
             throw DestinationErrors.ContainmentViolation(exception);
         }

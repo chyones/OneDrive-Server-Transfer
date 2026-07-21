@@ -194,7 +194,14 @@ public sealed class SqliteDestinationBindingStore : IDestinationBindingStore
 
     private static async Task<SqliteConnection> OpenAsync(string databasePath, CancellationToken cancellationToken)
     {
-        var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath }.ToString();
+        // Pooling is disabled so a disposed connection releases its OS file handle
+        // immediately: a database rejected by integrity validation must stay readable,
+        // preservable, and copyable by the caller without a stale pooled lock.
+        var connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Pooling = false,
+        }.ToString();
         var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
         return connection;
