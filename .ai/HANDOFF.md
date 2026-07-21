@@ -7,7 +7,7 @@
 - M3 integration: PR #12 merged; `main` baseline `fa1b81190b481a4dc4bf3f029a407b59da117ff4`; merge CI run 29742411955 succeeded.
 - Development state: paused after M3 integration.
 - Current phase: `M4 — Destination and source binding`.
-- Status: `NOT_STARTED`. M4 requires a new explicit owner instruction before any work begins. No M4 functionality exists.
+- Status: `IN_PROGRESS` on branch `agent/m4-destination-source-binding`, authorized by explicit owner instruction on 2026-07-21. No M4 functionality exists yet; Windows CI evidence for the M4 source commit is pending.
 - M3 evidence: `artifacts/evidence/M03_onedrive-resolution_20260720T110411Z.json` on validated source commit `eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9` (Windows CI run 29737013050, all checks passed, 209/209 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
@@ -23,11 +23,9 @@ Implemented on branch `agent/m3-employee-source-resolution`:
 - tenant-host, personal-site, business-drive, and owner validation producing `ResolvedEmployeeSource` (tenant ID, employee object ID, UPN when available, display name, drive ID/type/owner/webUrl, quota);
 - tenant OneDrive host configuration with placeholder-only example.
 
-## M4 task (not started)
+## M4 task (in progress)
 
-Development is paused. Do not begin M4 until the repository owner issues a new explicit instruction for it. Before changing source files, mark M4 `IN_PROGRESS`.
-
-Implement M4 only:
+M4 was marked `IN_PROGRESS` on 2026-07-21 under explicit owner authorization. Implement M4 only:
 
 - local fixed or directly attached destinations only;
 - create `OneDriveData` and `_TransferReport`;
