@@ -5,9 +5,9 @@
 - Documentation baseline: complete.
 - Application source: M1 foundation, M2 authentication, and M3 employee source resolution complete and merged into `main`.
 - M3 integration: PR #12 merged; `main` baseline `fa1b81190b481a4dc4bf3f029a407b59da117ff4`; merge CI run 29742411955 succeeded.
-- Development state: M4 source complete on branch `agent/m4-destination-source-binding` (pushed, intentionally not merged); paused awaiting M5 authorization.
+- Development state: M4 merged into `main` (PR #14, merge commit `f3011cd4216c8c1c03f74ce711c71b421ea39782`); M5 in progress on branch `agent/m5-scan-copy-resume`.
 - Current phase: `M5 — Scan, copy, resume, verification, and state`.
-- Status: `NOT_STARTED`. M5 requires a new explicit owner instruction before any work begins. No M5 functionality exists.
+- Status: `IN_PROGRESS` on branch `agent/m5-scan-copy-resume`, authorized by explicit owner instruction on 2026-07-21. No M5 functionality exists yet; Windows CI evidence for the M5 source commit is pending.
 - M4 evidence: `artifacts/evidence/M04_destination-binding_20260721T095012Z.json` on validated source commit `2861f8549e9c48b09a8336b8f48b700005f058b4` (Windows CI run 29818672841, all checks passed, 350/350 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
@@ -38,9 +38,9 @@ Implemented on branch `agent/m4-destination-source-binding` (validated commit `2
 - NTFS broad-exposure ACL evaluation behind a testable seam (Windows-gated reader);
 - 141 new tests; full suite 350/350 on Windows CI.
 
-## M5 task (not started)
+## M5 task (in progress)
 
-Development is paused. Do not begin M5 until the repository owner issues a new explicit instruction for it. Before changing source files, mark M5 `IN_PROGRESS`. Implement the M5 goals in `docs/IMPLEMENTATION_PLAN.md` only: mandatory dry-run delta inventory, reconciliation, bounded transfer with resume and verification, transactional state, and exact run states.
+M5 was marked `IN_PROGRESS` on 2026-07-21 under explicit owner authorization. Implement the M5 goals in `docs/IMPLEMENTATION_PLAN.md` only: mandatory dry-run delta inventory, reconciliation (at most three bounded passes), bounded transfer with fixed concurrency of three, `.partial` files, validated Range resume, one retry owner with `Retry-After`, supported Microsoft source hashes separate from local SHA-256, timestamp preservation, transactional SQLite state with integrity checks and idempotent recovery, and exact item/run states.
 
 ## M5 boundaries
 
