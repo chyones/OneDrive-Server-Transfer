@@ -20,6 +20,9 @@ internal sealed class FakeDeltaInventoryClient : IDeltaInventoryClient
 
     public int FailAfterPages { get; set; } = int.MaxValue;
 
+    /// <summary>When set, the failure fires once and then clears itself.</summary>
+    public bool ClearFailureAfterThrow { get; set; }
+
     public void EnqueuePage(DeltaInventoryPage page) => _pages.Enqueue(page);
 
     public async Task<DeltaEnumerationResult> EnumerateAsync(
@@ -41,7 +44,14 @@ internal sealed class FakeDeltaInventoryClient : IDeltaInventoryClient
             // FailAfterPages = N fails after N pages were applied through the sink.
             if (pageCount >= FailAfterPages && Failure is not null)
             {
-                throw Failure;
+                var failure = Failure;
+                if (ClearFailureAfterThrow)
+                {
+                    Failure = null;
+                    FailAfterPages = int.MaxValue;
+                }
+
+                throw failure;
             }
 
             var page = _pages.Dequeue();

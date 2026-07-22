@@ -360,6 +360,214 @@ public class SqliteTransferStateStoreTests : IDisposable
         Assert.Equal(["orphan"], unresolved.Select(item => item.SourceItemId).ToArray());
     }
 
+    [Fact]
+    public async Task RunLifecyclePersistsStatesAndRejectsTerminalRewrite()
+    {
+        var store = await CreateOpenStoreAsync();
+
+        await store.BeginRunAsync(new TransferRunRecord(
+            "run-1", DriveId, "scan-1", DateTimeOffset.UtcNow, null, null), CancellationToken.None);
+
+        var latest = await store.GetLatestRunAsync(CancellationToken.None);
+        Assert.Equal("run-1", latest!.RunId);
+        Assert.True(latest.IsInProgress);
+        Assert.Null(latest.FinalState);
+
+        await store.CompleteRunAsync("run-1", TransferRunState.Completed, CancellationToken.None);
+        latest = await store.GetLatestRunAsync(CancellationToken.None);
+        Assert.Equal(TransferRunState.Completed, latest!.FinalState);
+        Assert.NotNull(latest.EndedUtc);
+
+        // A second terminal transition for the same run is rejected.
+        await Assert.ThrowsAsync<DestinationException>(() =>
+            store.CompleteRunAsync("run-1", TransferRunState.Failed, CancellationToken.None));
+
+        // InProgress itself is not a terminal state and cannot be persisted.
+        await store.BeginRunAsync(new TransferRunRecord(
+            "run-2", DriveId, null, DateTimeOffset.UtcNow, null, null), CancellationToken.None);
+        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
+            store.CompleteRunAsync("run-2", TransferRunState.InProgress, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task StaleInProgressRunsAreMarkedInterruptedIdempotently()
+    {
+        var store = await CreateOpenStoreAsync();
+        await store.BeginRunAsync(new TransferRunRecord(
+            "run-1", DriveId, null, DateTimeOffset.UtcNow, null, null), CancellationToken.None);
+        await store.BeginRunAsync(new TransferRunRecord(
+            "run-2", DriveId, null, DateTimeOffset.UtcNow, null, null), CancellationToken.None);
+        await store.CompleteRunAsync("run-2", TransferRunState.Cancelled, CancellationToken.None);
+        await store.BeginRunAsync(new TransferRunRecord(
+            "run-3", DriveId, null, DateTimeOffset.UtcNow, null, null), CancellationToken.None);
+
+        var interrupted = await store.MarkInProgressRunsInterruptedAsync(CancellationToken.None);
+        Assert.Equal(2, interrupted);
+
+        // Idempotent: a second open finds nothing to interrupt.
+        Assert.Equal(0, await store.MarkInProgressRunsInterruptedAsync(CancellationToken.None));
+
+        var latest = await store.GetLatestRunAsync(CancellationToken.None);
+        Assert.Equal("run-3", latest!.RunId);
+        Assert.Equal(TransferRunState.Interrupted, latest.FinalState);
+    }
+
+    [Fact]
+    public async Task SchedulableBatchReturnsOnlyMappedFilesBounded()
+    {
+        var store = await CreateOpenStoreAsync();
+        await store.BeginScanAsync(Scan("scan-1"), CancellationToken.None);
+        await store.ApplyFinalDeltaPageAsync("scan-1",
+        [
+            Item("f1", "root", "a.txt"),
+            Item("f2", "root", "b.txt"),
+            Item("f3", "root", "c.txt"),
+            Item("d1", "root", "folder", ItemFacetClassification.Folder, null),
+            Item("u1", "root", "pkg", ItemFacetClassification.UnsupportedPackage, null),
+        ], "https://opaque/delta", CancellationToken.None);
+
+        foreach (var id in new[] { "f1", "f2", "f3" })
+        {
+            await store.UpdateItemPathsAsync(id, id, id, TransferItemState.Mapped, CancellationToken.None);
+        }
+
+        await store.SetItemStateAsync("f3", TransferItemState.Completed, CancellationToken.None);
+        await store.UpdateItemPathsAsync("d1", "d1", "d1", TransferItemState.Mapped, CancellationToken.None);
+
+        var batch = await store.GetSchedulableFileItemsAsync(10, CancellationToken.None);
+        Assert.Equal(["f1", "f2"], batch.Select(item => item.SourceItemId).ToArray());
+
+        var bounded = await store.GetSchedulableFileItemsAsync(1, CancellationToken.None);
+        Assert.Equal(["f1"], bounded.Select(item => item.SourceItemId).ToArray());
+    }
+
+    [Fact]
+    public async Task AttemptBudgetIncrementsPersistently()
+    {
+        var store = await CreateOpenStoreAsync();
+        await store.BeginScanAsync(Scan("scan-1"), CancellationToken.None);
+        await store.ApplyFinalDeltaPageAsync("scan-1", [Item("f1")], "https://opaque/delta",
+            CancellationToken.None);
+
+        Assert.Equal(1, await store.IncrementAttemptCountAsync("f1", CancellationToken.None));
+        Assert.Equal(2, await store.IncrementAttemptCountAsync("f1", CancellationToken.None));
+
+        // A reopened store sees the persisted budget: restart cannot hide attempts.
+        var reopened = await OpenStoreAsync();
+        Assert.Equal(3, await reopened.IncrementAttemptCountAsync("f1", CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task VerifiedCompletedAndRecopyTransitionsPersist()
+    {
+        var store = await CreateOpenStoreAsync();
+        await store.BeginScanAsync(Scan("scan-1"), CancellationToken.None);
+        await store.ApplyFinalDeltaPageAsync("scan-1", [Item("f1")], "https://opaque/delta",
+            CancellationToken.None);
+
+        await store.MarkItemVerifiedAsync("f1", "local-sha", CancellationToken.None);
+        var item = await store.GetItemAsync("f1", CancellationToken.None);
+        Assert.Equal(TransferItemState.Verified, item!.TransferState);
+        Assert.Equal("local-sha", item.LocalSha256);
+
+        await store.MarkItemCompletedAsync("f1", TimestampPreservationResult.Preserved, CancellationToken.None);
+        item = await store.GetItemAsync("f1", CancellationToken.None);
+        Assert.Equal(TransferItemState.Completed, item!.TransferState);
+        Assert.Equal(TimestampPreservationResult.Preserved, item.TimestampPreservation);
+
+        await store.ResetItemForRecopyAsync("f1", CancellationToken.None);
+        item = await store.GetItemAsync("f1", CancellationToken.None);
+        Assert.Equal(TransferItemState.Mapped, item!.TransferState);
+        Assert.Null(item.LocalSha256);
+        Assert.Equal(0, item.AttemptCount);
+        Assert.Equal(TimestampPreservationResult.NotAttempted, item.TimestampPreservation);
+    }
+
+    [Fact]
+    public async Task CancellationTransitionsOnlyPendingItems()
+    {
+        var store = await CreateOpenStoreAsync();
+        await store.BeginScanAsync(Scan("scan-1"), CancellationToken.None);
+        await store.ApplyFinalDeltaPageAsync("scan-1",
+        [
+            Item("f1"), Item("f2"), Item("f3"), Item("f4"),
+        ], "https://opaque/delta", CancellationToken.None);
+
+        await store.SetItemStateAsync("f1", TransferItemState.Mapped, CancellationToken.None);
+        await store.SetItemStateAsync("f2", TransferItemState.Downloading, CancellationToken.None);
+        await store.SetItemStateAsync("f3", TransferItemState.Completed, CancellationToken.None);
+        await store.SetItemStateAsync("f4", TransferItemState.Failed, CancellationToken.None);
+
+        var cancelled = await store.CancelPendingItemsAsync(CancellationToken.None);
+
+        // f1 and f2 are cancelled; the Discovered-root-style item (none here), the
+        // completed item, and the failed item keep their recorded outcome.
+        Assert.Equal(2, cancelled);
+        Assert.Equal(TransferItemState.Cancelled,
+            (await store.GetItemAsync("f1", CancellationToken.None))!.TransferState);
+        Assert.Equal(TransferItemState.Cancelled,
+            (await store.GetItemAsync("f2", CancellationToken.None))!.TransferState);
+        Assert.Equal(TransferItemState.Completed,
+            (await store.GetItemAsync("f3", CancellationToken.None))!.TransferState);
+        Assert.Equal(TransferItemState.Failed,
+            (await store.GetItemAsync("f4", CancellationToken.None))!.TransferState);
+    }
+
+    [Fact]
+    public async Task RunDeltaPagePersistsCheckpointStateAndPageMarker()
+    {
+        var store = await CreateOpenStoreAsync();
+        await store.BeginScanAsync(Scan("scan-1"), CancellationToken.None);
+        await store.ApplyFinalDeltaPageAsync("scan-1", [Item("f1")], "https://opaque/delta",
+            CancellationToken.None);
+
+        await store.ApplyRunDeltaPageAsync("run-1", [Item("f2")], "https://opaque/next2",
+            DeltaCheckpointState.ReconciliationInProgress, CancellationToken.None);
+
+        var checkpoint = await store.GetDeltaCheckpointRecordAsync(CancellationToken.None);
+        Assert.Equal("https://opaque/next2", checkpoint!.Checkpoint);
+        Assert.Equal(DeltaCheckpointState.ReconciliationInProgress, checkpoint.State);
+
+        var item = await store.GetItemAsync("f2", CancellationToken.None);
+        Assert.Equal("run-1", item!.ScanId);
+    }
+
+    [Fact]
+    public async Task FreshReenumerationMarksUntouchedItemsDeletedWithoutTouchingState()
+    {
+        var store = await CreateOpenStoreAsync();
+        await store.BeginScanAsync(Scan("scan-1"), CancellationToken.None);
+        await store.ApplyFinalDeltaPageAsync("scan-1",
+        [
+            Item("root", null, "root", ItemFacetClassification.Folder, null),
+            Item("f1", "root", "kept.txt"),
+            Item("f2", "root", "gone.txt"),
+        ], "https://opaque/delta", CancellationToken.None);
+
+        await store.MarkItemVerifiedAsync("f2", "sha", CancellationToken.None);
+        await store.MarkItemCompletedAsync("f2", TimestampPreservationResult.Preserved, CancellationToken.None);
+
+        // Fresh enumeration touches only root and f1 with the run marker.
+        await store.ApplyRunDeltaPageAsync("run-9",
+        [
+            Item("root", null, "root", ItemFacetClassification.Folder, null),
+            Item("f1", "root", "kept.txt"),
+        ], "https://opaque/delta9", DeltaCheckpointState.FullReenumerationInProgress,
+            CancellationToken.None);
+
+        var marked = await store.MarkUntouchedItemsDeletedAsync("run-9", CancellationToken.None);
+
+        Assert.Equal(1, marked);
+        var gone = await store.GetItemAsync("f2", CancellationToken.None);
+        Assert.Equal(ItemFacetClassification.DeletedSource, gone!.Classification);
+        // Retained archive content keeps its completed outcome and local hash.
+        Assert.Equal(TransferItemState.Completed, gone.TransferState);
+        Assert.Equal("sha", gone.LocalSha256);
+
+        var kept = await store.GetItemAsync("f1", CancellationToken.None);
+        Assert.Equal(ItemFacetClassification.File, kept!.Classification);
+    }
+
     public void Dispose()
     {
         SqliteConnection.ClearAllPools();

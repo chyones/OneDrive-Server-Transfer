@@ -129,4 +129,115 @@ public interface ITransferStateStore
     /// Idempotent; returns the number of items reset.
     /// </summary>
     Task<int> ResetInFlightItemsAsync(CancellationToken cancellationToken);
+
+    /// <summary>Creates a new copy run in the in-progress state (null final state).</summary>
+    Task BeginRunAsync(TransferRunRecord run, CancellationToken cancellationToken);
+
+    /// <summary>The most recently started run for the bound drive, or null.</summary>
+    Task<TransferRunRecord?> GetLatestRunAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Marks every run left without an orderly terminal transition as
+    /// <see cref="TransferRunState.Interrupted" />. Idempotent; returns the number of
+    /// runs transitioned. Runs on open so a crashed run stays eligible for validated
+    /// resume and is never mistaken for a live one.
+    /// </summary>
+    Task<int> MarkInProgressRunsInterruptedAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Persists the terminal state of one run with its end timestamp. Terminal states
+    /// only; a second terminal transition for the same run is rejected so run history
+    /// is never rewritten.
+    /// </summary>
+    Task CompleteRunAsync(string runId, TransferRunState finalState, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Up to <paramref name="maxCount" /> supported file items in the schedulable
+    /// <see cref="TransferItemState.Mapped" /> state, in stable insertion order. The
+    /// bounded batch feeds the download queue so the complete hierarchy is never
+    /// materialized for scheduling.
+    /// </summary>
+    Task<IReadOnlyList<TransferItemRecord>> GetSchedulableFileItemsAsync(
+        int maxCount,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Increments the persisted per-file attempt budget and returns the new value, so a
+    /// restart cannot create an unbounded hidden retry loop.
+    /// </summary>
+    Task<int> IncrementAttemptCountAsync(string sourceItemId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Transactionally records the local SHA-256 and the
+    /// <see cref="TransferItemState.Verified" /> state for one item whose content has
+    /// been downloaded and verified but whose final path is not yet committed.
+    /// </summary>
+    Task MarkItemVerifiedAsync(
+        string sourceItemId,
+        string localSha256,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Transactionally records the <see cref="TransferItemState.Completed" /> state and
+    /// the timestamp-preservation result for one item whose final path is committed.
+    /// </summary>
+    Task MarkItemCompletedAsync(
+        string sourceItemId,
+        TimestampPreservationResult timestampResult,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Returns one item to the schedulable state for a content re-copy after the source
+    /// version changed: clears the local hash and timestamp result and restarts the
+    /// per-file attempt budget for the new source version.
+    /// </summary>
+    Task ResetItemForRecopyAsync(string sourceItemId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Marks every item still in a non-terminal pre-completion state
+    /// (<see cref="TransferItemState.Discovered" />, <see cref="TransferItemState.Mapped" />,
+    /// <see cref="TransferItemState.Downloading" />, <see cref="TransferItemState.Verified" />)
+    /// as <see cref="TransferItemState.Cancelled" />. Completed, skipped, unsupported,
+    /// and failed items keep their recorded outcome. Returns the number transitioned.
+    /// </summary>
+    Task<int> CancelPendingItemsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Applies one reconciliation or fresh re-enumeration delta page transactionally:
+    /// upserts the items by Drive Item ID and persists the opaque paging link with the
+    /// given checkpoint state in the same transaction. The run ID is recorded as the
+    /// page marker so a fresh re-enumeration can identify items the source no longer
+    /// returns.
+    /// </summary>
+    Task ApplyRunDeltaPageAsync(
+        string runId,
+        IReadOnlyList<TransferItemRecord> items,
+        string pagingLink,
+        DeltaCheckpointState checkpointState,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// After a completed fresh re-enumeration, marks every non-tombstone item the new
+    /// inventory did not touch (page marker differs from <paramref name="runId" />) as
+    /// a deleted-source record. Local archive content is never deleted; verified items
+    /// keep their completed state so retained content stays distinguishable.
+    /// Returns the number of items marked.
+    /// </summary>
+    Task<int> MarkUntouchedItemsDeletedAsync(string runId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// All items whose mapped relative path sits under the given mapped directory
+    /// prefix (the folder's own mapped path). Used to update descendant mappings
+    /// transactionally when a verified folder is relocated after a rename or move.
+    /// </summary>
+    Task<IReadOnlyList<TransferItemRecord>> GetItemsUnderMappedPathAsync(
+        string mappedPathPrefix,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Sum of the expected sizes of supported file items still needing transfer
+    /// (Discovered, Mapped, or Downloading). Bounded SQL aggregation for the
+    /// pre-scheduling capacity evaluation.
+    /// </summary>
+    Task<long> GetRemainingFileBytesAsync(CancellationToken cancellationToken);
 }

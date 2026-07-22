@@ -25,8 +25,8 @@ public enum DeltaItemFacet
 
 /// <summary>
 /// One item of a drive delta page, reduced to the contract-required fields. Source-hash
-/// information carries only supported Microsoft hashes (sha1Hash, then quickXorHash);
-/// the Graph sha256Hash value is never used (decision D-038).
+/// information carries only supported Microsoft hashes (quickXorHash preferred, then
+/// sha1Hash); the Graph sha256Hash value is never used (decision D-038).
 /// </summary>
 public sealed record DeltaInventoryItem(
     string ItemId,

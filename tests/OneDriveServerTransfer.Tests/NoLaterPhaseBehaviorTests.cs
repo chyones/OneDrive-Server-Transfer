@@ -4,9 +4,9 @@ namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
 /// Guards the milestone boundary: source code may use only the approved v1.0 endpoints
-/// in GraphEndpoints.cs, and no download, transfer, report, or later-phase UI behavior
-/// may exist yet. M4 destination and source binding and the M5 scan, delta inventory,
-/// and transfer state exist and are covered by their own tests.
+/// in GraphEndpoints.cs, and no report or later-phase UI behavior may exist yet. M5
+/// download, transfer, verification, and reconciliation behavior exists and is covered
+/// by its own tests; reports and Start Copy UI wiring remain prohibited.
 /// </summary>
 public class NoLaterPhaseBehaviorTests
 {
@@ -57,19 +57,22 @@ public class NoLaterPhaseBehaviorTests
         Assert.Contains("/sites/{0}:/{1}", inventory, StringComparison.Ordinal);
         Assert.Contains("/sites/{0}/drive", inventory, StringComparison.Ordinal);
         Assert.Contains("/drives/{0}/root/delta", inventory, StringComparison.Ordinal);
+        Assert.Contains("/drives/{0}/items/{1}", inventory, StringComparison.Ordinal);
     }
 
     [Theory]
-    [InlineData("@microsoft.graph.downloadUrl")]
-    [InlineData("ScanCommand")]
     [InlineData("StartCopy")]
-    [InlineData("TransferEngine")]
+    [InlineData("ScanCommand")]
     [InlineData("GetDriveItemContent")]
-    public void NoDownloadTransferReportOrLaterUiBehaviorExists(string forbidden)
+    [InlineData("TransferReport.csv")]
+    [InlineData("TransferSummary.json")]
+    [InlineData("FailedFiles.csv")]
+    [InlineData("CsvReportWriter")]
+    public void NoReportOrLaterUiBehaviorExists(string forbidden)
     {
         Assert.False(
             AllSource().Contains(forbidden, StringComparison.Ordinal),
-            $"M5 slice-1 source must not contain '{forbidden}'.");
+            $"M5 slice-2 source must not contain '{forbidden}'.");
     }
 
     [Fact]

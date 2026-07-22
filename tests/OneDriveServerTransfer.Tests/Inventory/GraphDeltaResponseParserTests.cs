@@ -51,24 +51,24 @@ public class GraphDeltaResponseParserTests
         Assert.Equal("ctag-1", item.CTag);
         Assert.Equal(new DateTimeOffset(2026, 1, 2, 3, 4, 5, TimeSpan.Zero), item.CreatedUtc);
         Assert.Equal(new DateTimeOffset(2026, 2, 3, 4, 5, 6, TimeSpan.Zero), item.LastModifiedUtc);
-        // sha1Hash wins over quickXorHash; the Graph sha256Hash is never used (D-038).
-        Assert.Equal("sha1Hash", item.SourceHashAlgorithm);
-        Assert.Equal("SHA1", item.SourceHashValue);
+        // quickXorHash wins over sha1Hash (D-038); the Graph sha256Hash is never used.
+        Assert.Equal("quickXorHash", item.SourceHashAlgorithm);
+        Assert.Equal("QXOR", item.SourceHashValue);
     }
 
     [Fact]
-    public void FallsBackToQuickXorHashWhenSha1Absent()
+    public void FallsBackToSha1HashWhenQuickXorAbsent()
     {
         using var document = Json("""
             {
-              "value": [ { "id": "f1", "file": { "hashes": { "quickXorHash": "QX" } } } ],
+              "value": [ { "id": "f1", "file": { "hashes": { "sha1Hash": "SHA1" } } } ],
               "@odata.deltaLink": "d"
             }
             """);
 
         var item = Assert.Single(GraphDeltaResponseParser.ParseDeltaPage(document).Items);
-        Assert.Equal("quickXorHash", item.SourceHashAlgorithm);
-        Assert.Equal("QX", item.SourceHashValue);
+        Assert.Equal("sha1Hash", item.SourceHashAlgorithm);
+        Assert.Equal("SHA1", item.SourceHashValue);
     }
 
     [Fact]

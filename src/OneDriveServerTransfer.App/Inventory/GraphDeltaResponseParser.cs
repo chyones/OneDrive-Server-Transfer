@@ -47,7 +47,11 @@ public static class GraphDeltaResponseParser
         return new DeltaInventoryPage(items, nextLink, deltaLink);
     }
 
-    private static DeltaInventoryItem ParseItem(JsonElement element)
+    /// <summary>
+    /// Parses one drive item element (delta page item or GRAPH-ITEM-001 single-item
+    /// response). Shared by the delta inventory and the item metadata re-read.
+    /// </summary>
+    public static DeltaInventoryItem ParseItem(JsonElement element)
     {
         if (element.ValueKind != JsonValueKind.Object)
         {
@@ -125,9 +129,10 @@ public static class GraphDeltaResponseParser
     }
 
     /// <summary>
-    /// Reads the supported Microsoft source hash: sha1Hash first, then quickXorHash.
-    /// The Graph sha256Hash value is never used (D-038); unknown hash properties are
-    /// ignored. Absence of a comparable hash is valid and stays null.
+    /// Reads the supported Microsoft source hash: quickXorHash first (preferred per
+    /// D-038), then sha1Hash. The Graph sha256Hash value is never used (D-038); unknown
+    /// hash properties are ignored. Absence of a comparable hash is valid and stays
+    /// null.
     /// </summary>
     private static (string? Algorithm, string? Value) ReadSourceHash(JsonElement element)
     {
@@ -137,14 +142,14 @@ public static class GraphDeltaResponseParser
             return (null, null);
         }
 
-        var sha1 = GetString(hashes, "sha1Hash");
-        if (!string.IsNullOrEmpty(sha1))
+        var quickXor = GetString(hashes, "quickXorHash");
+        if (!string.IsNullOrEmpty(quickXor))
         {
-            return ("sha1Hash", sha1);
+            return ("quickXorHash", quickXor);
         }
 
-        var quickXor = GetString(hashes, "quickXorHash");
-        return !string.IsNullOrEmpty(quickXor) ? ("quickXorHash", quickXor) : (null, null);
+        var sha1 = GetString(hashes, "sha1Hash");
+        return !string.IsNullOrEmpty(sha1) ? ("sha1Hash", sha1) : (null, null);
     }
 
     private static bool HasObjectFacet(JsonElement element, string facet) =>

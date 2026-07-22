@@ -472,6 +472,284 @@ public sealed class SqliteTransferStateStore : ITransferStateStore
         return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task BeginRunAsync(TransferRunRecord run, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(run);
+
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            INSERT INTO transfer_run (run_id, drive_id, scan_id, started_utc)
+            VALUES ($runId, $driveId, $scanId, $startedUtc);
+            """;
+        command.Parameters.AddWithValue("$runId", run.RunId);
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        command.Parameters.AddWithValue("$scanId", (object?)run.ScanId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$startedUtc", FormatUtc(run.StartedUtc));
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<TransferRunRecord?> GetLatestRunAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT run_id, drive_id, scan_id, started_utc, ended_utc, final_state
+            FROM transfer_run
+            WHERE drive_id = $driveId
+            ORDER BY started_utc DESC
+            LIMIT 1;
+            """;
+        command.Parameters.AddWithValue("$driveId", DriveId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? ReadRun(reader)
+            : null;
+    }
+
+    public async Task<int> MarkInProgressRunsInterruptedAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE transfer_run
+            SET final_state = $interrupted, ended_utc = $endedUtc
+            WHERE drive_id = $driveId AND final_state IS NULL;
+            """;
+        command.Parameters.AddWithValue("$interrupted", TransferRunState.Interrupted.ToString());
+        command.Parameters.AddWithValue("$endedUtc", FormatUtc(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task CompleteRunAsync(
+        string runId,
+        TransferRunState finalState,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+        if (finalState == TransferRunState.InProgress)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(finalState), finalState, "Only terminal run states may be persisted.");
+        }
+
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE transfer_run
+            SET final_state = $finalState, ended_utc = $endedUtc
+            WHERE run_id = $runId AND drive_id = $driveId AND final_state IS NULL;
+            """;
+        command.Parameters.AddWithValue("$finalState", finalState.ToString());
+        command.Parameters.AddWithValue("$endedUtc", FormatUtc(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$runId", runId);
+        command.Parameters.AddWithValue("$driveId", DriveId);
+
+        // A missing or already-terminated run means the terminal transition would
+        // rewrite history; that is a state failure, never a silent no-op.
+        var affected = await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+        if (affected != 1)
+        {
+            throw DestinationErrors.DestinationStateFailure();
+        }
+    }
+
+    public Task<IReadOnlyList<TransferItemRecord>> GetSchedulableFileItemsAsync(
+        int maxCount,
+        CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(maxCount, 1);
+        return QueryItemsAsync($"""
+            {SelectItemSql}
+            WHERE drive_id = $driveId
+              AND transfer_state = $state
+              AND facet_classification = $file
+            ORDER BY rowid
+            LIMIT $limit;
+            """,
+            cancellationToken,
+            ("$state", TransferItemState.Mapped.ToString()),
+            ("$file", ItemFacetClassification.File.ToString()),
+            ("$limit", maxCount));
+    }
+
+    public async Task<int> IncrementAttemptCountAsync(
+        string sourceItemId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceItemId);
+
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE transfer_item
+            SET attempt_count = attempt_count + 1, updated_utc = $updatedUtc
+            WHERE drive_id = $driveId AND source_item_id = $sourceItemId;
+            SELECT attempt_count FROM transfer_item
+            WHERE drive_id = $driveId AND source_item_id = $sourceItemId;
+            """;
+        command.Parameters.AddWithValue("$updatedUtc", FormatUtc(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        command.Parameters.AddWithValue("$sourceItemId", sourceItemId);
+        return Convert.ToInt32(
+            await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            System.Globalization.CultureInfo.InvariantCulture);
+    }
+
+    public async Task MarkItemVerifiedAsync(
+        string sourceItemId,
+        string localSha256,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceItemId);
+        ArgumentException.ThrowIfNullOrWhiteSpace(localSha256);
+
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE transfer_item
+            SET transfer_state = $verified, local_sha256 = $localSha256, updated_utc = $updatedUtc
+            WHERE drive_id = $driveId AND source_item_id = $sourceItemId;
+            """;
+        command.Parameters.AddWithValue("$verified", TransferItemState.Verified.ToString());
+        command.Parameters.AddWithValue("$localSha256", localSha256);
+        command.Parameters.AddWithValue("$updatedUtc", FormatUtc(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        command.Parameters.AddWithValue("$sourceItemId", sourceItemId);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task MarkItemCompletedAsync(
+        string sourceItemId,
+        TimestampPreservationResult timestampResult,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceItemId);
+
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE transfer_item
+            SET transfer_state = $completed, timestamp_preservation = $timestampResult,
+                updated_utc = $updatedUtc
+            WHERE drive_id = $driveId AND source_item_id = $sourceItemId;
+            """;
+        command.Parameters.AddWithValue("$completed", TransferItemState.Completed.ToString());
+        command.Parameters.AddWithValue("$timestampResult", timestampResult.ToString());
+        command.Parameters.AddWithValue("$updatedUtc", FormatUtc(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        command.Parameters.AddWithValue("$sourceItemId", sourceItemId);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task ResetItemForRecopyAsync(string sourceItemId, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourceItemId);
+
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE transfer_item
+            SET transfer_state = $mapped, local_sha256 = NULL, attempt_count = 0,
+                timestamp_preservation = $notAttempted, updated_utc = $updatedUtc
+            WHERE drive_id = $driveId AND source_item_id = $sourceItemId;
+            """;
+        command.Parameters.AddWithValue("$mapped", TransferItemState.Mapped.ToString());
+        command.Parameters.AddWithValue("$notAttempted", TimestampPreservationResult.NotAttempted.ToString());
+        command.Parameters.AddWithValue("$updatedUtc", FormatUtc(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        command.Parameters.AddWithValue("$sourceItemId", sourceItemId);
+        await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<int> CancelPendingItemsAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE transfer_item
+            SET transfer_state = $cancelled, updated_utc = $updatedUtc
+            WHERE drive_id = $driveId
+              AND transfer_state IN ($discovered, $mapped, $downloading, $verified);
+            """;
+        command.Parameters.AddWithValue("$cancelled", TransferItemState.Cancelled.ToString());
+        command.Parameters.AddWithValue("$discovered", TransferItemState.Discovered.ToString());
+        command.Parameters.AddWithValue("$mapped", TransferItemState.Mapped.ToString());
+        command.Parameters.AddWithValue("$downloading", TransferItemState.Downloading.ToString());
+        command.Parameters.AddWithValue("$verified", TransferItemState.Verified.ToString());
+        command.Parameters.AddWithValue("$updatedUtc", FormatUtc(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task ApplyRunDeltaPageAsync(
+        string runId,
+        IReadOnlyList<TransferItemRecord> items,
+        string pagingLink,
+        DeltaCheckpointState checkpointState,
+        CancellationToken cancellationToken) =>
+        ApplyPageAsync(runId, items, pagingLink, checkpointState, cancellationToken);
+
+    public async Task<int> MarkUntouchedItemsDeletedAsync(
+        string runId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            UPDATE transfer_item
+            SET facet_classification = $deleted, updated_utc = $updatedUtc
+            WHERE drive_id = $driveId
+              AND facet_classification <> $deleted
+              AND (scan_id IS NULL OR scan_id <> $runId);
+            """;
+        command.Parameters.AddWithValue("$deleted", ItemFacetClassification.DeletedSource.ToString());
+        command.Parameters.AddWithValue("$updatedUtc", FormatUtc(DateTimeOffset.UtcNow));
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        command.Parameters.AddWithValue("$runId", runId);
+        return await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+    }
+
+    public Task<IReadOnlyList<TransferItemRecord>> GetItemsUnderMappedPathAsync(
+        string mappedPathPrefix,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(mappedPathPrefix);
+        return QueryItemsAsync($"""
+            {SelectItemSql}
+            WHERE drive_id = $driveId
+              AND mapped_relative_path IS NOT NULL
+              AND substr(mapped_relative_path, 1, length($prefix) + 1) = $prefix || '\';
+            """,
+            cancellationToken,
+            ("$prefix", mappedPathPrefix));
+    }
+
+    public async Task<long> GetRemainingFileBytesAsync(CancellationToken cancellationToken)
+    {
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT COALESCE(SUM(size_bytes), 0)
+            FROM transfer_item
+            WHERE drive_id = $driveId
+              AND facet_classification = $file
+              AND transfer_state IN ($discovered, $mapped, $downloading);
+            """;
+        command.Parameters.AddWithValue("$driveId", DriveId);
+        command.Parameters.AddWithValue("$file", ItemFacetClassification.File.ToString());
+        command.Parameters.AddWithValue("$discovered", TransferItemState.Discovered.ToString());
+        command.Parameters.AddWithValue("$mapped", TransferItemState.Mapped.ToString());
+        command.Parameters.AddWithValue("$downloading", TransferItemState.Downloading.ToString());
+        return Convert.ToInt64(
+            await command.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false),
+            System.Globalization.CultureInfo.InvariantCulture);
+    }
+
     private async Task ApplyPageAsync(
         string scanId,
         IReadOnlyList<TransferItemRecord> items,
@@ -778,6 +1056,14 @@ public sealed class SqliteTransferStateStore : ITransferStateStore
         reader.GetInt64(10),
         reader.GetInt64(11),
         reader.GetInt64(12));
+
+    private static TransferRunRecord ReadRun(SqliteDataReader reader) => new(
+        reader.GetString(0),
+        reader.GetString(1),
+        reader.IsDBNull(2) ? null : reader.GetString(2),
+        ParseUtc(reader.GetString(3)),
+        reader.IsDBNull(4) ? null : ParseUtc(reader.GetString(4)),
+        reader.IsDBNull(5) ? null : ParseEnum<TransferRunState>(reader.GetString(5)));
 
     private static TEnum ParseEnum<TEnum>(string value) where TEnum : struct, Enum
     {

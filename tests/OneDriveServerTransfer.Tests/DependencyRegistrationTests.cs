@@ -11,6 +11,8 @@ using OneDriveServerTransfer.Inventory;
 using OneDriveServerTransfer.Scan;
 using OneDriveServerTransfer.SourceResolution;
 using OneDriveServerTransfer.State;
+using OneDriveServerTransfer.Transfer;
+using OneDriveServerTransfer.Verification;
 using OneDriveServerTransfer.ViewModels;
 
 namespace OneDriveServerTransfer.Tests;
@@ -112,11 +114,25 @@ public class DependencyRegistrationTests
         Assert.IsType<ScanService>(provider.GetRequiredService<IScanService>());
     }
 
+    [Fact]
+    public void ResolvesRealM5TransferServices()
+    {
+        using var provider = BuildProvider();
+
+        Assert.IsType<TemporaryDownloadClient>(provider.GetRequiredService<ITemporaryDownloadClient>());
+        Assert.IsType<HashingService>(provider.GetRequiredService<IHashingService>());
+        Assert.IsType<GraphMetadataClient>(provider.GetRequiredService<IGraphMetadataClient>());
+        Assert.IsType<TransferEngine>(provider.GetRequiredService<ITransferEngine>());
+        Assert.IsType<TransferOrchestrator>(provider.GetRequiredService<ITransferOrchestrator>());
+        Assert.NotNull(provider.GetRequiredService<DownloadRetryCoordinator>());
+
+        // Retry ownership stays split per request category: Graph requests keep the
+        // Graph coordinator; downloads use the dedicated download coordinator.
+        Assert.IsType<GraphRetryCoordinator>(provider.GetRequiredService<IRetryCoordinator>());
+    }
+
     public static TheoryData<Type> LaterPhaseInterfaces => new()
     {
-        typeof(IGraphMetadataClient),
-        typeof(ITemporaryDownloadClient),
-        typeof(IHashingService),
         typeof(IReportWriter),
     };
 

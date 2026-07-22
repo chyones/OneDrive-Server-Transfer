@@ -88,6 +88,24 @@ public sealed record DeltaCheckpointRecord(
     DeltaCheckpointState State,
     DateTimeOffset UpdatedUtc);
 
+/// <summary>
+/// One copy run (contract section 10). A null <see cref="FinalState" /> means the run
+/// is <see cref="TransferRunState.InProgress" />; terminal states are stored as the
+/// exact approved enum names. A run left without an orderly terminal transition is
+/// marked <see cref="TransferRunState.Interrupted" /> on the next open.
+/// </summary>
+public sealed record TransferRunRecord(
+    string RunId,
+    string DriveId,
+    string? ScanId,
+    DateTimeOffset StartedUtc,
+    DateTimeOffset? EndedUtc,
+    TransferRunState? FinalState)
+{
+    /// <summary>True while the run has no persisted terminal state.</summary>
+    public bool IsInProgress => FinalState is null;
+}
+
 /// <summary>One dry-run scan identity and its persisted summary.</summary>
 public sealed record ScanRecord(
     string ScanId,
