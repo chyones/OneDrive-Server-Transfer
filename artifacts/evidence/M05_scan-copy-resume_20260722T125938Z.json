@@ -1,0 +1,132 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M5 — Scan, copy, resume, verification, and state",
+  "completionState": "SOURCE_COMPLETE",
+  "validatedSourceCommit": "c20d39bda96b9d7611cc9dd209e0c9bb38731fb4",
+  "executedAtUtc": "2026-07-22T12:59:11Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/m5-scan-copy-resume",
+    "authoritativeValidation": "GitHub Actions Windows CI",
+    "windowsCiRunnerImage": "windows-2025-vs2026",
+    "dotnetSdk": "10.0.301 (pinned by global.json, rollForward latestPatch); test runtime .NET 10.0.10",
+    "supplementaryLocalChecks": "macOS arm64, .NET SDK 10.0.301, EnableWindowsTargeting=true Release build (0 warnings, 0 errors) and scratch net10.0 xunit runs of the pure-logic and filesystem-safe tests (slice 1: 54/54; slice 2: 77/77 after the hang fix); the WPF test assembly requires the Windows Desktop runtime and runs only on Windows CI"
+  },
+  "approvedScopeSet": [
+    "User.Read",
+    "Files.Read.All",
+    "Sites.Read.All",
+    "offline_access",
+    "openid",
+    "profile"
+  ],
+  "exercisedEndpointTemplates": [
+    "GET https://graph.microsoft.com/v1.0/drives/{drive-id}/root/delta?$select=id,name,parentReference,size,createdDateTime,lastModifiedDateTime,eTag,cTag,file,folder,package,deleted,remoteItem (GRAPH-SCAN-001, stubbed)",
+    "GET https://graph.microsoft.com/v1.0/drives/{drive-id}/items/{item-id}?$select=... (GRAPH-ITEM-001, stubbed)",
+    "GET https://graph.microsoft.com/v1.0/drives/{drive-id}/items/{item-id}?$select=@microsoft.graph.downloadUrl (GRAPH-DL-001, stubbed)",
+    "opaque @odata.nextLink continuation (GRAPH-DELTA-001, stubbed)",
+    "opaque @odata.deltaLink checkpoint persistence (GRAPH-DELTA-002, stubbed)",
+    "410 Gone with Location fresh-enumeration reset (GRAPH-DELTA-003, stubbed)"
+  ],
+  "validatedActions": [
+    {
+      "action": "Deterministic dependency restore on Windows",
+      "command": "dotnet restore OneDriveServerTransfer.sln --locked-mode",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "action": "Release build and static analysis on Windows",
+      "command": "dotnet build OneDriveServerTransfer.sln --configuration Release --no-restore",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "0 warnings, 0 errors."
+    },
+    {
+      "action": "Automated tests on Windows",
+      "command": "dotnet test OneDriveServerTransfer.sln --configuration Release --no-build",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": {
+        "total": 486,
+        "passed": 486,
+        "failed": 0,
+        "skipped": 0
+      },
+      "details": "M5 coverage (136 new tests): delta paging multi-page with opaque next/delta links, checkpoint persistence and crash resume, empty drive, 410 reset classification and fresh enumeration without state reset; facet classification (file, folder, package as Unsupported, deleted tombstones, external shortcuts, unknown facets); mandatory dry-run scan with counts, known bytes, unsupported items, path and storage warnings, capacity boundary, and scan invalidation on source or destination change; SQLite transfer state with transactional idempotent writes, page+checkpoint atomicity, in-flight reset, schema-version gate; SQLite path-collision registry persistence; temporary-download credential isolation (no Graph tokens, cookies, or authorization headers outbound; URL never logged or persisted); streaming with proven fixed concurrency of three; .partial download and commit; 206 resume with valid Content-Range, 200-on-range and invalid-range restart from zero, 416 handling, fresh-URL refetch; single download retry owner with Retry-After, bounded backoff with jitter, five-attempt budget, cancellation during delay; per-file failure isolation; disk-reserve stop-scheduling that never reports Completed; cancellation preserving completed files and safe partials; verification chain (size match, GRAPH-ITEM-001 metadata stability, quickXorHash/SHA-1 source hash with Graph sha256Hash ignored, separate streaming local SHA-256, no source-verification claim without a comparable hash); timestamp preservation with pre-1601 values classified as unsupported warnings forcing CompletedWithWarnings; existing-file skip rules; rename/move relocation by Drive Item ID with transactional remap and descendant rebuild; source deletion never deletes local content; at-most-three reconciliation passes with stable and unstable outcomes; exact run-state matrix (Completed, CompletedWithWarnings, Incomplete, Failed, Cancelled, Interrupted); crash-recovery idempotency; scan-currency gate before copy; DI registration."
+    },
+    {
+      "action": "Dependency vulnerability review",
+      "command": "dotnet list OneDriveServerTransfer.sln package --vulnerable --include-transitive",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "No vulnerable NuGet packages detected."
+    },
+    {
+      "action": "Prohibited authentication and API checks",
+      "command": "./scripts/Test-ProhibitedContent.ps1",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "100 files scanned for 15 prohibited patterns. No matches."
+    },
+    {
+      "action": "Secret detection",
+      "command": "gitleaks/gitleaks-action@v2 (full history)",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "Gitleaks reported: no leaks found."
+    }
+  ],
+  "ciEvidence": {
+    "workflow": ".github/workflows/windows-ci.yml",
+    "passingRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29921734475",
+    "passingRunConclusion": "success",
+    "passingRunHeadSha": "c20d39bda96b9d7611cc9dd209e0c9bb38731fb4",
+    "earlierRuns": [
+      {
+        "run": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29894615489",
+        "note": "Slice-1 commit 483a00e passed all checks (intermediate signal, not the validated commit)."
+      },
+      {
+        "run": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29918002782",
+        "note": "Commit 6ffe2b2 hung in the test step for over 30 minutes and was cancelled. Root cause: TransferOrchestrator.ScheduleMappedFilesAsync never exited the scheduling loop on a disk-reserve violation. Fixed in c20d39b; the cancelled run is retained as history and is not used as evidence."
+      }
+    ]
+  },
+  "retryOwnership": "GraphRetryCoordinator remains the single retry owner for Graph metadata requests (3 attempts, Retry-After, bounded backoff with jitter). DownloadRetryCoordinator is the single retry owner for temporary-download requests (5 attempts per file, Retry-After, bounded backoff with jitter, responsive cancellation). Exactly one layer retries per request category (D-036).",
+  "temporaryHostCredentialIsolation": "The temporary-download client uses a separate unauthenticated HttpClient (cookies disabled). Tests prove no Graph bearer token, cookie, or Graph authorization header is sent to download hosts, and that temporary URLs are never logged or persisted (including absence from the SQLite database bytes).",
+  "sourceHashBehavior": "quickXorHash preferred, sha1Hash accepted, Graph sha256Hash ignored (D-038). The delta parser was corrected to quickXorHash-first in this milestone. Local streaming SHA-256 is calculated and stored separately; source cryptographic verification is never claimed when Microsoft Graph provided no comparable source hash.",
+  "deltaResetBehavior": "A supported 410 Gone on delta reconciliation marks the checkpoint DeltaCheckpointResetRequired and triggers a fresh full enumeration through the returned opaque Location URL without resetting SQLite state or deleting archived local content (GRAPH-DELTA-003).",
+  "result": "PASS",
+  "exitCode": 0,
+  "statusConclusion": {
+    "completionLabel": "Source Implementation Complete remains unearned (M6 UI and reports pending)",
+    "m5Status": "SOURCE_COMPLETE",
+    "applicationImplementationStarted": true,
+    "productionReady": false
+  },
+  "unexecutedChecks": [
+    "real-tenant delta inventory, throttling, temporary-URL expiry, and 410 behavior (M7)",
+    "real large-file and long-name transfers on Windows Server storage (M7)",
+    "disk-full behavior against a real volume (M7)",
+    "cross-process destination locking during a transfer (M7)",
+    "reports and per-run report directories (M6)",
+    "UI wiring of scan, copy, cancel, and progress (M6)",
+    "self-contained win-x64 publish (M7/M8)"
+  ],
+  "limitations": [
+    "All Graph and temporary-download responses were stubbed; no live tenant or live download host was contacted or claimed.",
+    "Timestamp preservation of pre-1601 values is classified deterministically as unsupported; live Windows file-time edge cases remain an M7 item.",
+    "The concurrency-of-three proof uses a bounded gate in a unit test; sustained real-network concurrency is an M7 item.",
+    "Local macOS checks were supplementary only; mandatory evidence comes from Windows CI on the exact validated commit."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}
