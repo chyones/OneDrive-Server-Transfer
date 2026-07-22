@@ -23,4 +23,14 @@ public static class GraphEndpoints
     /// <summary>GRAPH-SRC-003: default drive from validated personal site.</summary>
     public const string SiteDriveTemplate =
         V1Base + "/sites/{0}/drive?$select=id,driveType,webUrl,owner,quota";
+
+    /// <summary>
+    /// GRAPH-SCAN-001: initial drive delta inventory. The $select is limited to the
+    /// contract-required identity, hierarchy, facet, size, time, tag, and hash fields
+    /// (docs/GRAPH_DELTA_AND_RECONCILIATION_POLICY.md). Returned paging links are
+    /// followed as opaque values (GRAPH-DELTA-001/002/003) and are never constructed
+    /// here.
+    /// </summary>
+    public const string DriveRootDeltaTemplate =
+        V1Base + "/drives/{0}/root/delta?$select=id,name,parentReference,size,createdDateTime,lastModifiedDateTime,eTag,cTag,file,folder,package,deleted,remoteItem";
 }

@@ -7,6 +7,8 @@ using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.DependencyInjection;
 using OneDriveServerTransfer.Destination;
+using OneDriveServerTransfer.Inventory;
+using OneDriveServerTransfer.Scan;
 using OneDriveServerTransfer.SourceResolution;
 using OneDriveServerTransfer.State;
 using OneDriveServerTransfer.ViewModels;
@@ -14,7 +16,7 @@ using OneDriveServerTransfer.ViewModels;
 namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
-/// Verifies the dependency-injection composition root: M1, M2, M3, and M4 services
+/// Verifies the dependency-injection composition root: M1 through M5 slice-1 services
 /// resolve, and no later-phase abstraction has a registered implementation (fake
 /// production services are prohibited).
 /// </summary>
@@ -89,7 +91,10 @@ public class DependencyRegistrationTests
         Assert.IsType<SqliteDestinationBindingStore>(provider.GetRequiredService<IDestinationBindingStore>());
         Assert.IsType<DestinationBindingService>(provider.GetRequiredService<IDestinationBindingService>());
         Assert.IsType<DestinationSessionService>(provider.GetRequiredService<IDestinationSessionService>());
-        Assert.IsType<InMemoryPathCollisionRegistry>(provider.GetRequiredService<IPathCollisionRegistry>());
+        Assert.IsType<SqlitePathCollisionRegistry>(provider.GetRequiredService<IPathCollisionRegistry>());
+        Assert.Same(
+            provider.GetRequiredService<SqlitePathCollisionRegistry>(),
+            provider.GetRequiredService<IPathCollisionRegistry>());
         Assert.IsType<PathMapperV1>(provider.GetRequiredService<IPathMapper>());
         Assert.IsType<DestinationPathGuard>(provider.GetRequiredService<IDestinationPathGuard>());
         Assert.IsType<DestinationCapacityService>(provider.GetRequiredService<IDestinationCapacityService>());
@@ -97,12 +102,21 @@ public class DependencyRegistrationTests
         Assert.IsType<LocalStorageService>(provider.GetRequiredService<ILocalStorageService>());
     }
 
+    [Fact]
+    public void ResolvesRealM5ScanInventoryAndStateServices()
+    {
+        using var provider = BuildProvider();
+
+        Assert.IsType<DeltaInventoryClient>(provider.GetRequiredService<IDeltaInventoryClient>());
+        Assert.IsType<SqliteTransferStateStore>(provider.GetRequiredService<ITransferStateStore>());
+        Assert.IsType<ScanService>(provider.GetRequiredService<IScanService>());
+    }
+
     public static TheoryData<Type> LaterPhaseInterfaces => new()
     {
         typeof(IGraphMetadataClient),
         typeof(ITemporaryDownloadClient),
         typeof(IHashingService),
-        typeof(ITransferStateStore),
         typeof(IReportWriter),
     };
 

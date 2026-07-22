@@ -3,10 +3,10 @@ using System.Text.RegularExpressions;
 namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
-/// Guards the milestone boundary: employee source resolution may use only the approved
-/// v1.0 endpoints in GraphEndpoints.cs, and no inventory, delta, download, transfer,
-/// or report behavior may exist yet. M4 destination and source binding exists and is
-/// covered by its own tests.
+/// Guards the milestone boundary: source code may use only the approved v1.0 endpoints
+/// in GraphEndpoints.cs, and no download, transfer, report, or later-phase UI behavior
+/// may exist yet. M4 destination and source binding and the M5 scan, delta inventory,
+/// and transfer state exist and are covered by their own tests.
 /// </summary>
 public class NoLaterPhaseBehaviorTests
 {
@@ -56,22 +56,20 @@ public class NoLaterPhaseBehaviorTests
         Assert.Contains("/users/{0}/drive", inventory, StringComparison.Ordinal);
         Assert.Contains("/sites/{0}:/{1}", inventory, StringComparison.Ordinal);
         Assert.Contains("/sites/{0}/drive", inventory, StringComparison.Ordinal);
+        Assert.Contains("/drives/{0}/root/delta", inventory, StringComparison.Ordinal);
     }
 
     [Theory]
-    [InlineData("/drives/")]
-    [InlineData("/root/delta")]
-    [InlineData("@odata.nextLink")]
     [InlineData("@microsoft.graph.downloadUrl")]
     [InlineData("ScanCommand")]
     [InlineData("StartCopy")]
     [InlineData("TransferEngine")]
     [InlineData("GetDriveItemContent")]
-    public void NoInventoryTransferDestinationOrReportBehaviorExists(string forbidden)
+    public void NoDownloadTransferReportOrLaterUiBehaviorExists(string forbidden)
     {
         Assert.False(
             AllSource().Contains(forbidden, StringComparison.Ordinal),
-            $"M3 source must not contain '{forbidden}'.");
+            $"M5 slice-1 source must not contain '{forbidden}'.");
     }
 
     [Fact]

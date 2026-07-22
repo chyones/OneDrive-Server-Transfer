@@ -134,9 +134,13 @@ public sealed class GraphRequestChannel : IGraphRequestChannel
             var (graphErrorCode, errorHint) = await ReadErrorAsync(response, cancellationToken).ConfigureAwait(false);
             var retryAfter = ReadRetryAfter(response);
             var isTransient = TransientStatuses.Contains(statusCode);
+            // A 410 delta reset carries an opaque Location that starts a fresh
+            // enumeration; capture it for the delta client without logging it.
+            var resetLocation = statusCode == 410 ? response.Headers.Location : null;
 
             return SendOutcome.Failure(new GraphRequestException(
-                statusCode, graphErrorCode, isTransient, retryAfter, errorHint), msRequestId, responseDate);
+                statusCode, graphErrorCode, isTransient, retryAfter, errorHint, resetLocation: resetLocation),
+                msRequestId, responseDate);
         }
     }
 

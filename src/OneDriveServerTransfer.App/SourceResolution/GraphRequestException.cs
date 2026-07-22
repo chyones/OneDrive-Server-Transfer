@@ -13,7 +13,8 @@ public sealed class GraphRequestException : Exception
         bool isTransient,
         TimeSpan? retryAfter,
         string? errorHintForClassification,
-        Exception? innerException = null)
+        Exception? innerException = null,
+        Uri? resetLocation = null)
         : base($"Graph request failed with status {statusCode?.ToString() ?? "n/a"} and code {graphErrorCode ?? "n/a"}.", innerException)
     {
         StatusCode = statusCode;
@@ -21,6 +22,7 @@ public sealed class GraphRequestException : Exception
         IsTransient = isTransient;
         RetryAfter = retryAfter;
         ErrorHintForClassification = errorHintForClassification;
+        ResetLocation = resetLocation;
     }
 
     public int? StatusCode { get; }
@@ -33,4 +35,11 @@ public sealed class GraphRequestException : Exception
 
     /// <summary>Classification-only hint. Never log or display this value.</summary>
     public string? ErrorHintForClassification { get; }
+
+    /// <summary>
+    /// The opaque <c>Location</c> URL of a supported HTTP 410 delta-reset response
+    /// (GRAPH-DELTA-003). It is never logged or displayed; the delta inventory client
+    /// surfaces it to the caller so a fresh enumeration can start from it.
+    /// </summary>
+    public Uri? ResetLocation { get; }
 }
