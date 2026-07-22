@@ -360,42 +360,11 @@ public sealed class TransferEngine : ITransferEngine
         File.Move(validatedPartial, validatedFinal, overwrite: allowOwnedReplacement);
     }
 
-    private TimestampPreservationResult ApplyTimestamps(
+    private static TimestampPreservationResult ApplyTimestamps(
         string finalPath,
         DateTimeOffset? createdUtc,
-        DateTimeOffset? lastModifiedUtc)
-    {
-        if (createdUtc is null && lastModifiedUtc is null)
-        {
-            return TimestampPreservationResult.NotAttempted;
-        }
-
-        try
-        {
-            if (createdUtc is { } created)
-            {
-                File.SetCreationTimeUtc(finalPath, created.UtcDateTime);
-            }
-
-            if (lastModifiedUtc is { } modified)
-            {
-                File.SetLastWriteTimeUtc(finalPath, modified.UtcDateTime);
-            }
-
-            return TimestampPreservationResult.Preserved;
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            // The source value cannot be represented; recorded, never fabricated.
-            return TimestampPreservationResult.UnsupportedValue;
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            // Timestamp failure never invalidates verified bytes; it is recorded per
-            // item and forces CompletedWithWarnings when no content is missing.
-            return TimestampPreservationResult.Failed;
-        }
-    }
+        DateTimeOffset? lastModifiedUtc) =>
+        TimestampPreservation.ApplyToFile(finalPath, createdUtc, lastModifiedUtc);
 
     private static string RelativeToContentRoot(ResolvedDestination destination, string fullPath) =>
         Path.GetRelativePath(destination.ContentRootPath, fullPath);

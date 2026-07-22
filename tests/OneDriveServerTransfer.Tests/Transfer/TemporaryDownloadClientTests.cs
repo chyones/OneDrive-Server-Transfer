@@ -237,8 +237,7 @@ public class TemporaryDownloadClientTests
         new Random(42).NextBytes(payload);
         var (client, _, _) = Create(_ => Content(HttpStatusCode.OK, payload));
 
-        var reports = new List<long>();
-        var progress = new Progress<long>(value => reports.Add(value));
+        var progress = new RecordingProgress();
         using var destination = new MemoryStream();
         var result = await client.DownloadAsync(
             new Uri("https://download.example.test/x"), ItemReference,
@@ -246,10 +245,24 @@ public class TemporaryDownloadClientTests
 
         Assert.Equal(payload.Length, result.BytesWritten);
         Assert.Equal(payload.Length, destination.Length);
-        // Progress is reported through IProgress asynchronously; the final report must
-        // equal the total once delivered.
-        SpinWait.SpinUntil(() => reports.Count > 0 && reports[^1] == payload.Length, TimeSpan.FromSeconds(5));
-        Assert.Equal(payload.Length, reports[^1]);
+        Assert.NotEmpty(progress.Reports);
+        Assert.Equal(payload.Length, progress.Reports[^1]);
+        Assert.True(progress.Reports.SequenceEqual(progress.Reports.OrderBy(v => v)),
+            "Progress reports must be cumulative and non-decreasing.");
+    }
+
+    /// <summary>Synchronous IProgress recorder; Progress&lt;T&gt; would marshal through the test context.</summary>
+    private sealed class RecordingProgress : IProgress<long>
+    {
+        public List<long> Reports { get; } = [];
+
+        public void Report(long value)
+        {
+            lock (Reports)
+            {
+                Reports.Add(value);
+            }
+        }
     }
 
     /// <summary>HttpMessageHandler double recording every outbound request.</summary>

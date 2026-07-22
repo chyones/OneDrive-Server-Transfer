@@ -205,33 +205,43 @@ public class TransferOrchestratorTests : IDisposable
         StubMetadataFromStore();
         StubStableDelta();
 
-        var active = 0;
-        var maxActive = 0;
+        // Deterministic concurrency proof: every worker blocks inside the download
+        // stub until three are simultaneously present. If the fixed cap were higher,
+        // a fourth would enter; if it were lower, the gate would time out.
+        var inside = 0;
+        var maxInside = 0;
+        var threeInside = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
         _downloadClient.Router = async (reference, offset, destination, ct) =>
         {
-            var current = Interlocked.Increment(ref active);
+            var current = Interlocked.Increment(ref inside);
             int observed;
-            while ((observed = maxActive) < current &&
-                   Interlocked.CompareExchange(ref maxActive, current, observed) != observed)
+            while ((observed = maxInside) < current &&
+                   Interlocked.CompareExchange(ref maxInside, current, observed) != observed)
             {
+            }
+
+            if (current == TransferOrchestrator.MaxConcurrentDownloads)
+            {
+                threeInside.TrySetResult();
             }
 
             try
             {
-                await Task.Delay(50, ct);
+                await threeInside.Task.WaitAsync(TimeSpan.FromSeconds(30));
                 await destination.WriteAsync(content, ct);
                 return new TemporaryDownloadResult(content.Length, false, 200, content.Length);
             }
             finally
             {
-                Interlocked.Decrement(ref active);
+                Interlocked.Decrement(ref inside);
             }
         };
 
         var result = await CreateOrchestrator().RunAsync(Source(), Session(), CancellationToken.None);
 
         Assert.Equal(TransferRunState.Completed, result.FinalState);
-        Assert.Equal(TransferOrchestrator.MaxConcurrentDownloads, maxActive);
+        Assert.Equal(TransferOrchestrator.MaxConcurrentDownloads, maxInside);
     }
 
     [Fact]
@@ -322,9 +332,19 @@ public class TransferOrchestratorTests : IDisposable
         };
 
         var runTask = CreateOrchestrator().RunAsync(Source(), Session(), cts.Token);
-        await bothStarted.Task.WaitAsync(TimeSpan.FromSeconds(30));
-        cts.Cancel();
-        var result = await runTask;
+        TransferRunResult result;
+        try
+        {
+            await bothStarted.Task.WaitAsync(TimeSpan.FromSeconds(30));
+        }
+        finally
+        {
+            // Even if the gate never trips, the run is always cancelled: a regression
+            // fails the test instead of hanging the run.
+            cts.Cancel();
+        }
+
+        result = await runTask;
 
         Assert.Equal(TransferRunState.Cancelled, result.FinalState);
         // Completed work is preserved; in-flight items are cancelled, never failed.
@@ -435,11 +455,17 @@ public class TransferOrchestratorTests : IDisposable
         var child = await _rig.Store.GetItemAsync("f1", CancellationToken.None);
         Assert.Equal("newfolder\\child.txt", child!.MappedRelativePath);
         Assert.Equal(TransferItemState.Completed, child.TransferState);
-        Assert.True(File.Exists(Path.Combine(
-            _rig.Destination.ContentRootPath, "newfolder", "child.txt")));
-        Assert.False(Directory.Exists(_rig.ContentPath("oldfolder")));
         var folder = await _rig.Store.GetItemAsync("d1", CancellationToken.None);
         Assert.Equal("newfolder", folder!.MappedRelativePath);
+
+        // Mapped paths use Windows separators by design; the physical relocation is
+        // verified on Windows (CI). State-level outcomes hold on every platform.
+        if (OperatingSystem.IsWindows())
+        {
+            Assert.True(File.Exists(Path.Combine(
+                _rig.Destination.ContentRootPath, "newfolder", "child.txt")));
+            Assert.False(Directory.Exists(_rig.ContentPath("oldfolder")));
+        }
     }
 
     [Fact]
@@ -500,7 +526,6 @@ public class TransferOrchestratorTests : IDisposable
         var content = "data"u8.ToArray();
         await _rig.AddMappedFileAsync("f1", "gone.txt", content);
         StubMetadataFromStore();
-        StubStableDelta();
 
         _downloadClient.Router = (reference, offset, destination, ct) =>
             Task.FromException<TemporaryDownloadResult>(

@@ -296,6 +296,13 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
                     },
                     CancellationToken.None));
             }
+
+            if (diskStop)
+            {
+                // New scheduling stopped on the reserve violation; remaining Mapped
+                // items stay schedulable for a later run.
+                break;
+            }
         }
 
         // In-flight workers finish (or observe cancellation) before the state is read.
@@ -683,70 +690,14 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
     private TimestampPreservationResult ApplyTimestamps(
         string fullPath,
         DateTimeOffset? createdUtc,
-        DateTimeOffset? lastModifiedUtc)
-    {
-        if (createdUtc is null && lastModifiedUtc is null)
-        {
-            return TimestampPreservationResult.NotAttempted;
-        }
-
-        try
-        {
-            if (createdUtc is { } created)
-            {
-                File.SetCreationTimeUtc(fullPath, created.UtcDateTime);
-            }
-
-            if (lastModifiedUtc is { } modified)
-            {
-                File.SetLastWriteTimeUtc(fullPath, modified.UtcDateTime);
-            }
-
-            return TimestampPreservationResult.Preserved;
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            return TimestampPreservationResult.UnsupportedValue;
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return TimestampPreservationResult.Failed;
-        }
-    }
+        DateTimeOffset? lastModifiedUtc) =>
+        TimestampPreservation.ApplyToFile(fullPath, createdUtc, lastModifiedUtc);
 
     private TimestampPreservationResult ApplyDirectoryTimestamps(
         string fullPath,
         DateTimeOffset? createdUtc,
-        DateTimeOffset? lastModifiedUtc)
-    {
-        if (createdUtc is null && lastModifiedUtc is null)
-        {
-            return TimestampPreservationResult.NotAttempted;
-        }
-
-        try
-        {
-            if (createdUtc is { } created)
-            {
-                Directory.SetCreationTimeUtc(fullPath, created.UtcDateTime);
-            }
-
-            if (lastModifiedUtc is { } modified)
-            {
-                Directory.SetLastWriteTimeUtc(fullPath, modified.UtcDateTime);
-            }
-
-            return TimestampPreservationResult.Preserved;
-        }
-        catch (ArgumentOutOfRangeException)
-        {
-            return TimestampPreservationResult.UnsupportedValue;
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return TimestampPreservationResult.Failed;
-        }
-    }
+        DateTimeOffset? lastModifiedUtc) =>
+        TimestampPreservation.ApplyToDirectory(fullPath, createdUtc, lastModifiedUtc);
 
     /// <summary>Adapts the orchestrator logger category for the internal applier.</summary>
     private sealed class LoggerAdapter<T>(ILogger inner) : ILogger<T>

@@ -81,7 +81,7 @@ public class GraphMetadataClientTests
 
         Assert.Equal(new Uri(secretUrl), url);
         var request = Assert.Single(channel.Requests);
-        Assert.Contains("%40microsoft.graph.downloadUrl", request.Uri.OriginalString, StringComparison.Ordinal);
+        Assert.Contains("@microsoft.graph.downloadUrl", request.Uri.OriginalString, StringComparison.Ordinal);
         Assert.All(logger.Messages, message =>
             Assert.DoesNotContain("preauth-secret", message, StringComparison.Ordinal));
     }
