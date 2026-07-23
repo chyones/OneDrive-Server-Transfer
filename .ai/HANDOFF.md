@@ -5,7 +5,7 @@
 - Documentation baseline: complete.
 - Application source: M1 foundation, M2 authentication, and M3 employee source resolution complete and merged into `main`.
 - M3 integration: PR #12 merged; `main` baseline `fa1b81190b481a4dc4bf3f029a407b59da117ff4`; merge CI run 29742411955 succeeded.
-- Development state: M4, M5, and M6 merged into `main` (PRs #14, #15, #16; M6 merge commit `1c1c873cd68badc6a199c875a1e8bcb7d8cb406c`, merge CI run 29997296552 passed); post-M6 hardening on branch `agent/post-m6-hardening`; paused awaiting M7 authorization.
+- Development state: M4, M5, and M6 merged into `main` (PRs #14, #15, #16); post-M6 hardening merged into `main` (PR #17, merge commit `12e9c46d36a1d8cabdb69feff562ece3ffd300d4`); paused awaiting M7 authorization.
 - Current phase: `M7 — Windows and real-tenant acceptance`.
 - Status: `NOT_STARTED`. M7 requires a new explicit owner instruction before any work begins. No M7 activity has occurred.
 - M6 evidence: `artifacts/evidence/M06_ui-errors-reports_20260723T092549Z.json` on validated source commit `c33138b4c1c34cb57603077679d8c42b3ea4c083` (Windows CI run 29995074450, all checks passed, 576/576 tests).
@@ -62,9 +62,9 @@ Implemented on branch `agent/m6-ui-errors-reports` (validated commit `c33138b4c1
 
 With M1–M6 complete and evidenced, the completion label is `Source Implementation Complete` (not Production Ready; M7/M8 unexecuted).
 
-## Post-M6 hardening (completed)
+## Post-M6 hardening (completed and integrated)
 
-Branch `agent/post-m6-hardening` (owner-authorized 2026-07-23, pushed, intentionally not merged). Validated commit `afdc04852439a10b8081dc60a8cc8b404150a97d`: `SqliteTransferStateSchemaInitializer` now uses `Pooling = false` (consistent with the binding and transfer stores), eliminating the Windows file-lock timing flake mechanism; focused handle-release and repeated-execution tests added. Windows CI run 29999753949 passed 4 consecutive full-suite executions (579/579 each). Evidence: `artifacts/evidence/M06_post-m6-hardening_20260723T104618Z.json`. No M7 behavior.
+Branch `agent/post-m6-hardening` (owner-authorized 2026-07-23). Validated commit `afdc04852439a10b8081dc60a8cc8b404150a97d`: `SqliteTransferStateSchemaInitializer` now uses `Pooling = false` (consistent with the binding and transfer stores), eliminating the Windows file-lock timing flake mechanism; focused handle-release and repeated-execution tests added. Windows CI run 29999753949 passed 4 consecutive full-suite executions (579/579 each). Integrated into `main` by merged PR #17 (merge commit `12e9c46d36a1d8cabdb69feff562ece3ffd300d4`). Evidence: `artifacts/evidence/M06_post-m6-hardening_20260723T104618Z.json`. No M7 behavior.
 
 ## M7 task (not started)
 
