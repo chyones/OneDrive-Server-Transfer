@@ -5,10 +5,10 @@
 - Documentation baseline: complete.
 - Application source: M1 foundation, M2 authentication, and M3 employee source resolution complete and merged into `main`.
 - M3 integration: PR #12 merged; `main` baseline `fa1b81190b481a4dc4bf3f029a407b59da117ff4`; merge CI run 29742411955 succeeded.
-- Development state: M4 source complete on branch `agent/m4-destination-source-binding` (pushed, intentionally not merged); paused awaiting M5 authorization.
-- Current phase: `M5 — Scan, copy, resume, verification, and state`.
-- Status: `NOT_STARTED`. M5 requires a new explicit owner instruction before any work begins. No M5 functionality exists.
-- M4 evidence: `artifacts/evidence/M04_destination-binding_20260721T095012Z.json` on validated source commit `2861f8549e9c48b09a8336b8f48b700005f058b4` (Windows CI run 29818672841, all checks passed, 350/350 tests).
+- Development state: M4 merged into `main` (PR #14, merge commit `f3011cd4216c8c1c03f74ce711c71b421ea39782`); M5 source complete on branch `agent/m5-scan-copy-resume` (pushed, intentionally not merged); paused awaiting M6 authorization.
+- Current phase: `M6 — UI, errors, and reports`.
+- Status: `NOT_STARTED`. M6 requires a new explicit owner instruction before any work begins. No M6 functionality exists.
+- M5 evidence: `artifacts/evidence/M05_scan-copy-resume_20260722T125938Z.json` on validated source commit `c20d39bda96b9d7611cc9dd209e0c9bb38731fb4` (Windows CI run 29921734475, all checks passed, 486/486 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
 
@@ -38,13 +38,24 @@ Implemented on branch `agent/m4-destination-source-binding` (validated commit `2
 - NTFS broad-exposure ACL evaluation behind a testable seam (Windows-gated reader);
 - 141 new tests; full suite 350/350 on Windows CI.
 
-## M5 task (not started)
+## M5 outcome (completed)
 
-Development is paused. Do not begin M5 until the repository owner issues a new explicit instruction for it. Before changing source files, mark M5 `IN_PROGRESS`. Implement the M5 goals in `docs/IMPLEMENTATION_PLAN.md` only: mandatory dry-run delta inventory, reconciliation, bounded transfer with resume and verification, transactional state, and exact run states.
+Implemented on branch `agent/m5-scan-copy-resume` (validated commit `c20d39bda96b9d7611cc9dd209e0c9bb38731fb4`, Windows CI run 29921734475):
 
-## M5 boundaries
+- `Inventory/` delta client: GRAPH-SCAN-001 with opaque next/delta link paging streamed page by page to a sink, checkpoint persistence, facet classification (file, folder, package → `Unsupported`, deleted tombstones, external shortcuts, unknown), and 410 reset surface (`DeltaCheckpointResetException` with opaque Location, never logged);
+- `Scan/` mandatory dry run: counts, known bytes, unsupported items, path/storage warnings, capacity and NTFS checks, transactional inventory persistence, and `IsScanCurrentAsync` invalidation on source or destination change;
+- `State/` transfer store: `transfer_item`, `transfer_run`, `delta_checkpoint`, `scan_state`, `path_mapping` tables (still `StateSchemaVersion = 1`), transactional idempotent accessors, in-flight reset, and run lifecycle; `SqlitePathCollisionRegistry` replaces the M4 in-memory default;
+- `Transfer/`: unauthenticated temporary-download client (no Graph credentials, URL never logged/persisted), `DownloadRetryCoordinator` (single download retry owner, 5 attempts), transfer engine (fixed concurrency 3, `.partial` commit, 206 resume / 200-or-invalid-range restart, fresh-URL refetch, per-file verification: size, GRAPH-ITEM-001 stability, quickXorHash/SHA-1 source hash, separate local SHA-256, timestamp preservation), reconciliation applier (rename/move relocation by Drive Item ID, deletions never delete local, ≤3 passes, 410 fresh enumeration), and the run-state orchestrator (scan-currency gate, crash recovery to `Interrupted`, exact terminal-state rules);
+- `Verification/`: streaming SHA-256, reference-exact QuickXorHash, SHA-1; Graph `sha256Hash` ignored (D-038 — delta parser corrected to quickXor-first in this milestone);
+- 136 new tests; full suite 486/486 on Windows CI. A disk-stop scheduling-loop hang was found by CI and fixed before validation.
 
-Do not implement reports, UI wiring, or production behavior during M5. Prohibited paths remain: Graph beta, application permissions, write permissions, ROPC, device-code flow, client secrets, certificates, employee-password handling.
+## M6 task (not started)
+
+Development is paused. Do not begin M6 until the repository owner issues a new explicit instruction for it. Before changing source files, mark M6 `IN_PROGRESS`. Implement the M6 goals in `docs/IMPLEMENTATION_PLAN.md` only: complete one-window UI wiring (sign-in, source input, destination, `Scan`, `Start Copy`, `Cancel`, `Open Report`), progress and bounded activity, reference-coded user errors, and unique per-run reports per `docs/REPORT_SCHEMA.md`.
+
+## M6 boundaries
+
+Do not implement production-acceptance (M7) or release (M8) behavior during M6. Prohibited paths remain: Graph beta, application permissions, write permissions, ROPC, device-code flow, client secrets, certificates, employee-password handling.
 
 ## Completion
 

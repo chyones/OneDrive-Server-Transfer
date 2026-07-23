@@ -83,6 +83,16 @@ The one-window workflow is:
 - NTFS broad-exposure evaluation (`DestinationSecurityEvaluator`) uses `System.IO.FileSystem.AccessControl` 5.0.0 (already pinned; same package as M2), Windows-gated behind a pure evaluation core.
 - Windows CI gotcha proven in M4: pooled SQLite connections keep file locks on Windows, and `Path.GetFullPath` can throw `PathTooLongException` for >32767-unit paths on Windows but not macOS.
 
+## Scan and transfer foundation (established in M5)
+
+- `Inventory/`: `IDeltaInventoryClient.EnumerateAsync(driveId, resumeLink, pageSink, ct)` streams delta pages in order; GRAPH-SCAN-001 is the only inventory endpoint; 410 surfaces as `DeltaCheckpointResetException.FreshEnumerationLocation` (opaque, never logged). Facet precedence: deleted → package → remoteItem → file → folder → unknown; package items are `Unsupported` and force `Incomplete`.
+- `Scan/`: `IScanService.ScanAsync` (mandatory dry run, transactional inventory persistence) and `IsScanCurrentAsync` (gate consumed by the transfer orchestrator; false on source or destination change).
+- State schema (still `StateSchemaVersion = 1`) adds `transfer_item`, `transfer_run`, `delta_checkpoint`, `scan_state`, `path_mapping`. `ITransferStateStore` = `SqliteTransferStateStore` (pooling disabled, transactional, idempotent). `SqlitePathCollisionRegistry` is the DI-registered `IPathCollisionRegistry` (M5 replacement for the M4 in-memory default).
+- `Transfer/`: `TemporaryDownloadClient` uses the separate unauthenticated `"download"` HttpClient (cookies off; no Graph credentials ever; URL never logged/persisted). `DownloadRetryCoordinator` owns download retries (5 attempts/file); `GraphRetryCoordinator` owns Graph retries — never two layers on one request. `GraphMetadataClient` implements GRAPH-ITEM-001 and GRAPH-DL-001 (`$select=@microsoft.graph.downloadUrl`).
+- `TransferOrchestrator` is the run-state machine: scan-currency gate, fixed semaphore of 3, per-file capacity recheck (stop scheduling, never `Completed`), ≤3 reconciliation passes, crash recovery (stale runs → `Interrupted`, in-flight reset), exact terminal-state rules. `ReconciliationApplier` handles tombstones (never delete local), rename/move relocation by Drive Item ID, and content-change recopy.
+- `Verification/`: reference-exact `QuickXorHash` (preferred per D-038; sha1Hash accepted; Graph `sha256Hash` ignored); local streaming SHA-256 stored separately; no source-verification claim without a comparable hash. `TimestampPreservation` classifies pre-1601 values as `UnsupportedValue` (warning → `CompletedWithWarnings`), deterministically, not via OS rejection.
+- Windows CI lesson: the disk-reserve stop path must exit the scheduling loop (a re-fetch spin hung CI for 30 minutes); timing-based concurrency tests must use bounded gates, not delays.
+
 ## Fixed controls
 
 - No employee-password collection or employee authentication.
