@@ -372,5 +372,45 @@ public class TransferEngineTests : IDisposable
         Assert.DoesNotContain("download.example.test", databaseText, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task TemporaryUrlIsNeverPersistedInStateAcrossRepeatedRuns()
+    {
+        // Stability proof for the Windows file-lock timing flake: the database byte
+        // read immediately after a transfer must never race a retained connection
+        // handle. Repeated with fresh rigs and no pool clearing between iterations.
+        for (var iteration = 0; iteration < 10; iteration++)
+        {
+            using var rig = new TransferTestRig();
+            var downloadClient = new StubTemporaryDownloadClient();
+            var metadataClient = new FakeGraphMetadataClient();
+            var hashing = new HashingService();
+
+            await rig.OpenStoreAsync();
+            var content = "employee content"u8.ToArray();
+            var item = await rig.AddMappedFileAsync("f1", "a.txt", content);
+            metadataClient.ItemHandler = (_, _) => FakeGraphMetadataClient.MetadataFor(item);
+            downloadClient.EnqueueWrite(content);
+
+            var engine = new TransferEngine(
+                rig.Store, metadataClient, downloadClient,
+                new DownloadRetryCoordinator(
+                    NullLogger<DownloadRetryCoordinator>.Instance,
+                    (_, _) => Task.CompletedTask,
+                    () => 0.0),
+                hashing,
+                new DestinationPathGuard(NullLogger<DestinationPathGuard>.Instance),
+                new CapturingLogger<TransferEngine>());
+
+            var outcome = await engine.TransferFileAsync(
+                item, rig.Destination, allowOwnedReplacement: false, null, CancellationToken.None);
+
+            Assert.Equal(FileTransferStatus.Completed, outcome.Status);
+
+            var databaseBytes = await File.ReadAllBytesAsync(rig.Destination.StateDatabasePath);
+            var databaseText = System.Text.Encoding.ASCII.GetString(databaseBytes);
+            Assert.DoesNotContain("download.example.test", databaseText, StringComparison.Ordinal);
+        }
+    }
+
     public void Dispose() => _rig.Dispose();
 }
