@@ -62,9 +62,9 @@ Implemented on branch `agent/m6-ui-errors-reports` (validated commit `c33138b4c1
 
 With M1–M6 complete and evidenced, the completion label is `Source Implementation Complete` (not Production Ready; M7/M8 unexecuted).
 
-## Post-M6 hardening (in progress)
+## Post-M6 hardening (completed)
 
-Branch `agent/post-m6-hardening` (owner-authorized 2026-07-23). Scope is limited to: recording the PR #16 integration, disabling SQLite connection pooling in `SqliteTransferStateSchemaInitializer` (consistent with the M4 binding store and M5 transfer store) to eliminate the Windows file-lock timing flake seen once in `TemporaryUrlIsNeverPersistedInState`, adding focused handle-release and stability tests, and proving the fix with repeated Windows CI runs. No M7 behavior.
+Branch `agent/post-m6-hardening` (owner-authorized 2026-07-23, pushed, intentionally not merged). Validated commit `afdc04852439a10b8081dc60a8cc8b404150a97d`: `SqliteTransferStateSchemaInitializer` now uses `Pooling = false` (consistent with the binding and transfer stores), eliminating the Windows file-lock timing flake mechanism; focused handle-release and repeated-execution tests added. Windows CI run 29999753949 passed 4 consecutive full-suite executions (579/579 each). Evidence: `artifacts/evidence/M06_post-m6-hardening_20260723T104618Z.json`. No M7 behavior.
 
 ## M7 task (not started)
 

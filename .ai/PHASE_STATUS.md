@@ -7,8 +7,9 @@ Last updated: 2026-07-23 UTC
 - Completion label: `Source Implementation Complete` (M1–M6 complete with Windows CI evidence; must not be represented as Production Ready)
 - Application implementation started: Yes
 - Production ready: No
-- Current evidence: `artifacts/evidence/M06_ui-errors-reports_20260723T092549Z.json`
+- Current evidence: `artifacts/evidence/M06_post-m6-hardening_20260723T104618Z.json`
 - Validated M6 source commit: `c33138b4c1c34cb57603077679d8c42b3ea4c083`
+- Post-M6 hardening commit: `afdc04852439a10b8081dc60a8cc8b404150a97d` (branch `agent/post-m6-hardening`, CI run 29999753949 ×4 executions, 579/579 each)
 - Validated M5 source commit: `c20d39bda96b9d7611cc9dd209e0c9bb38731fb4`
 - Validated M4 source commit: `2861f8549e9c48b09a8336b8f48b700005f058b4`
 - Validated M3 source commit: `eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9`

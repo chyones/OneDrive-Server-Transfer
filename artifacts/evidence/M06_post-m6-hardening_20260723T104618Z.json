@@ -1,0 +1,90 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "Post-M6 hardening — SQLite file-lock flake elimination",
+  "completionState": "HARDENING_COMPLETE (no milestone status change; M6 remains SOURCE_COMPLETE)",
+  "validatedSourceCommit": "afdc04852439a10b8081dc60a8cc8b404150a97d",
+  "executedAtUtc": "2026-07-23T10:45:29Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/post-m6-hardening",
+    "authoritativeValidation": "GitHub Actions Windows CI",
+    "windowsCiRunnerImage": "windows-2025-vs2026",
+    "dotnetSdk": "10.0.301 (pinned by global.json, rollForward latestPatch); test runtime .NET 10.0.10",
+    "supplementaryLocalChecks": "macOS arm64, EnableWindowsTargeting=true Release build (0 warnings, 0 errors); test execution is Windows-CI-only for this assembly"
+  },
+  "defect": {
+    "summary": "On the PR #16 merge run 29997296552 (first attempt), TransferEngineTests.TemporaryUrlIsNeverPersistedInState failed with IOException: TransferState.db in use by another process when read immediately after a transfer. The identical tree passed 576/576 on runs 29995074450 and 29996973859, confirming a timing-dependent Windows file-lock flake.",
+    "rootCause": "SqliteTransferStateSchemaInitializer was the last state component using Microsoft.Data.Sqlite connection pooling; a pooled connection could retain the OS file handle past dispose, racing the immediate database byte read.",
+    "fix": "Pooling = false in SqliteTransferStateSchemaInitializer, consistent with the M4 binding store and M5 transfer store decisions. Disposal now releases the OS file handle deterministically."
+  },
+  "validatedActions": [
+    {
+      "action": "Full Windows CI suite, execution 1 (push-triggered)",
+      "command": "GitHub Actions run 29999753949 (attempt 1): restore, Release build, dotnet test, vulnerability review, prohibited-content check, gitleaks",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": { "total": 579, "passed": 579, "failed": 0, "skipped": 0 }
+    },
+    {
+      "action": "Full Windows CI suite, execution 2 (re-run, same commit)",
+      "command": "gh run rerun 29999753949",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": { "total": 579, "passed": 579, "failed": 0, "skipped": 0 }
+    },
+    {
+      "action": "Full Windows CI suite, execution 3 (re-run, same commit)",
+      "command": "gh run rerun 29999753949",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": { "total": 579, "passed": 579, "failed": 0, "skipped": 0 }
+    },
+    {
+      "action": "Full Windows CI suite, execution 4 (re-run, same commit)",
+      "command": "gh run rerun 29999753949",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": { "total": 579, "passed": 579, "failed": 0, "skipped": 0 }
+    }
+  ],
+  "stabilityProof": {
+    "repeatedSuiteExecutions": 4,
+    "allPassed": true,
+    "focusedTestsAdded": [
+      "SqliteSchemaFoundationTests.InitializationReleasesTheDatabaseFileHandleImmediately (exclusive open with FileShare.None immediately after initialization, no pool clearing)",
+      "SqliteSchemaFoundationTests.RepeatedInitializationAndImmediateFileAccessIsStable (25 initialize/read/delete cycles without pool clearing)",
+      "TransferEngineTests.TemporaryUrlIsNeverPersistedInStateAcrossRepeatedRuns (10 fresh-rig transfer-then-read-database iterations)"
+    ],
+    "note": "Each suite execution also runs the 25-iteration and 10-iteration stability loops, so the four runs exercised the previously flaky pattern well over one hundred times on Windows."
+  },
+  "ciEvidence": {
+    "workflow": ".github/workflows/windows-ci.yml",
+    "passingRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29999753949",
+    "passingRunConclusion": "success (4 consecutive executions, attempts 1-4)",
+    "passingRunHeadSha": "afdc04852439a10b8081dc60a8cc8b404150a97d"
+  },
+  "controlFileUpdates": "PHASE_STATUS.md and HANDOFF.md record the PR #16 integration (merge commit 1c1c873cd68badc6a199c875a1e8bcb7d8cb406c, merge CI run 29997296552 passed) and the hardening scope; M7 remains NOT_STARTED and unauthorized.",
+  "result": "PASS",
+  "exitCode": 0,
+  "statusConclusion": {
+    "completionLabel": "Source Implementation Complete (unchanged)",
+    "m6Status": "SOURCE_COMPLETE (unchanged)",
+    "m7Status": "NOT_STARTED",
+    "productionReady": false
+  },
+  "unexecutedChecks": [
+    "all M7 Windows Server and real-tenant acceptance checks (not authorized)"
+  ],
+  "limitations": [
+    "Repeated green runs plus deterministic handle-release semantics make recurrence unlikely, but no finite repetition proves a timing defect impossible; the fix removes the mechanism (pooled handle retention) rather than masking it."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}
