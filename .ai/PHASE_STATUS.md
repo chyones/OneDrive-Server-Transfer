@@ -15,7 +15,7 @@ Last updated: 2026-07-23 UTC
 - Validated M3 source commit: `eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9`
 - Validated M2 source commit: `a1afd839e79f86e01e44a9f40a46b4b46363a988`
 - Validated M1 source commit: `6940eb7b43d868c419bfa814724b5d2a9316dcbc`
-- Merged `main` baseline: `1c1c873cd68badc6a199c875a1e8bcb7d8cb406c` (M6 integration, PR #16)
+- Merged `main` baseline: `12e9c46d36a1d8cabdb69feff562ece3ffd300d4` (post-M6 hardening integration, PR #17)
 - Development state: M6 integrated into `main`; post-M6 hardening on branch `agent/post-m6-hardening`; M7 unauthorized
 - Current phase: `M7 — Windows and real-tenant acceptance`
 - M7 status: `NOT_STARTED`
