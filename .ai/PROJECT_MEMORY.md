@@ -93,6 +93,14 @@ The one-window workflow is:
 - `Verification/`: reference-exact `QuickXorHash` (preferred per D-038; sha1Hash accepted; Graph `sha256Hash` ignored); local streaming SHA-256 stored separately; no source-verification claim without a comparable hash. `TimestampPreservation` classifies pre-1601 values as `UnsupportedValue` (warning → `CompletedWithWarnings`), deterministically, not via OS rejection.
 - Windows CI lesson: the disk-reserve stop path must exit the scheduling loop (a re-fetch spin hung CI for 30 minutes); timing-based concurrency tests must use bounded gates, not delays.
 
+## UI and reporting foundation (established in M6)
+
+- `Reporting/ReportWriter` implements `IReportWriter`; reports generate automatically at `TransferOrchestrator` finalization (never masking run outcome). `ReportWriter.GetRunReportDirectoryPath(destinationRoot, runId)` is the static path helper for Open Report on finished runs. Per-run log = `RunReportLogSink` (Serilog sink, one active run).
+- CSV policy: UTF-8 no BOM, RFC 4180 escaping, leading-apostrophe formula-injection neutralization (D-040). State schema v1 has no per-item error code/message/start columns, so those CSV columns are emitted empty by design (future schema-version decision if needed).
+- `MainViewModel` owns the whole §2 workflow; Start Copy requires `_scanIsCurrent` (revalidated via `IScanService.IsScanCurrentAsync` before scheduling) plus the `IsScanConfirmed` checkbox; any source/destination edit disposes the destination session (releasing the M4 lock) and clears scan state. Activity list is bounded at 100 FIFO. `TransferProgress` with null `TotalKnownBytes` means indeterminate progress.
+- UI abstractions live in `Abstractions/UserInterfaceServices.cs` (`IFolderPickerService` via `Microsoft.Win32.OpenFolderDialog`, `IShellService` via `Process.Start explorer`, Windows-gated) and `UserInterfaceErrors.cs` (`UI-GEN-001`, `UI-SHELL-001`).
+- With M1–M6 evidenced, the completion label is `Source Implementation Complete`; never represent it as Production Ready.
+
 ## Fixed controls
 
 - No employee-password collection or employee authentication.

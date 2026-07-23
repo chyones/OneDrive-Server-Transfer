@@ -133,6 +133,19 @@ public interface ITransferStateStore
     /// <summary>Creates a new copy run in the in-progress state (null final state).</summary>
     Task BeginRunAsync(TransferRunRecord run, CancellationToken cancellationToken);
 
+    /// <summary>One run by its stable run identifier, or null.</summary>
+    Task<TransferRunRecord?> GetRunAsync(string runId, CancellationToken cancellationToken);
+
+    /// <summary>One scan by its stable scan identifier, or null.</summary>
+    Task<ScanRecord?> GetScanAsync(string scanId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// All items of the bound drive in stable insertion order. Report generation is the
+    /// intended caller: it materializes the hierarchy once per run to build the audit
+    /// files. Scheduling paths must keep using the bounded batch accessors instead.
+    /// </summary>
+    Task<IReadOnlyList<TransferItemRecord>> GetAllItemsAsync(CancellationToken cancellationToken);
+
     /// <summary>The most recently started run for the bound drive, or null.</summary>
     Task<TransferRunRecord?> GetLatestRunAsync(CancellationToken cancellationToken);
 

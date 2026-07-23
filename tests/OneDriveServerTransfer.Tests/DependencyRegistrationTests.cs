@@ -8,6 +8,7 @@ using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.DependencyInjection;
 using OneDriveServerTransfer.Destination;
 using OneDriveServerTransfer.Inventory;
+using OneDriveServerTransfer.Reporting;
 using OneDriveServerTransfer.Scan;
 using OneDriveServerTransfer.SourceResolution;
 using OneDriveServerTransfer.State;
@@ -18,9 +19,8 @@ using OneDriveServerTransfer.ViewModels;
 namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
-/// Verifies the dependency-injection composition root: M1 through M5 slice-1 services
-/// resolve, and no later-phase abstraction has a registered implementation (fake
-/// production services are prohibited).
+/// Verifies the dependency-injection composition root: M1 through M6 slice-1 services
+/// resolve to their real implementations (fake production services are prohibited).
 /// </summary>
 public class DependencyRegistrationTests
 {
@@ -131,17 +131,29 @@ public class DependencyRegistrationTests
         Assert.IsType<GraphRetryCoordinator>(provider.GetRequiredService<IRetryCoordinator>());
     }
 
-    public static TheoryData<Type> LaterPhaseInterfaces => new()
-    {
-        typeof(IReportWriter),
-    };
-
-    [Theory]
-    [MemberData(nameof(LaterPhaseInterfaces))]
-    public void DoesNotRegisterLaterPhaseServices(Type serviceType)
+    [Fact]
+    public void ResolvesRealM6ReportServices()
     {
         using var provider = BuildProvider();
 
-        Assert.Null(provider.GetService(serviceType));
+        Assert.IsType<ReportWriter>(provider.GetRequiredService<IReportWriter>());
+        Assert.NotNull(provider.GetRequiredService<RunReportLogSink>());
+
+        // The orchestrator consumes the report writer and the per-run log sink.
+        Assert.IsType<TransferOrchestrator>(provider.GetRequiredService<ITransferOrchestrator>());
+    }
+
+    [Fact]
+    public void ResolvesRealM6UiServices()
+    {
+        using var provider = BuildProvider();
+
+        Assert.IsType<OneDriveServerTransfer.Shell.WpfFolderPickerService>(
+            provider.GetRequiredService<IFolderPickerService>());
+        Assert.IsType<OneDriveServerTransfer.Shell.WindowsShellService>(
+            provider.GetRequiredService<IShellService>());
+
+        // The window view model resolves with the full workflow surface wired.
+        Assert.NotNull(provider.GetRequiredService<MainViewModel>());
     }
 }

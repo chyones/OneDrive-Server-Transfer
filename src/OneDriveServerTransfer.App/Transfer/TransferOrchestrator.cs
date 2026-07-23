@@ -23,10 +23,17 @@ namespace OneDriveServerTransfer.Transfer;
 /// </summary>
 public interface ITransferOrchestrator
 {
+    /// <summary>
+    /// Runs one copy run to its terminal state. <paramref name="progress" /> is an
+    /// optional advisory UI sink (contract section 12); it receives snapshots of the
+    /// current operation, current file, and counts, and it never changes the run
+    /// outcome.
+    /// </summary>
     Task<TransferRunResult> RunAsync(
         ResolvedEmployeeSource source,
         DestinationSession session,
-        CancellationToken cancellationToken);
+        CancellationToken cancellationToken,
+        IProgress<TransferProgress>? progress = null);
 }
 
 public sealed class TransferOrchestrator : ITransferOrchestrator
@@ -50,6 +57,8 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
     private readonly IDestinationPathGuard _pathGuard;
     private readonly IDestinationCapacityService _capacityService;
     private readonly IHashingService _hashingService;
+    private readonly IReportWriter _reportWriter;
+    private readonly Reporting.RunReportLogSink _runLogSink;
     private readonly ILogger<TransferOrchestrator> _logger;
 
     private readonly HashSet<string> _recopyItemIds = new(StringComparer.Ordinal);
@@ -66,6 +75,8 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
         IDestinationPathGuard pathGuard,
         IDestinationCapacityService capacityService,
         IHashingService hashingService,
+        IReportWriter reportWriter,
+        Reporting.RunReportLogSink runLogSink,
         ILogger<TransferOrchestrator> logger)
     {
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
@@ -79,17 +90,21 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
         _pathGuard = pathGuard ?? throw new ArgumentNullException(nameof(pathGuard));
         _capacityService = capacityService ?? throw new ArgumentNullException(nameof(capacityService));
         _hashingService = hashingService ?? throw new ArgumentNullException(nameof(hashingService));
+        _reportWriter = reportWriter ?? throw new ArgumentNullException(nameof(reportWriter));
+        _runLogSink = runLogSink ?? throw new ArgumentNullException(nameof(runLogSink));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<TransferRunResult> RunAsync(
         ResolvedEmployeeSource source,
         DestinationSession session,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        IProgress<TransferProgress>? progress = null)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(session);
         _recopyItemIds.Clear();
+        var reporter = new RunProgressReporter(progress, _logger);
 
         // Revalidate the signed-in operator before any state transition.
         var operatorIdentity = await _authenticationService
@@ -126,7 +141,15 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
             FinalState: null);
         await _stateStore.BeginRunAsync(run, cancellationToken).ConfigureAwait(false);
 
+        // Every run gets its own report directory and technical log up front; the
+        // audit files are finalized when the run reaches its terminal state.
+        var reportDirectory = await _reportWriter.CreateRunReportDirectoryAsync(
+                session.Destination.RootPath, run.RunId, cancellationToken)
+            .ConfigureAwait(false);
+        _runLogSink.BeginRun(Path.Combine(reportDirectory, Reporting.ReportWriter.LogFileName));
+
         var warnings = new List<TransferWarning>();
+        var reconciliationPasses = 0;
 
         try
         {
@@ -159,9 +182,14 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
                     .ConfigureAwait(false);
             }
 
-            await CreatePendingFoldersAsync(session, cancellationToken).ConfigureAwait(false);
+            // Advisory UI progress: seed from operational state, then advance with
+            // events. Reporting never changes the run outcome.
+            reporter.Seed(await BuildProgressSnapshotAsync(cancellationToken).ConfigureAwait(false));
+            reporter.Note("Preparing the copy", "The copy run started.");
 
-            var diskStop = await ScheduleMappedFilesAsync(session, cancellationToken)
+            await CreatePendingFoldersAsync(session, reporter, cancellationToken).ConfigureAwait(false);
+
+            var diskStop = await ScheduleMappedFilesAsync(session, reporter, cancellationToken)
                 .ConfigureAwait(false);
             if (diskStop)
             {
@@ -171,7 +199,8 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
                     null));
             }
 
-            var stable = await ReconcileAsync(run.RunId, session, warnings, cancellationToken)
+            bool stable;
+            (stable, reconciliationPasses) = await ReconcileAsync(run.RunId, session, reporter, warnings, cancellationToken)
                 .ConfigureAwait(false);
             if (!stable)
             {
@@ -223,6 +252,49 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
             };
             throw await FailRunAsync(run.RunId, error, cancellationToken).ConfigureAwait(false);
         }
+        finally
+        {
+            // The audit report is generated for every terminal run outcome and must
+            // never change that outcome; the run log closes after it.
+            await GenerateReportBestEffortAsync(
+                    source, session, run.RunId, operatorIdentity.UserPrincipalName,
+                    reconciliationPasses, warnings)
+                .ConfigureAwait(false);
+            _runLogSink.EndRun();
+        }
+    }
+
+    /// <summary>
+    /// Generates the run's audit report set without ever masking or changing the
+    /// persisted run outcome; a report failure is logged and the run result stands.
+    /// </summary>
+    private async Task GenerateReportBestEffortAsync(
+        ResolvedEmployeeSource source,
+        DestinationSession session,
+        string runId,
+        string? operatorUpn,
+        int reconciliationPasses,
+        IReadOnlyList<TransferWarning> warnings)
+    {
+        try
+        {
+            await _reportWriter.GenerateRunReportAsync(
+                    new RunReportRequest(
+                        runId,
+                        session.Destination.RootPath,
+                        session.Destination.RootPath,
+                        operatorUpn ?? string.Empty,
+                        source.UserPrincipalName,
+                        source.Mode.ToString(),
+                        reconciliationPasses,
+                        warnings.Count(warning => warning.Kind is TransferWarningKind.DiskReserveStop)),
+                    CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning("Run report could not be generated; error={Error}", exception.Message);
+        }
     }
 
     /// <summary>
@@ -234,6 +306,7 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
     /// </summary>
     private async Task<bool> ScheduleMappedFilesAsync(
         DestinationSession session,
+        RunProgressReporter reporter,
         CancellationToken cancellationToken)
     {
         var diskStop = false;
@@ -275,19 +348,22 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
                         item.SourceItemId, TransferItemState.Downloading, cancellationToken)
                     .ConfigureAwait(false);
 
+                reporter.FileStarted(item.ItemName);
+
                 await throttler.WaitAsync(cancellationToken).ConfigureAwait(false);
                 running.Add(Task.Run(
                     async () =>
                     {
                         try
                         {
-                            await _engine.TransferFileAsync(
+                            var outcome = await _engine.TransferFileAsync(
                                     item,
                                     session.Destination,
                                     _recopyItemIds.Contains(item.SourceItemId),
                                     bytesWritten: null,
                                     cancellationToken)
                                 .ConfigureAwait(false);
+                            reporter.FileFinished(item.ItemName, item.SizeBytes ?? 0, outcome);
                         }
                         finally
                         {
@@ -315,11 +391,13 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
     /// Each pass applies changes transactionally, schedules newly supported work, and
     /// must reach a new checkpoint; a pass with no content-affecting change is stable.
     /// A supported 410 reset starts a fresh enumeration without resetting state or
-    /// deleting archived files.
+    /// deleting archived files. Returns whether the source stabilized and how many
+    /// passes were executed.
     /// </summary>
-    private async Task<bool> ReconcileAsync(
+    private async Task<(bool Stable, int Passes)> ReconcileAsync(
         string runId,
         DestinationSession session,
+        RunProgressReporter reporter,
         List<TransferWarning> warnings,
         CancellationToken cancellationToken)
     {
@@ -331,12 +409,16 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
         {
             cancellationToken.ThrowIfCancellationRequested();
 
+            reporter.Note(
+                "Reconciling source changes",
+                $"Reconciling source changes (pass {pass} of {MaxReconciliationPasses}).");
+
             var checkpoint = await _stateStore.GetDeltaCheckpointRecordAsync(cancellationToken)
                 .ConfigureAwait(false);
             if (checkpoint is null)
             {
                 // Without a checkpoint the source can never be confirmed stable.
-                return false;
+                return (false, pass - 1);
             }
 
             var tracker = new ReconciliationPassTracker();
@@ -360,8 +442,12 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
                 .CompletePassAsync(session, tracker, _recopyItemIds, warnings, cancellationToken)
                 .ConfigureAwait(false);
 
-            await CreatePendingFoldersAsync(session, cancellationToken).ConfigureAwait(false);
-            var diskStop = await ScheduleMappedFilesAsync(session, cancellationToken)
+            // The pass may have added, renamed, or deleted items; reseed the advisory
+            // counters from operational state before scheduling the new work.
+            reporter.Seed(await BuildProgressSnapshotAsync(cancellationToken).ConfigureAwait(false));
+
+            await CreatePendingFoldersAsync(session, reporter, cancellationToken).ConfigureAwait(false);
+            var diskStop = await ScheduleMappedFilesAsync(session, reporter, cancellationToken)
                 .ConfigureAwait(false);
             if (diskStop)
             {
@@ -375,13 +461,13 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
             {
                 await SaveCheckpointStateAsync(DeltaCheckpointState.SourceStable, cancellationToken)
                     .ConfigureAwait(false);
-                return true;
+                return (true, pass);
             }
         }
 
         await SaveCheckpointStateAsync(DeltaCheckpointState.SourceUnstable, cancellationToken)
             .ConfigureAwait(false);
-        return false;
+        return (false, MaxReconciliationPasses);
     }
 
     /// <summary>
@@ -511,8 +597,10 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
 
     private async Task CreatePendingFoldersAsync(
         DestinationSession session,
+        RunProgressReporter reporter,
         CancellationToken cancellationToken)
     {
+        var createdCount = 0;
         foreach (var classification in new[]
                  {
                      ItemFacetClassification.Folder,
@@ -535,7 +623,13 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
                 await _stateStore.MarkItemCompletedAsync(
                         folder.SourceItemId, TimestampPreservationResult.NotAttempted, cancellationToken)
                     .ConfigureAwait(false);
+                createdCount++;
             }
+        }
+
+        if (createdCount > 0)
+        {
+            reporter.FoldersPrepared(createdCount);
         }
     }
 
@@ -698,6 +792,145 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
         DateTimeOffset? createdUtc,
         DateTimeOffset? lastModifiedUtc) =>
         TimestampPreservation.ApplyToDirectory(fullPath, createdUtc, lastModifiedUtc);
+
+    /// <summary>
+    /// Advisory progress snapshot from operational state: state counts, the bytes of
+    /// completed files, and the latest successful scan's known total (null while the
+    /// total is unknown, so the UI never fabricates a percentage).
+    /// </summary>
+    private async Task<ProgressSnapshot> BuildProgressSnapshotAsync(CancellationToken cancellationToken)
+    {
+        var completed = await _stateStore.GetItemsByStateAsync(TransferItemState.Completed, cancellationToken)
+            .ConfigureAwait(false);
+        var skipped = await _stateStore.GetItemsByStateAsync(TransferItemState.Skipped, cancellationToken)
+            .ConfigureAwait(false);
+        var failed = await _stateStore.GetItemsByStateAsync(TransferItemState.Failed, cancellationToken)
+            .ConfigureAwait(false);
+        var unsupported = await _stateStore.GetItemsByStateAsync(TransferItemState.Unsupported, cancellationToken)
+            .ConfigureAwait(false);
+        var pending = (await _stateStore.GetItemsByStateAsync(TransferItemState.Discovered, cancellationToken)
+                .ConfigureAwait(false)).Count +
+            (await _stateStore.GetItemsByStateAsync(TransferItemState.Mapped, cancellationToken)
+                .ConfigureAwait(false)).Count +
+            (await _stateStore.GetItemsByStateAsync(TransferItemState.Downloading, cancellationToken)
+                .ConfigureAwait(false)).Count +
+            (await _stateStore.GetItemsByStateAsync(TransferItemState.Verified, cancellationToken)
+                .ConfigureAwait(false)).Count;
+        var scan = await _stateStore.GetLatestSuccessfulScanAsync(cancellationToken).ConfigureAwait(false);
+
+        return new ProgressSnapshot(
+            Discovered: completed.Count + skipped.Count + failed.Count + unsupported.Count + pending,
+            Completed: completed.Count,
+            Skipped: skipped.Count,
+            Failed: failed.Count,
+            Unsupported: unsupported.Count,
+            DownloadedBytes: completed
+                .Where(item => item.Classification is ItemFacetClassification.File)
+                .Sum(item => item.SizeBytes ?? 0),
+            TotalKnownBytes: scan?.KnownBytes);
+    }
+
+    private sealed record ProgressSnapshot(
+        long Discovered,
+        long Completed,
+        long Skipped,
+        long Failed,
+        long Unsupported,
+        long DownloadedBytes,
+        long? TotalKnownBytes);
+
+    /// <summary>
+    /// Thread-safe advisory progress sink for the UI. Seeds from operational state at
+    /// coarse points and applies file and folder events as deltas in between, so no
+    /// per-file state queries are needed. Reporting is best-effort: a failing sink is
+    /// logged and never changes the run outcome.
+    /// </summary>
+    private sealed class RunProgressReporter(IProgress<TransferProgress>? progress, ILogger logger)
+    {
+        private readonly object _gate = new();
+        private long _discovered;
+        private long _completed;
+        private long _skipped;
+        private long _failed;
+        private long _unsupported;
+        private long _downloadedBytes;
+        private long? _totalKnownBytes;
+
+        public void Seed(ProgressSnapshot snapshot)
+        {
+            lock (_gate)
+            {
+                _discovered = snapshot.Discovered;
+                _completed = snapshot.Completed;
+                _skipped = snapshot.Skipped;
+                _failed = snapshot.Failed;
+                _unsupported = snapshot.Unsupported;
+                _downloadedBytes = snapshot.DownloadedBytes;
+                _totalKnownBytes = snapshot.TotalKnownBytes;
+            }
+        }
+
+        public void Note(string operation, string activity) => Report(operation, null, activity);
+
+        public void FileStarted(string itemName) => Report("Copying files", itemName, null);
+
+        public void FileFinished(string itemName, long sizeBytes, FileTransferOutcome outcome)
+        {
+            string? activity = null;
+            lock (_gate)
+            {
+                if (outcome.Status is FileTransferStatus.Completed)
+                {
+                    _completed++;
+                    _downloadedBytes += sizeBytes;
+                    activity = $"Copied {itemName}";
+                }
+                else if (outcome.Status is FileTransferStatus.Failed)
+                {
+                    _failed++;
+                    activity = $"Failed to copy {itemName}";
+                }
+            }
+
+            Report("Copying files", itemName, activity);
+        }
+
+        public void FoldersPrepared(int createdCount)
+        {
+            lock (_gate)
+            {
+                _completed += createdCount;
+            }
+
+            Report("Preparing folder structure", null, "Folder structure prepared.");
+        }
+
+        private void Report(string operation, string? currentItemName, string? activity)
+        {
+            if (progress is null)
+            {
+                return;
+            }
+
+            TransferProgress snapshot;
+            lock (_gate)
+            {
+                snapshot = new TransferProgress(
+                    operation, currentItemName, activity,
+                    _discovered, _completed, _skipped, _unsupported, _failed,
+                    _totalKnownBytes, _downloadedBytes);
+            }
+
+            try
+            {
+                progress.Report(snapshot);
+            }
+            catch (Exception exception)
+            {
+                logger.LogWarning("Progress reporting failed; error={Error}", exception.Message);
+            }
+        }
+    }
 
     /// <summary>Adapts the orchestrator logger category for the internal applier.</summary>
     private sealed class LoggerAdapter<T>(ILogger inner) : ILogger<T>

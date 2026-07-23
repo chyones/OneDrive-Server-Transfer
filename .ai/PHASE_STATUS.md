@@ -1,25 +1,26 @@
 # Phase Status
 
-Last updated: 2026-07-22 UTC
+Last updated: 2026-07-23 UTC
 
 ## Current status
 
-- Completion label: `Documentation Ready` (Source Implementation Complete requires M1–M6)
+- Completion label: `Source Implementation Complete` (M1–M6 complete with Windows CI evidence; must not be represented as Production Ready)
 - Application implementation started: Yes
 - Production ready: No
-- Current evidence: `artifacts/evidence/M05_scan-copy-resume_20260722T125938Z.json`
+- Current evidence: `artifacts/evidence/M06_ui-errors-reports_20260723T092549Z.json`
+- Validated M6 source commit: `c33138b4c1c34cb57603077679d8c42b3ea4c083`
 - Validated M5 source commit: `c20d39bda96b9d7611cc9dd209e0c9bb38731fb4`
 - Validated M4 source commit: `2861f8549e9c48b09a8336b8f48b700005f058b4`
 - Validated M3 source commit: `eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9`
 - Validated M2 source commit: `a1afd839e79f86e01e44a9f40a46b4b46363a988`
 - Validated M1 source commit: `6940eb7b43d868c419bfa814724b5d2a9316dcbc`
-- Merged `main` baseline: `f3011cd4216c8c1c03f74ce711c71b421ea39782` (M4 integration, PR #14); M5 is complete on branch `agent/m5-scan-copy-resume` and not yet merged
-- Development state: M5 source complete; paused awaiting M6 authorization
-- Current phase: `M6 — UI, errors, and reports`
-- M6 status: `NOT_STARTED`
-- M6 start authorized: No (new explicit owner instruction required)
+- Merged `main` baseline: `5a986bba4ee6c1b1bfa7c6d3d5431854bd7b0e71` (M5 integration, PR #15); M6 is complete on branch `agent/m6-ui-errors-reports` and not yet merged
+- Development state: M6 source complete; paused awaiting M7 authorization
+- Current phase: `M7 — Windows and real-tenant acceptance`
+- M7 status: `NOT_STARTED`
+- M7 start authorized: No (new explicit owner instruction required)
 
-M1, M2, and M3 were each completed on their implementation branches with Windows CI passing on the exact validated source commits above (runs 29720061002, 29732929639, 29737013050). M3 was integrated into `main` by merged PR #12 (merge commit `fa1b81190b481a4dc4bf3f029a407b59da117ff4`) with GitHub Actions succeeding on the merge commit (run 29742411955). M4 was integrated into `main` by merged PR #14 (merge commit `f3011cd4216c8c1c03f74ce711c71b421ea39782`) with GitHub Actions succeeding on the merge commit (run 29823373555); its validated source commit `2861f8549e9c48b09a8336b8f48b700005f058b4` passed Windows CI run 29818672841 (350/350 tests). M5 was completed on branch `agent/m5-scan-copy-resume` with Windows CI passing on the exact validated source commit above (run 29921734475, 486/486 tests); the branch is pushed and intentionally not merged. M6 has not started and may begin only after a new explicit owner instruction. Do not claim source, Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
+M1, M2, and M3 were each completed on their implementation branches with Windows CI passing on the exact validated source commits above (runs 29720061002, 29732929639, 29737013050). M3 was integrated into `main` by merged PR #12 (merge commit `fa1b81190b481a4dc4bf3f029a407b59da117ff4`) with GitHub Actions succeeding on the merge commit (run 29742411955). M4 was integrated into `main` by merged PR #14 (merge commit `f3011cd4216c8c1c03f74ce711c71b421ea39782`) with GitHub Actions succeeding on the merge commit (run 29823373555); its validated source commit `2861f8549e9c48b09a8336b8f48b700005f058b4` passed Windows CI run 29818672841 (350/350 tests). M5 was completed on branch `agent/m5-scan-copy-resume` with Windows CI passing on the exact validated source commit above (run 29921734475, 486/486 tests) and integrated into `main` by merged PR #15 (merge commit `5a986bba4ee6c1b1bfa7c6d3d5431854bd7b0e71`) with GitHub Actions succeeding on the merge commit (run 29987459917). M6 was completed on branch `agent/m6-ui-errors-reports` with Windows CI passing on the exact validated source commit above (run 29995074450, 576/576 tests); the branch is pushed and intentionally not merged. With M1–M6 complete and evidenced, the completion label is `Source Implementation Complete`; real-tenant, interactive, Windows Server, publish, and production checks remain unexecuted and this label must not be represented as Production Ready. M7 has not started and may begin only after a new explicit owner instruction. Do not claim Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
 
 ## Phase table
 
@@ -31,7 +32,7 @@ M1, M2, and M3 were each completed on their implementation branches with Windows
 | M3 Employee source resolution | SOURCE_COMPLETE |
 | M4 Destination and source binding | SOURCE_COMPLETE |
 | M5 Scan, copy, resume, verification, and state | SOURCE_COMPLETE |
-| M6 UI, errors, and reports | NOT_STARTED |
+| M6 UI, errors, and reports | SOURCE_COMPLETE |
 | M7 Windows and real-tenant acceptance | NOT_STARTED |
 | M8 Internal release | NOT_STARTED |
 

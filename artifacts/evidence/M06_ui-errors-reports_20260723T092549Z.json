@@ -1,0 +1,125 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M6 — UI, errors, and reports",
+  "completionState": "SOURCE_COMPLETE",
+  "validatedSourceCommit": "c33138b4c1c34cb57603077679d8c42b3ea4c083",
+  "executedAtUtc": "2026-07-23T09:25:49Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/m6-ui-errors-reports",
+    "authoritativeValidation": "GitHub Actions Windows CI",
+    "windowsCiRunnerImage": "windows-2025-vs2026",
+    "dotnetSdk": "10.0.301 (pinned by global.json, rollForward latestPatch); test runtime .NET 10.0.10",
+    "supplementaryLocalChecks": "macOS arm64, .NET SDK 10.0.301, EnableWindowsTargeting=true Release build (0 warnings, 0 errors) and scratch net10.0 xunit runs of the non-WPF sources (slice 1: 86/86; slice 2: 123/123, run 4 times without flakes); the WPF test assembly runs only on Windows CI"
+  },
+  "validatedActions": [
+    {
+      "action": "Deterministic dependency restore on Windows",
+      "command": "dotnet restore OneDriveServerTransfer.sln --locked-mode",
+      "result": "PASS",
+      "exitCode": 0
+    },
+    {
+      "action": "Release build and static analysis on Windows",
+      "command": "dotnet build OneDriveServerTransfer.sln --configuration Release --no-restore",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "0 warnings, 0 errors."
+    },
+    {
+      "action": "Automated tests on Windows",
+      "command": "dotnet test OneDriveServerTransfer.sln --configuration Release --no-build",
+      "result": "PASS",
+      "exitCode": 0,
+      "testCounts": {
+        "total": 576,
+        "passed": 576,
+        "failed": 0,
+        "skipped": 0
+      },
+      "details": "M6 coverage (90 new tests): exact REPORT_SCHEMA.md CSV header order, RFC 4180 escaping (commas, quotes, CR, LF, Arabic/Unicode names), formula-injection neutralization vectors, UTF-8 output, FailedFiles.csv filtering to Failed and Unsupported rows, TransferSummary.json field presence and IsArchiveComplete rules (true only for Completed/CompletedWithWarnings), per-run report isolation (never overwrite or append to another run), report redaction (token-like strings, temporary download URLs, raw Graph bodies, stack traces absent), per-run Serilog log sink behavior, report generation wired into orchestrator finalization without masking run outcomes, report failure never changes the run result, ViewModel workflow state machine (sign-in, source input, destination, scan, confirm, copy, terminal), scan invalidation on source edit and destination change, Start Copy enable rules (no scan, stale scan, no confirmation; scan currency revalidated before scheduling), progress counts and indeterminate behavior while totals are unknown, bounded recent-activity list (100 entries, oldest dropped), cancel during scan and copy, exact terminal-state display with Incomplete stating the archive is not complete, Open Report and Open Destination enable rules and shell calls, sign-out semantics, error display shape, and UI redaction vectors (tenant IDs, drive IDs, JWT shapes, temporary URLs, Bearer headers, client secrets never rendered), WPF shell construction, and DI registration."
+    },
+    {
+      "action": "Dependency vulnerability review",
+      "command": "dotnet list OneDriveServerTransfer.sln package --vulnerable --include-transitive",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "No vulnerable NuGet packages detected."
+    },
+    {
+      "action": "Prohibited authentication and API checks",
+      "command": "./scripts/Test-ProhibitedContent.ps1",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "111 files scanned for 15 prohibited patterns. No matches."
+    },
+    {
+      "action": "Secret detection",
+      "command": "gitleaks/gitleaks-action@v2 (full history)",
+      "result": "PASS",
+      "exitCode": 0,
+      "details": "Gitleaks reported: no leaks found."
+    }
+  ],
+  "ciEvidence": {
+    "workflow": ".github/workflows/windows-ci.yml",
+    "passingRun": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29995074450",
+    "passingRunConclusion": "success",
+    "passingRunHeadSha": "c33138b4c1c34cb57603077679d8c42b3ea4c083",
+    "earlierRuns": [
+      {
+        "run": "https://github.com/chyones/OneDrive-Server-Transfer/actions/runs/29990749156",
+        "note": "Slice-1 commit e031cea (report engine) passed all checks; intermediate signal, not the validated commit."
+      }
+    ]
+  },
+  "reportSchemaCompliance": {
+    "schemaVersion": 1,
+    "csvNeutralizationPolicy": "Leading apostrophe prefixed to values beginning with =, +, -, @, tab, CR, or LF, applied before RFC 4180 escaping (recorded as decision D-040).",
+    "reportFiles": [
+      "_TransferReport/Runs/<RunId>/TransferSummary.json",
+      "_TransferReport/Runs/<RunId>/TransferReport.csv",
+      "_TransferReport/Runs/<RunId>/FailedFiles.csv",
+      "_TransferReport/Runs/<RunId>/TransferLog.log"
+    ],
+    "perRunIsolation": "All report files are written with FileMode.CreateNew; a later run can never overwrite or append to another run's files.",
+    "operationalAuthority": "SQLite remains the operational source; CSV and JSON are audit outputs only."
+  },
+  "uiCompliance": {
+    "singleWindow": true,
+    "workflow": "Sign in, enter UPN or OneDrive URL, select destination, Scan, review, confirm, Start Copy, monitor, Open Report.",
+    "startCopyGate": "Enabled only after a successful current scan and explicit confirmation; source or destination changes invalidate the scan; scan currency is revalidated service-side before scheduling.",
+    "unknownTotals": "Indeterminate progress and Calculating/Unknown display while totals are unknown; no fabricated percentage.",
+    "errorShape": "Every user-facing error carries a short title, plain-language explanation, corrective action, and stable reference code; protected identifiers, tokens, URLs, and stack traces are never displayed."
+  },
+  "result": "PASS",
+  "exitCode": 0,
+  "statusConclusion": {
+    "completionLabel": "Source Implementation Complete is earned by M1–M6 source completion with mandatory Windows CI evidence; this label must not be represented as Production Ready",
+    "m6Status": "SOURCE_COMPLETE",
+    "applicationImplementationStarted": true,
+    "productionReady": false
+  },
+  "unexecutedChecks": [
+    "WPF startup and interactive sign-in on Windows Server with a real authorized transfer account (M7)",
+    "real-tenant scan, copy, resume, reconciliation, locking, and disk-space behavior (M7)",
+    "operator review of real generated reports against a live run (M7)",
+    "production ACL and BitLocker validation (M7)",
+    "self-contained win-x64 publish (M7/M8)"
+  ],
+  "limitations": [
+    "The state schema (version 1) does not persist per-item error codes, error messages, or per-item start times, so the corresponding TransferReport.csv columns are emitted empty rather than fabricated; the sanitization path is implemented and test-proven. Persisting them would require a future schema-version decision.",
+    "UI behavior is validated through ViewModel tests and WPF construction tests; interactive Windows sign-in and operational review remain M7 acceptance items.",
+    "Open Report enablement trusts the orchestrator-created report directory; shell-open failures surface as reference-coded errors.",
+    "Local macOS checks were supplementary only; mandatory evidence comes from Windows CI on the exact validated commit."
+  ],
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}

@@ -3,6 +3,7 @@ using OneDriveServerTransfer.Abstractions;
 using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Destination;
 using OneDriveServerTransfer.Inventory;
+using OneDriveServerTransfer.Reporting;
 using OneDriveServerTransfer.Scan;
 using OneDriveServerTransfer.State;
 using OneDriveServerTransfer.Tests.TestSupport;
@@ -32,6 +33,8 @@ public class TransferOrchestratorTests : IDisposable
     private readonly FakeScanService _scanService = new();
     private readonly ScriptedDriveSpaceProvider _spaceProvider = new();
     private readonly HashingService _hashing = new();
+    private readonly FakeReportWriter _reportWriter = new();
+    private readonly RunReportLogSink _runLogSink = new();
 
     public TransferOrchestratorTests()
     {
@@ -66,6 +69,8 @@ public class TransferOrchestratorTests : IDisposable
             new DestinationPathGuard(NullLogger<DestinationPathGuard>.Instance),
             new DestinationCapacityService(_spaceProvider),
             _hashing,
+            _reportWriter,
+            _runLogSink,
             new CapturingLogger<TransferOrchestrator>());
 
     private TransferEngine CreateEngine() =>
@@ -670,6 +675,98 @@ public class TransferOrchestratorTests : IDisposable
         Assert.Equal(TransferRunState.CompletedWithWarnings, result.FinalState);
         Assert.Equal(TimestampPreservationResult.UnsupportedValue,
             (await _rig.Store.GetItemAsync("f1", CancellationToken.None))!.TimestampPreservation);
+    }
+
+    [Fact]
+    public async Task RunFinalizationCreatesPerRunReportDirectoryAndGeneratesReport()
+    {
+        await SetupStoreAsync();
+        var content = "file content"u8.ToArray();
+        await _rig.AddMappedFileAsync("f1", "folder/a.txt", content);
+        await AddMappedFolderAsync("d1", "folder");
+        StubMetadataFromStore();
+        ServeContent(content);
+        StubStableDelta();
+
+        var result = await CreateOrchestrator().RunAsync(Source(), Session(), CancellationToken.None);
+
+        Assert.Equal(TransferRunState.Completed, result.FinalState);
+
+        var created = Assert.Single(_reportWriter.CreatedDirectories);
+        Assert.Equal(_rig.RootPath, created.DestinationRoot);
+        Assert.Equal(result.RunId, created.RunId);
+
+        var reportDirectory = Path.Combine(
+            _rig.Destination.StateRootPath, "Runs", result.RunId);
+        Assert.True(Directory.Exists(reportDirectory));
+        // The run log sink opened TransferLog.log at run start and closed it at run end.
+        Assert.True(File.Exists(Path.Combine(reportDirectory, "TransferLog.log")));
+        Assert.Null(_runLogSink.ActiveLogPath);
+
+        var request = Assert.Single(_reportWriter.GenerationRequests);
+        Assert.Equal(result.RunId, request.RunId);
+        Assert.Equal("operator@example.test", request.OperatorUpn);
+        Assert.Equal("employee@example.test", request.EmployeeUpn);
+        Assert.Equal(EmployeeSourceMode.Upn.ToString(), request.SourceInputMode);
+        Assert.Equal(1, request.ReconciliationPasses);
+        Assert.Equal(0, request.StorageWarningCount);
+    }
+
+    [Fact]
+    public async Task FailedRunStillGeneratesReport()
+    {
+        await SetupStoreAsync();
+        await _rig.AddMappedFileAsync("f1", "a.bin", new byte[16]);
+        _spaceProvider.FreeBytes = 0; // total-capacity precheck fails the run
+
+        var exception = await Assert.ThrowsAsync<TransferException>(() =>
+            CreateOrchestrator().RunAsync(Source(), Session(), CancellationToken.None));
+
+        Assert.Equal(TransferErrorCodes.InsufficientStorage, exception.ReferenceCode);
+        var request = Assert.Single(_reportWriter.GenerationRequests);
+        Assert.Equal(_reportWriter.CreatedDirectories.Single().RunId, request.RunId);
+        Assert.Null(_runLogSink.ActiveLogPath);
+    }
+
+    [Fact]
+    public async Task ReportGenerationFailureNeverChangesTheRunOutcome()
+    {
+        await SetupStoreAsync();
+        var content = "file content"u8.ToArray();
+        await _rig.AddMappedFileAsync("f1", "a.txt", content);
+        StubMetadataFromStore();
+        ServeContent(content);
+        StubStableDelta();
+        _reportWriter.GenerationFailure = new InvalidOperationException("disk full");
+
+        var result = await CreateOrchestrator().RunAsync(Source(), Session(), CancellationToken.None);
+
+        Assert.Equal(TransferRunState.Completed, result.FinalState);
+        Assert.Single(_reportWriter.GenerationRequests);
+        Assert.Null(_runLogSink.ActiveLogPath);
+    }
+
+    [Fact]
+    public async Task CancelledRunStillGeneratesReport()
+    {
+        await SetupStoreAsync();
+        var content = new byte[64];
+        await _rig.AddMappedFileAsync("f1", "a.bin", content);
+        StubMetadataFromStore();
+        using var cts = new CancellationTokenSource();
+        _downloadClient.Router = async (reference, offset, destination, ct) =>
+        {
+            cts.Cancel();
+            ct.ThrowIfCancellationRequested();
+            await Task.CompletedTask;
+            return new TemporaryDownloadResult(0, false, 200, 0);
+        };
+
+        var result = await CreateOrchestrator().RunAsync(Source(), Session(), cts.Token);
+
+        Assert.Equal(TransferRunState.Cancelled, result.FinalState);
+        Assert.Single(_reportWriter.GenerationRequests);
+        Assert.Null(_runLogSink.ActiveLogPath);
     }
 
     private static async Task<TemporaryDownloadResult> WriteResult(

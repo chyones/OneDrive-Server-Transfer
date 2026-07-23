@@ -8,6 +8,7 @@ using OneDriveServerTransfer.Authentication;
 using OneDriveServerTransfer.Configuration;
 using OneDriveServerTransfer.Destination;
 using OneDriveServerTransfer.Inventory;
+using OneDriveServerTransfer.Reporting;
 using OneDriveServerTransfer.Scan;
 using OneDriveServerTransfer.SourceResolution;
 using OneDriveServerTransfer.State;
@@ -20,11 +21,9 @@ namespace OneDriveServerTransfer.DependencyInjection;
 
 /// <summary>
 /// Composition root for application services. M1 foundations, M2 authentication, M3
-/// employee source resolution, M4 local destination and source binding, and the M5
-/// scan, delta inventory, transfer state, download, verification, transfer engine,
-/// and copy orchestration are registered here. The report abstraction
-/// (<see cref="IReportWriter" />) remains intentionally unregistered: reports are a
-/// later milestone and no fake service may take their place.
+/// employee source resolution, M4 local destination and source binding, the M5 scan,
+/// delta inventory, transfer state, download, verification, transfer engine, and copy
+/// orchestration, and the M6 report writer are registered here.
 /// </summary>
 public static class ServiceCollectionExtensions
 {
@@ -54,10 +53,13 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IValidateOptions<SourceResolutionOptions>, SourceResolutionOptionsValidator>();
 
         services.AddLogging();
+        services.AddSingleton<RunReportLogSink>();
         services.AddSerilog((serviceProvider, loggerConfiguration) => loggerConfiguration
             .ReadFrom.Configuration(configuration)
             .ReadFrom.Services(serviceProvider)
-            .Enrich.FromLogContext());
+            .Enrich.FromLogContext()
+            // The per-run TransferLog.log sink; it only emits while a run log is open.
+            .WriteTo.Sink(serviceProvider.GetRequiredService<RunReportLogSink>()));
 
         // M2 authentication services (real implementations; no fakes).
         services.AddSingleton<ITokenCacheProtector, DpapiTokenCacheProtector>();
@@ -97,8 +99,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<ILocalStorageService, LocalStorageService>();
 
         // M5 scan, delta inventory, and transfer state (real implementations; no
-        // fakes). Report abstractions remain intentionally unregistered for the later
-        // milestone.
+        // fakes).
         services.AddSingleton<IDeltaInventoryClient, DeltaInventoryClient>();
         services.AddSingleton<ITransferStateStore, SqliteTransferStateStore>();
         services.AddSingleton<IScanService, ScanService>();
@@ -116,6 +117,14 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IGraphMetadataClient, GraphMetadataClient>();
         services.AddSingleton<ITransferEngine, TransferEngine>();
         services.AddSingleton<ITransferOrchestrator, TransferOrchestrator>();
+
+        // M6: per-run audit report generation (docs/REPORT_SCHEMA.md).
+        services.AddSingleton<IReportWriter, ReportWriter>();
+
+        // M6: one-window UI wiring. The folder picker and shell integration sit behind
+        // testable abstractions; the WPF implementations live in the App layer.
+        services.AddSingleton<IFolderPickerService, Shell.WpfFolderPickerService>();
+        services.AddSingleton<IShellService, Shell.WindowsShellService>();
 
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<ITransferStateSchemaInitializer, SqliteTransferStateSchemaInitializer>();
