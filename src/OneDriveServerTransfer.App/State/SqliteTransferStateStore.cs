@@ -489,6 +489,37 @@ public sealed class SqliteTransferStateStore : ITransferStateStore
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<TransferRunRecord?> GetRunAsync(
+        string runId,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runId);
+
+        await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT run_id, drive_id, scan_id, started_utc, ended_utc, final_state
+            FROM transfer_run
+            WHERE run_id = $runId AND drive_id = $driveId;
+            """;
+        command.Parameters.AddWithValue("$runId", runId);
+        command.Parameters.AddWithValue("$driveId", DriveId);
+
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        return await reader.ReadAsync(cancellationToken).ConfigureAwait(false)
+            ? ReadRun(reader)
+            : null;
+    }
+
+    public Task<IReadOnlyList<TransferItemRecord>> GetAllItemsAsync(
+        CancellationToken cancellationToken) =>
+        QueryItemsAsync($"""
+            {SelectItemSql}
+            WHERE drive_id = $driveId
+            ORDER BY rowid;
+            """,
+            cancellationToken);
+
     public async Task<TransferRunRecord?> GetLatestRunAsync(CancellationToken cancellationToken)
     {
         await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
@@ -847,8 +878,10 @@ public sealed class SqliteTransferStateStore : ITransferStateStore
         return items;
     }
 
-    private async Task<ScanRecord?> GetScanAsync(string scanId, CancellationToken cancellationToken)
+    public async Task<ScanRecord?> GetScanAsync(string scanId, CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(scanId);
+
         await using var connection = await OpenRequiredAsync(cancellationToken).ConfigureAwait(false);
         await using var command = connection.CreateCommand();
         command.CommandText = $"SELECT {ScanColumns} FROM scan_state WHERE scan_id = $scanId;";

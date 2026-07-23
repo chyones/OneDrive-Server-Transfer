@@ -50,6 +50,8 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
     private readonly IDestinationPathGuard _pathGuard;
     private readonly IDestinationCapacityService _capacityService;
     private readonly IHashingService _hashingService;
+    private readonly IReportWriter _reportWriter;
+    private readonly Reporting.RunReportLogSink _runLogSink;
     private readonly ILogger<TransferOrchestrator> _logger;
 
     private readonly HashSet<string> _recopyItemIds = new(StringComparer.Ordinal);
@@ -66,6 +68,8 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
         IDestinationPathGuard pathGuard,
         IDestinationCapacityService capacityService,
         IHashingService hashingService,
+        IReportWriter reportWriter,
+        Reporting.RunReportLogSink runLogSink,
         ILogger<TransferOrchestrator> logger)
     {
         _authenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
@@ -79,6 +83,8 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
         _pathGuard = pathGuard ?? throw new ArgumentNullException(nameof(pathGuard));
         _capacityService = capacityService ?? throw new ArgumentNullException(nameof(capacityService));
         _hashingService = hashingService ?? throw new ArgumentNullException(nameof(hashingService));
+        _reportWriter = reportWriter ?? throw new ArgumentNullException(nameof(reportWriter));
+        _runLogSink = runLogSink ?? throw new ArgumentNullException(nameof(runLogSink));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -126,7 +132,15 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
             FinalState: null);
         await _stateStore.BeginRunAsync(run, cancellationToken).ConfigureAwait(false);
 
+        // Every run gets its own report directory and technical log up front; the
+        // audit files are finalized when the run reaches its terminal state.
+        var reportDirectory = await _reportWriter.CreateRunReportDirectoryAsync(
+                session.Destination.RootPath, run.RunId, cancellationToken)
+            .ConfigureAwait(false);
+        _runLogSink.BeginRun(Path.Combine(reportDirectory, Reporting.ReportWriter.LogFileName));
+
         var warnings = new List<TransferWarning>();
+        var reconciliationPasses = 0;
 
         try
         {
@@ -171,7 +185,8 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
                     null));
             }
 
-            var stable = await ReconcileAsync(run.RunId, session, warnings, cancellationToken)
+            bool stable;
+            (stable, reconciliationPasses) = await ReconcileAsync(run.RunId, session, warnings, cancellationToken)
                 .ConfigureAwait(false);
             if (!stable)
             {
@@ -222,6 +237,49 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
                 _ => TransferErrors.UnexpectedResponse(),
             };
             throw await FailRunAsync(run.RunId, error, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            // The audit report is generated for every terminal run outcome and must
+            // never change that outcome; the run log closes after it.
+            await GenerateReportBestEffortAsync(
+                    source, session, run.RunId, operatorIdentity.UserPrincipalName,
+                    reconciliationPasses, warnings)
+                .ConfigureAwait(false);
+            _runLogSink.EndRun();
+        }
+    }
+
+    /// <summary>
+    /// Generates the run's audit report set without ever masking or changing the
+    /// persisted run outcome; a report failure is logged and the run result stands.
+    /// </summary>
+    private async Task GenerateReportBestEffortAsync(
+        ResolvedEmployeeSource source,
+        DestinationSession session,
+        string runId,
+        string? operatorUpn,
+        int reconciliationPasses,
+        IReadOnlyList<TransferWarning> warnings)
+    {
+        try
+        {
+            await _reportWriter.GenerateRunReportAsync(
+                    new RunReportRequest(
+                        runId,
+                        session.Destination.RootPath,
+                        session.Destination.RootPath,
+                        operatorUpn ?? string.Empty,
+                        source.UserPrincipalName,
+                        source.Mode.ToString(),
+                        reconciliationPasses,
+                        warnings.Count(warning => warning.Kind is TransferWarningKind.DiskReserveStop)),
+                    CancellationToken.None)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.LogWarning("Run report could not be generated; error={Error}", exception.Message);
         }
     }
 
@@ -315,9 +373,10 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
     /// Each pass applies changes transactionally, schedules newly supported work, and
     /// must reach a new checkpoint; a pass with no content-affecting change is stable.
     /// A supported 410 reset starts a fresh enumeration without resetting state or
-    /// deleting archived files.
+    /// deleting archived files. Returns whether the source stabilized and how many
+    /// passes were executed.
     /// </summary>
-    private async Task<bool> ReconcileAsync(
+    private async Task<(bool Stable, int Passes)> ReconcileAsync(
         string runId,
         DestinationSession session,
         List<TransferWarning> warnings,
@@ -336,7 +395,7 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
             if (checkpoint is null)
             {
                 // Without a checkpoint the source can never be confirmed stable.
-                return false;
+                return (false, pass - 1);
             }
 
             var tracker = new ReconciliationPassTracker();
@@ -375,13 +434,13 @@ public sealed class TransferOrchestrator : ITransferOrchestrator
             {
                 await SaveCheckpointStateAsync(DeltaCheckpointState.SourceStable, cancellationToken)
                     .ConfigureAwait(false);
-                return true;
+                return (true, pass);
             }
         }
 
         await SaveCheckpointStateAsync(DeltaCheckpointState.SourceUnstable, cancellationToken)
             .ConfigureAwait(false);
-        return false;
+        return (false, MaxReconciliationPasses);
     }
 
     /// <summary>

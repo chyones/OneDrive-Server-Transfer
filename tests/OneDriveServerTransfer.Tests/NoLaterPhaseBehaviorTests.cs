@@ -4,9 +4,10 @@ namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
 /// Guards the milestone boundary: source code may use only the approved v1.0 endpoints
-/// in GraphEndpoints.cs, and no report or later-phase UI behavior may exist yet. M5
-/// download, transfer, verification, and reconciliation behavior exists and is covered
-/// by its own tests; reports and Start Copy UI wiring remain prohibited.
+/// in GraphEndpoints.cs, and no later-phase UI behavior may exist yet. M5 download,
+/// transfer, verification, and reconciliation behavior and the M6 report generation
+/// engine exist and are covered by their own tests; the Start Copy UI wiring remains
+/// prohibited for the M6 UI slice.
 /// </summary>
 public class NoLaterPhaseBehaviorTests
 {
@@ -64,15 +65,11 @@ public class NoLaterPhaseBehaviorTests
     [InlineData("StartCopy")]
     [InlineData("ScanCommand")]
     [InlineData("GetDriveItemContent")]
-    [InlineData("TransferReport.csv")]
-    [InlineData("TransferSummary.json")]
-    [InlineData("FailedFiles.csv")]
-    [InlineData("CsvReportWriter")]
-    public void NoReportOrLaterUiBehaviorExists(string forbidden)
+    public void NoLaterUiBehaviorExists(string forbidden)
     {
         Assert.False(
             AllSource().Contains(forbidden, StringComparison.Ordinal),
-            $"M5 slice-2 source must not contain '{forbidden}'.");
+            $"M6 slice-1 source must not contain '{forbidden}'.");
     }
 
     [Fact]
