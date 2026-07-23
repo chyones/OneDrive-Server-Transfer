@@ -1,6 +1,6 @@
 # Phase Status
 
-Last updated: 2026-07-22 UTC
+Last updated: 2026-07-23 UTC
 
 ## Current status
 
@@ -13,13 +13,13 @@ Last updated: 2026-07-22 UTC
 - Validated M3 source commit: `eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9`
 - Validated M2 source commit: `a1afd839e79f86e01e44a9f40a46b4b46363a988`
 - Validated M1 source commit: `6940eb7b43d868c419bfa814724b5d2a9316dcbc`
-- Merged `main` baseline: `f3011cd4216c8c1c03f74ce711c71b421ea39782` (M4 integration, PR #14); M5 is complete on branch `agent/m5-scan-copy-resume` and not yet merged
-- Development state: M5 source complete; paused awaiting M6 authorization
+- Merged `main` baseline: `5a986bba4ee6c1b1bfa7c6d3d5431854bd7b0e71` (M5 integration, PR #15)
+- Development state: M6 in progress on branch `agent/m6-ui-errors-reports`
 - Current phase: `M6 — UI, errors, and reports`
-- M6 status: `NOT_STARTED`
-- M6 start authorized: No (new explicit owner instruction required)
+- M6 status: `IN_PROGRESS`
+- M6 start authorized: Yes (explicit owner instruction 2026-07-23)
 
-M1, M2, and M3 were each completed on their implementation branches with Windows CI passing on the exact validated source commits above (runs 29720061002, 29732929639, 29737013050). M3 was integrated into `main` by merged PR #12 (merge commit `fa1b81190b481a4dc4bf3f029a407b59da117ff4`) with GitHub Actions succeeding on the merge commit (run 29742411955). M4 was integrated into `main` by merged PR #14 (merge commit `f3011cd4216c8c1c03f74ce711c71b421ea39782`) with GitHub Actions succeeding on the merge commit (run 29823373555); its validated source commit `2861f8549e9c48b09a8336b8f48b700005f058b4` passed Windows CI run 29818672841 (350/350 tests). M5 was completed on branch `agent/m5-scan-copy-resume` with Windows CI passing on the exact validated source commit above (run 29921734475, 486/486 tests); the branch is pushed and intentionally not merged. M6 has not started and may begin only after a new explicit owner instruction. Do not claim source, Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
+M1, M2, and M3 were each completed on their implementation branches with Windows CI passing on the exact validated source commits above (runs 29720061002, 29732929639, 29737013050). M3 was integrated into `main` by merged PR #12 (merge commit `fa1b81190b481a4dc4bf3f029a407b59da117ff4`) with GitHub Actions succeeding on the merge commit (run 29742411955). M4 was integrated into `main` by merged PR #14 (merge commit `f3011cd4216c8c1c03f74ce711c71b421ea39782`) with GitHub Actions succeeding on the merge commit (run 29823373555); its validated source commit `2861f8549e9c48b09a8336b8f48b700005f058b4` passed Windows CI run 29818672841 (350/350 tests). M5 was completed on branch `agent/m5-scan-copy-resume` with Windows CI passing on the exact validated source commit above (run 29921734475, 486/486 tests) and integrated into `main` by merged PR #15 (merge commit `5a986bba4ee6c1b1bfa7c6d3d5431854bd7b0e71`) with GitHub Actions succeeding on the merge commit (run 29987459917). M6 implementation is underway on branch `agent/m6-ui-errors-reports`; Windows CI evidence for the exact M6 source commit is pending. Do not claim source, Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
 
 ## Phase table
 
@@ -31,7 +31,7 @@ M1, M2, and M3 were each completed on their implementation branches with Windows
 | M3 Employee source resolution | SOURCE_COMPLETE |
 | M4 Destination and source binding | SOURCE_COMPLETE |
 | M5 Scan, copy, resume, verification, and state | SOURCE_COMPLETE |
-| M6 UI, errors, and reports | NOT_STARTED |
+| M6 UI, errors, and reports | IN_PROGRESS |
 | M7 Windows and real-tenant acceptance | NOT_STARTED |
 | M8 Internal release | NOT_STARTED |
 

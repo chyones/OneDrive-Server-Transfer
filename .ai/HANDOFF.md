@@ -5,9 +5,9 @@
 - Documentation baseline: complete.
 - Application source: M1 foundation, M2 authentication, and M3 employee source resolution complete and merged into `main`.
 - M3 integration: PR #12 merged; `main` baseline `fa1b81190b481a4dc4bf3f029a407b59da117ff4`; merge CI run 29742411955 succeeded.
-- Development state: M4 merged into `main` (PR #14, merge commit `f3011cd4216c8c1c03f74ce711c71b421ea39782`); M5 source complete on branch `agent/m5-scan-copy-resume` (pushed, intentionally not merged); paused awaiting M6 authorization.
+- Development state: M4 merged into `main` (PR #14) and M5 merged into `main` (PR #15, merge commit `5a986bba4ee6c1b1bfa7c6d3d5431854bd7b0e71`); M6 in progress on branch `agent/m6-ui-errors-reports`.
 - Current phase: `M6 — UI, errors, and reports`.
-- Status: `NOT_STARTED`. M6 requires a new explicit owner instruction before any work begins. No M6 functionality exists.
+- Status: `IN_PROGRESS` on branch `agent/m6-ui-errors-reports`, authorized by explicit owner instruction on 2026-07-23. No M6 functionality exists yet; Windows CI evidence for the M6 source commit is pending.
 - M5 evidence: `artifacts/evidence/M05_scan-copy-resume_20260722T125938Z.json` on validated source commit `c20d39bda96b9d7611cc9dd209e0c9bb38731fb4` (Windows CI run 29921734475, all checks passed, 486/486 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
@@ -49,9 +49,9 @@ Implemented on branch `agent/m5-scan-copy-resume` (validated commit `c20d39bda96
 - `Verification/`: streaming SHA-256, reference-exact QuickXorHash, SHA-1; Graph `sha256Hash` ignored (D-038 — delta parser corrected to quickXor-first in this milestone);
 - 136 new tests; full suite 486/486 on Windows CI. A disk-stop scheduling-loop hang was found by CI and fixed before validation.
 
-## M6 task (not started)
+## M6 task (in progress)
 
-Development is paused. Do not begin M6 until the repository owner issues a new explicit instruction for it. Before changing source files, mark M6 `IN_PROGRESS`. Implement the M6 goals in `docs/IMPLEMENTATION_PLAN.md` only: complete one-window UI wiring (sign-in, source input, destination, `Scan`, `Start Copy`, `Cancel`, `Open Report`), progress and bounded activity, reference-coded user errors, and unique per-run reports per `docs/REPORT_SCHEMA.md`.
+M6 was marked `IN_PROGRESS` on 2026-07-23 under explicit owner authorization. Implement the M6 goals in `docs/IMPLEMENTATION_PLAN.md` only: complete one-window UI wiring (sign-in, source input, destination, `Scan`, `Start Copy`, `Cancel`, `Open Report`), progress and bounded activity, reference-coded user errors, and unique per-run reports per `docs/REPORT_SCHEMA.md`.
 
 ## M6 boundaries
 
