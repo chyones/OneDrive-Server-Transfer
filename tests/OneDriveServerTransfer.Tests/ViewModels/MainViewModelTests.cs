@@ -19,6 +19,12 @@ public class MainViewModelTests
         return new MainViewModel(
             authenticationService,
             Options.Create(new AuthenticationOptions { RememberSignInDefault = rememberSignInDefault }),
+            new FakeEmployeeSourceResolver(),
+            new FakeDestinationSessionService(),
+            new FakeScanService(),
+            new FakeTransferOrchestrator(),
+            new FakeFolderPickerService(),
+            new FakeShellService(),
             NullLogger<MainViewModel>.Instance);
     }
 

@@ -2,24 +2,58 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:conv="clr-namespace:OneDriveServerTransfer.Converters"
-        Title="OneDrive Server Transfer" Height="560" Width="880"
+        Title="OneDrive Server Transfer" Height="840" Width="920"
         WindowStartupLocation="CenterScreen">
     <!--
-        M2 scope: Microsoft sign-in, signed-in operator display, remember sign-in, and
-        sign-out only. The transfer workflow (employee source, destination, Scan,
-        Start Copy, progress, reports) is implemented in later milestones.
+        The one application window (contract section 12): sign-in, one employee source
+        input, destination selector, Scan / Start Copy / Cancel with explicit
+        confirmation, the dry-run summary, progress, a bounded recent-activity list,
+        Open Report / Open Destination, and reference-coded errors. No other screens.
     -->
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
+        <Style x:Key="GroupBorder" TargetType="Border">
+            <Setter Property="Padding" Value="16" />
+            <Setter Property="BorderBrush" Value="#FFB0B0B0" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="4" />
+            <Setter Property="Margin" Value="0,0,0,12" />
+        </Style>
+        <Style x:Key="GroupHeader" TargetType="TextBlock">
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Margin" Value="0,0,0,8" />
+        </Style>
+        <Style x:Key="FieldLabel" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#FF606060" />
+        </Style>
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Width" Value="140" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+            <Setter Property="Padding" Value="0,6" />
+        </Style>
     </Window.Resources>
-    <Grid Margin="24">
-        <StackPanel>
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24">
             <TextBlock Text="{Binding WindowTitle}" FontSize="22" FontWeight="SemiBold" />
             <TextBlock Text="{Binding StatusMessage}" Margin="0,8,0,16" TextWrapping="Wrap" />
 
-            <Border Padding="16" BorderBrush="#FFB0B0B0" BorderThickness="1" CornerRadius="4">
+            <Border Padding="16" Margin="0,0,0,12" BorderBrush="#FFB00020" BorderThickness="1" CornerRadius="4"
+                    Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
                 <StackPanel>
+                    <TextBlock Text="{Binding ErrorTitle}" FontWeight="SemiBold" Foreground="#FFB00020" />
+                    <TextBlock Text="{Binding ErrorMessage}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding ErrorAction}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,8,0,0" Foreground="#FF606060">
+                        <Run Text="Reference: " />
+                        <Run Text="{Binding ErrorReferenceCode}" />
+                    </TextBlock>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource GroupBorder}">
+                <StackPanel>
+                    <TextBlock Text="Sign-in" Style="{StaticResource GroupHeader}" />
                     <StackPanel Visibility="{Binding IsSignedIn, Converter={StaticResource InverseBoolToVisibility}}">
                         <TextBlock Text="Sign in with the authorized IT transfer account. Multi-factor authentication and organizational policies are handled by the official Microsoft sign-in flow."
                                    TextWrapping="Wrap" />
@@ -33,7 +67,7 @@
                     </StackPanel>
 
                     <StackPanel Visibility="{Binding IsSignedIn, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="Signed-in operator" FontWeight="SemiBold" />
+                        <TextBlock Text="Signed-in operator" Style="{StaticResource FieldLabel}" />
                         <TextBlock Text="{Binding OperatorDisplayName}" Margin="0,4,0,0" />
                         <TextBlock Text="{Binding OperatorUpn}" Foreground="#FF606060" />
                         <Button Content="Sign out"
@@ -43,21 +77,182 @@
                 </StackPanel>
             </Border>
 
-            <Border Padding="16" Margin="0,16,0,0" BorderBrush="#FFB00020" BorderThickness="1" CornerRadius="4"
-                    Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+            <Border Style="{StaticResource GroupBorder}">
                 <StackPanel>
-                    <TextBlock Text="{Binding ErrorTitle}" FontWeight="SemiBold" Foreground="#FFB00020" />
-                    <TextBlock Text="{Binding ErrorMessage}" Margin="0,4,0,0" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding ErrorAction}" Margin="0,4,0,0" TextWrapping="Wrap" />
-                    <TextBlock Margin="0,8,0,0" Foreground="#FF606060">
-                        <Run Text="Reference: " />
-                        <Run Text="{Binding ErrorReferenceCode}" />
-                    </TextBlock>
+                    <TextBlock Text="Employee source" Style="{StaticResource GroupHeader}" />
+                    <TextBlock Text="Employee UPN or OneDrive URL" Style="{StaticResource FieldLabel}" />
+                    <TextBox Text="{Binding SourceInput, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,4,0,0" />
                 </StackPanel>
             </Border>
 
-            <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0"
+            <Border Style="{StaticResource GroupBorder}">
+                <StackPanel>
+                    <TextBlock Text="Destination" Style="{StaticResource GroupHeader}" />
+                    <TextBlock Text="Local destination on this server" Style="{StaticResource FieldLabel}" />
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding DestinationPath, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Grid.Column="1" Content="Browse..."
+                                Command="{Binding BrowseDestinationCommand}"
+                                Width="100" Margin="8,0,0,0" />
+                        <Button Grid.Column="2" Content="Open Destination"
+                                Command="{Binding OpenDestinationCommand}"
+                                Width="140" Margin="8,0,0,0" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource GroupBorder}">
+                <StackPanel>
+                    <TextBlock Text="Actions" Style="{StaticResource GroupHeader}" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="Scan" Command="{Binding ScanCommand}"
+                                Style="{StaticResource ActionButton}" />
+                        <Button Content="Start Copy" Command="{Binding StartCopyCommand}"
+                                Style="{StaticResource ActionButton}" />
+                        <Button Content="Cancel" Command="{Binding CancelCommand}"
+                                Style="{StaticResource ActionButton}" />
+                    </StackPanel>
+                    <CheckBox Content="I have reviewed the resolved employee, the destination, and the scan summary and confirm they are correct."
+                              IsChecked="{Binding IsScanConfirmed}"
+                              IsEnabled="{Binding HasScanSummary}"
+                              Margin="0,12,0,0" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource GroupBorder}"
+                    Visibility="{Binding HasScanSummary, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Dry-run summary" Style="{StaticResource GroupHeader}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="180" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Resolved employee" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ScanEmployeeDisplay}" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Authorized operator" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ScanOperatorDisplay}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Source mode" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding ScanSourceModeDisplay}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="Destination" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ScanDestinationDisplay}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="Files" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding ScanFileCountText}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="5" Grid.Column="0" Text="Known total size" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding ScanKnownSizeText}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="6" Grid.Column="0" Text="Unsupported items" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding ScanUnsupportedCountText}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="7" Grid.Column="0" Text="Path warnings" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding ScanPathWarningCountText}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="8" Grid.Column="0" Text="Storage warnings" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="8" Grid.Column="1" Text="{Binding ScanStorageWarningCountText}" Margin="0,4,0,0" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding ScanWarnings}" Margin="0,8,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" TextWrapping="Wrap" Foreground="#FF8A6D00" Margin="0,2,0,0" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <TextBlock Text="The dry run did not copy any content."
+                               Margin="0,8,0,0" Foreground="#FF606060" FontStyle="Italic" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource GroupBorder}"
+                    Visibility="{Binding ShowProgressArea, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Progress" Style="{StaticResource GroupHeader}" />
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="Current operation" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CurrentOperation, TargetNullValue=—}" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="Current file" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding CurrentItemName, TargetNullValue=—}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="Downloaded" Style="{StaticResource FieldLabel}" Margin="0,4,0,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Margin="0,4,0,0">
+                            <Run Text="{Binding DownloadedSizeText}" />
+                            <Run Text=" of " />
+                            <Run Text="{Binding TotalKnownSizeText}" />
+                        </TextBlock>
+                    </Grid>
+                    <ProgressBar Minimum="0" Maximum="100" Height="8" Margin="0,12,0,0"
+                                 Value="{Binding ProgressPercent}"
+                                 IsIndeterminate="{Binding IsProgressIndeterminate}" />
+                    <UniformGrid Columns="5" Margin="0,12,0,0">
+                        <StackPanel>
+                            <TextBlock Text="Discovered" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding DiscoveredCount, StringFormat={}{0:N0}}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Completed" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding CompletedCount, StringFormat={}{0:N0}}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Skipped" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding SkippedCount, StringFormat={}{0:N0}}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Unsupported" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding UnsupportedCount, StringFormat={}{0:N0}}" FontWeight="SemiBold" />
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="Failed" Style="{StaticResource FieldLabel}" />
+                            <TextBlock Text="{Binding FailedCount, StringFormat={}{0:N0}}" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </UniformGrid>
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource GroupBorder}"
+                    Visibility="{Binding HasFinalResult, Converter={StaticResource BoolToVisibility}}">
+                <StackPanel>
+                    <TextBlock Text="Final result" Style="{StaticResource GroupHeader}" />
+                    <TextBlock Text="{Binding FinalStateName}" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding FinalStateTitle}" Margin="0,2,0,0" />
+                    <TextBlock Text="{Binding FinalStateExplanation}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                    <Button Content="Open Report"
+                            Command="{Binding OpenReportCommand}"
+                            Width="140" Margin="0,12,0,0" HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource GroupBorder}">
+                <StackPanel>
+                    <TextBlock Text="Recent activity" Style="{StaticResource GroupHeader}" />
+                    <ListBox ItemsSource="{Binding RecentActivity}" MaxHeight="140"
+                             BorderThickness="0" Background="Transparent" />
+                </StackPanel>
+            </Border>
+
+            <ProgressBar IsIndeterminate="True" Height="4"
                          Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
         </StackPanel>
-    </Grid>
+    </ScrollViewer>
 </Window>

@@ -4,10 +4,11 @@ namespace OneDriveServerTransfer.Tests;
 
 /// <summary>
 /// Guards the milestone boundary: source code may use only the approved v1.0 endpoints
-/// in GraphEndpoints.cs, and no later-phase UI behavior may exist yet. M5 download,
-/// transfer, verification, and reconciliation behavior and the M6 report generation
-/// engine exist and are covered by their own tests; the Start Copy UI wiring remains
-/// prohibited for the M6 UI slice.
+/// in GraphEndpoints.cs, and no later-phase behavior may exist yet. The M6 UI wiring
+/// (Scan and Start Copy commands) is now implemented and no longer guarded here. The
+/// GetDriveItemContent guard stays: M5 downloads through temporary pre-authenticated
+/// URLs selected with $select=@microsoft.graph.downloadUrl (GraphMetadataClient), and
+/// the Graph content endpoint symbol must never appear.
 /// </summary>
 public class NoLaterPhaseBehaviorTests
 {
@@ -62,14 +63,12 @@ public class NoLaterPhaseBehaviorTests
     }
 
     [Theory]
-    [InlineData("StartCopy")]
-    [InlineData("ScanCommand")]
     [InlineData("GetDriveItemContent")]
     public void NoLaterUiBehaviorExists(string forbidden)
     {
         Assert.False(
             AllSource().Contains(forbidden, StringComparison.Ordinal),
-            $"M6 slice-1 source must not contain '{forbidden}'.");
+            $"Source must not contain '{forbidden}'.");
     }
 
     [Fact]

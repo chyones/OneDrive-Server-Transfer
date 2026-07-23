@@ -29,6 +29,12 @@ public class WpfShellTests
                 var viewModel = new MainViewModel(
                     new FakeAuthenticationService(),
                     Options.Create(new AuthenticationOptions()),
+                    new FakeEmployeeSourceResolver(),
+                    new FakeDestinationSessionService(),
+                    new FakeScanService(),
+                    new FakeTransferOrchestrator(),
+                    new FakeFolderPickerService(),
+                    new FakeShellService(),
                     NullLogger<MainViewModel>.Instance);
                 var window = new MainWindow(viewModel);
                 Assert.Equal("OneDrive Server Transfer", window.Title);

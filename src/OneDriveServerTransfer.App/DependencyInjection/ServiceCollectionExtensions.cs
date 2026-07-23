@@ -121,6 +121,11 @@ public static class ServiceCollectionExtensions
         // M6: per-run audit report generation (docs/REPORT_SCHEMA.md).
         services.AddSingleton<IReportWriter, ReportWriter>();
 
+        // M6: one-window UI wiring. The folder picker and shell integration sit behind
+        // testable abstractions; the WPF implementations live in the App layer.
+        services.AddSingleton<IFolderPickerService, Shell.WpfFolderPickerService>();
+        services.AddSingleton<IShellService, Shell.WindowsShellService>();
+
         services.AddSingleton<MainViewModel>();
         services.AddSingleton<ITransferStateSchemaInitializer, SqliteTransferStateSchemaInitializer>();
 

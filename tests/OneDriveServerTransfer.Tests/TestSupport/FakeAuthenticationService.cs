@@ -28,13 +28,16 @@ internal sealed class FakeAuthenticationService : IAuthenticationService
     public Task<OperatorIdentity?> GetCurrentOperatorAsync(CancellationToken cancellationToken) =>
         GetCurrentOperatorHandler?.Invoke(cancellationToken) ?? Task.FromResult(_currentOperator);
 
-    public Task<OperatorIdentity> SignInAsync(IntPtr parentWindowHandle, bool rememberSignIn, CancellationToken cancellationToken)
+    public async Task<OperatorIdentity> SignInAsync(IntPtr parentWindowHandle, bool rememberSignIn, CancellationToken cancellationToken)
     {
         LastSignInWindowHandle = parentWindowHandle;
         LastRememberSignIn = rememberSignIn;
-        return SignInHandler?.Invoke(parentWindowHandle, rememberSignIn, cancellationToken)
-            ?? Task.FromResult(new OperatorIdentity(
-                "33333333-3333-3333-3333-333333333333", "operator@example.test", "Test Operator", "11111111-1111-1111-1111-111111111111"));
+        var identity = SignInHandler is not null
+            ? await SignInHandler(parentWindowHandle, rememberSignIn, cancellationToken)
+            : new OperatorIdentity(
+                "33333333-3333-3333-3333-333333333333", "operator@example.test", "Test Operator", "11111111-1111-1111-1111-111111111111");
+        _currentOperator = identity;
+        return identity;
     }
 
     public Task SignOutAsync(CancellationToken cancellationToken)
