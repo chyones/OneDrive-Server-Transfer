@@ -5,10 +5,10 @@
 - Documentation baseline: complete.
 - Application source: M1 foundation, M2 authentication, and M3 employee source resolution complete and merged into `main`.
 - M3 integration: PR #12 merged; `main` baseline `fa1b81190b481a4dc4bf3f029a407b59da117ff4`; merge CI run 29742411955 succeeded.
-- Development state: M4 merged into `main` (PR #14) and M5 merged into `main` (PR #15, merge commit `5a986bba4ee6c1b1bfa7c6d3d5431854bd7b0e71`); M6 in progress on branch `agent/m6-ui-errors-reports`.
-- Current phase: `M6 — UI, errors, and reports`.
-- Status: `IN_PROGRESS` on branch `agent/m6-ui-errors-reports`, authorized by explicit owner instruction on 2026-07-23. No M6 functionality exists yet; Windows CI evidence for the M6 source commit is pending.
-- M5 evidence: `artifacts/evidence/M05_scan-copy-resume_20260722T125938Z.json` on validated source commit `c20d39bda96b9d7611cc9dd209e0c9bb38731fb4` (Windows CI run 29921734475, all checks passed, 486/486 tests).
+- Development state: M4 merged into `main` (PR #14) and M5 merged into `main` (PR #15, merge commit `5a986bba4ee6c1b1bfa7c6d3d5431854bd7b0e71`); M6 source complete on branch `agent/m6-ui-errors-reports` (pushed, intentionally not merged); paused awaiting M7 authorization.
+- Current phase: `M7 — Windows and real-tenant acceptance`.
+- Status: `NOT_STARTED`. M7 requires a new explicit owner instruction before any work begins. No M7 activity has occurred.
+- M6 evidence: `artifacts/evidence/M06_ui-errors-reports_20260723T092549Z.json` on validated source commit `c33138b4c1c34cb57603077679d8c42b3ea4c083` (Windows CI run 29995074450, all checks passed, 576/576 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
 
@@ -49,9 +49,22 @@ Implemented on branch `agent/m5-scan-copy-resume` (validated commit `c20d39bda96
 - `Verification/`: streaming SHA-256, reference-exact QuickXorHash, SHA-1; Graph `sha256Hash` ignored (D-038 — delta parser corrected to quickXor-first in this milestone);
 - 136 new tests; full suite 486/486 on Windows CI. A disk-stop scheduling-loop hang was found by CI and fixed before validation.
 
-## M6 task (in progress)
+## M6 outcome (completed)
 
-M6 was marked `IN_PROGRESS` on 2026-07-23 under explicit owner authorization. Implement the M6 goals in `docs/IMPLEMENTATION_PLAN.md` only: complete one-window UI wiring (sign-in, source input, destination, `Scan`, `Start Copy`, `Cancel`, `Open Report`), progress and bounded activity, reference-coded user errors, and unique per-run reports per `docs/REPORT_SCHEMA.md`.
+Implemented on branch `agent/m6-ui-errors-reports` (validated commit `c33138b4c1c34cb57603077679d8c42b3ea4c083`, Windows CI run 29995074450):
+
+- `Reporting/`: `IReportWriter` implementation producing `_TransferReport\Runs\<RunId>\{TransferSummary.json, TransferReport.csv, FailedFiles.csv, TransferLog.log}` with exact `docs/REPORT_SCHEMA.md` header order, UTF-8 (no BOM), RFC 4180 escaping, leading-apostrophe formula-injection neutralization (D-040), sanitized error text, and `FileMode.CreateNew` per-run isolation; per-run Serilog file sink for the protected technical log; report generation wired into `TransferOrchestrator` finalization without ever masking the run outcome;
+- one-window UI: complete `MainViewModel` workflow (sign-in, UPN/URL input, destination selection, mandatory Scan, confirmation-gated Start Copy, Cancel, progress with counts and a 100-entry bounded activity list, exact terminal run states with `Incomplete` stating the archive is not complete) and full `MainWindow.xaml`;
+- Start Copy enabled only after a successful current scan plus explicit confirmation; any source or destination change invalidates the scan; scan currency revalidated service-side before scheduling; indeterminate progress while totals are unknown;
+- reference-coded error display with UI redaction (protected identifiers, tokens, URLs, stack traces never rendered); `IFolderPickerService` and `IShellService` abstractions for Browse, Open Report, and Open Destination;
+- additive `IProgress<TransferProgress>` surface on the transfer orchestrator; no M2–M5 semantics changed;
+- 90 new tests; full suite 576/576 on Windows CI.
+
+With M1–M6 complete and evidenced, the completion label is `Source Implementation Complete` (not Production Ready; M7/M8 unexecuted).
+
+## M7 task (not started)
+
+Development is paused. Do not begin M7 until the repository owner issues a new explicit instruction for it. M7 executes on the target environment per `docs/IMPLEMENTATION_PLAN.md`: Windows Server build, WPF startup, real sign-in, real UPN/URL resolution, complete dry run and copy, interruption/resume, reconciliation, locking, disk-space behavior, reports, ACL/encryption validation, access-removal verification, and self-contained publish.
 
 ## M6 boundaries
 

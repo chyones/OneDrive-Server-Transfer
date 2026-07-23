@@ -47,3 +47,4 @@ Use UTC dates. Add a new entry only for a material owner-approved decision that 
 - **D-037:** Temporary download URLs use a separate unauthenticated client, are never logged or persisted, and resume only after valid `206` and `Content-Range`.
 - **D-038:** Prefer `quickXorHash` when available, ignore Graph `sha256Hash`, and keep Microsoft source hashes separate from local SHA-256.
 - **D-039:** Self-contained releases must be rebuilt for runtime patches and record exact platform versions, source commit, and artifact hash.
+- **D-040:** CSV formula-injection neutralization uses a leading apostrophe on values beginning with `=`, `+`, `-`, `@`, tab, CR, or LF, applied before RFC 4180 escaping; report files are UTF-8 without BOM.
