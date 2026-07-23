@@ -25,7 +25,16 @@ public sealed class SqliteTransferStateSchemaInitializer : ITransferStateSchemaI
             Directory.CreateDirectory(directory);
         }
 
-        var connectionString = new SqliteConnectionStringBuilder { DataSource = databasePath }.ToString();
+        // Pooling is disabled so a disposed connection releases its OS file handle
+        // immediately, consistent with the binding and transfer stores: pooled
+        // connections kept the state database locked on Windows past dispose, which
+        // surfaced as a timing-dependent IOException when the database file was
+        // read, copied, or deleted right after initialization.
+        var connectionString = new SqliteConnectionStringBuilder
+        {
+            DataSource = databasePath,
+            Pooling = false,
+        }.ToString();
         await using var connection = new SqliteConnection(connectionString);
         await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
 

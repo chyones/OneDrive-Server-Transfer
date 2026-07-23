@@ -44,6 +44,38 @@ public class SqliteSchemaFoundationTests : IDisposable
         Assert.Equal("1", await ReadMetadataValueAsync(connection, "StateSchemaVersion"));
     }
 
+    [Fact]
+    public async Task InitializationReleasesTheDatabaseFileHandleImmediately()
+    {
+        var initializer = new SqliteTransferStateSchemaInitializer();
+
+        await initializer.InitializeAsync(_databasePath, CancellationToken.None);
+
+        // No pool clearing and no GC: with pooling disabled the initializer must not
+        // retain any OS handle. On Windows a pooled connection intermittently kept the
+        // file locked here (the TemporaryUrlIsNeverPersistedInState flake).
+        using var stream = new FileStream(
+            _databasePath, FileMode.Open, FileAccess.Read, FileShare.None);
+        Assert.True(stream.Length > 0);
+    }
+
+    [Fact]
+    public async Task RepeatedInitializationAndImmediateFileAccessIsStable()
+    {
+        var initializer = new SqliteTransferStateSchemaInitializer();
+
+        for (var iteration = 0; iteration < 25; iteration++)
+        {
+            await initializer.InitializeAsync(_databasePath, CancellationToken.None);
+
+            // Immediate byte read and delete without pool clearing: any retained
+            // handle fails this on Windows.
+            var bytes = await File.ReadAllBytesAsync(_databasePath);
+            Assert.True(bytes.Length > 0);
+            File.Delete(_databasePath);
+        }
+    }
+
     private static async Task<long> ReadUserVersionAsync(SqliteConnection connection)
     {
         await using var command = connection.CreateCommand();

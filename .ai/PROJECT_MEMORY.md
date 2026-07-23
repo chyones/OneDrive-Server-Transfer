@@ -99,6 +99,7 @@ The one-window workflow is:
 - CSV policy: UTF-8 no BOM, RFC 4180 escaping, leading-apostrophe formula-injection neutralization (D-040). State schema v1 has no per-item error code/message/start columns, so those CSV columns are emitted empty by design (future schema-version decision if needed).
 - `MainViewModel` owns the whole §2 workflow; Start Copy requires `_scanIsCurrent` (revalidated via `IScanService.IsScanCurrentAsync` before scheduling) plus the `IsScanConfirmed` checkbox; any source/destination edit disposes the destination session (releasing the M4 lock) and clears scan state. Activity list is bounded at 100 FIFO. `TransferProgress` with null `TotalKnownBytes` means indeterminate progress.
 - UI abstractions live in `Abstractions/UserInterfaceServices.cs` (`IFolderPickerService` via `Microsoft.Win32.OpenFolderDialog`, `IShellService` via `Process.Start explorer`, Windows-gated) and `UserInterfaceErrors.cs` (`UI-GEN-001`, `UI-SHELL-001`).
+- All SQLite components run with `Pooling = false` (binding store, transfer store, and — after post-M6 hardening — the schema initializer), so disposal releases OS file handles deterministically on Windows.
 - With M1–M6 evidenced, the completion label is `Source Implementation Complete`; never represent it as Production Ready.
 
 ## Fixed controls
