@@ -7,7 +7,7 @@ Last updated: 2026-07-23 UTC
 - Completion label: `Source Implementation Complete` (M1–M6 complete with Windows CI evidence; must not be represented as Production Ready)
 - Application implementation started: Yes
 - Production ready: No
-- Current evidence: `artifacts/evidence/M06_post-m6-hardening_20260723T104618Z.json`
+- Current evidence: `artifacts/evidence/M07_windows-real-tenant_20260724T104407Z.json` (M7 BLOCKED — external environment and tenant inputs unavailable)
 - Validated M6 source commit: `c33138b4c1c34cb57603077679d8c42b3ea4c083`
 - Post-M6 hardening commit: `afdc04852439a10b8081dc60a8cc8b404150a97d` (branch `agent/post-m6-hardening`, CI run 29999753949 ×4 executions, 579/579 each)
 - Validated M5 source commit: `c20d39bda96b9d7611cc9dd209e0c9bb38731fb4`
@@ -16,9 +16,9 @@ Last updated: 2026-07-23 UTC
 - Validated M2 source commit: `a1afd839e79f86e01e44a9f40a46b4b46363a988`
 - Validated M1 source commit: `6940eb7b43d868c419bfa814724b5d2a9316dcbc`
 - Merged `main` baseline: `97a39fc1b06bf615b52470d8fc5677a7a254d245` (post-M6 hardening baseline recording, PR #18; hardening itself integrated by PR #17, merge commit `12e9c46d36a1d8cabdb69feff562ece3ffd300d4`)
-- Development state: M7 in progress on branch `agent/m7-windows-real-tenant-acceptance`
+- Development state: M7 blocked on missing external environment and tenant inputs; branch `agent/m7-windows-real-tenant-acceptance` carries the blocked evidence
 - Current phase: `M7 — Windows and real-tenant acceptance`
-- M7 status: `IN_PROGRESS`
+- M7 status: `BLOCKED`
 - M7 start authorized: Yes (explicit owner instruction 2026-07-23)
 - M8 status: `NOT_STARTED`
 - M8 start authorized: No (new explicit owner instruction required)
@@ -36,7 +36,7 @@ M1, M2, and M3 were each completed on their implementation branches with Windows
 | M4 Destination and source binding | SOURCE_COMPLETE |
 | M5 Scan, copy, resume, verification, and state | SOURCE_COMPLETE |
 | M6 UI, errors, and reports | SOURCE_COMPLETE |
-| M7 Windows and real-tenant acceptance | IN_PROGRESS |
+| M7 Windows and real-tenant acceptance | BLOCKED |
 | M8 Internal release | NOT_STARTED |
 
 ## Status rules

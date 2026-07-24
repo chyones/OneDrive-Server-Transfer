@@ -1,0 +1,76 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M7 — Windows and real-tenant acceptance",
+  "completionState": "BLOCKED (genuine external blocker: required Windows Server environment and Microsoft 365 tenant inputs unavailable)",
+  "validatedSourceCommit": null,
+  "sourceCommitContext": "ce22c40 (control-file changes only on branch agent/m7-windows-real-tenant-acceptance; application source is unchanged from the M6-integrated and post-M6-hardened main baseline 97a39fc1b06bf615b52470d8fc5677a7a254d245)",
+  "executedAtUtc": "2026-07-24T10:44:07Z",
+  "environment": {
+    "repository": "chyones/OneDrive-Server-Transfer",
+    "branchContext": "agent/m7-windows-real-tenant-acceptance",
+    "executionHost": "macOS arm64 (Darwin 25.5.0), .NET SDK 10.0.301 — not the Windows Server 2019 target environment",
+    "windowsServerTarget": "UNAVAILABLE — no Windows Server 2019 (or 2022/2025) environment, server name, build, or execution account was provided",
+    "tenant": "UNAVAILABLE — no tenant ID, client ID, OneDrive host, authorized transfer-account object IDs, test employee, or admin consent was provided",
+    "inputsTracking": "docs/ENVIRONMENT_AND_INPUTS.md records every required M7 input as Not provided or Not confirmed (tenant, application registration, test employee and source data, Windows Server, destination, BitLocker, network constraints)"
+  },
+  "executedPreparation": [
+    {
+      "action": "Self-contained win-x64 publish build check (build-only preparation, NOT M7 publish acceptance)",
+      "command": "dotnet publish src/OneDriveServerTransfer.App/OneDriveServerTransfer.App.csproj -c Release -r win-x64 --self-contained true -p:EnableWindowsTargeting=true -o artifacts/win-x64/m7-prepublish-check",
+      "result": "PASS (build produced the self-contained layout)",
+      "exitCode": 0,
+      "details": "OneDriveServerTransfer.App.exe SHA-256 e09715d3e9aaa5b78ad99e5559c48f30f9e57b0ab9cb0cf69ebd8acd18ca4e1a; 302 files in the publish layout; bundled runtime pack Microsoft.NETCore.App.Runtime.win-x64 10.0.9. Generated under artifacts/win-x64, which is Git-ignored; the artifact is not committed.",
+      "limitations": [
+        "The artifact was built on macOS and has NOT been executed on Windows; M7 acceptance requires execution on Windows Server 2019.",
+        "The local SDK produced bundled runtime 10.0.9 while Windows CI tests executed on runtime 10.0.10 (SDK rollForward latestPatch). The M7 executor should publish with the current supported .NET 10 servicing patch on or for the target environment and record the exact versions (D-039)."
+      ]
+    }
+  ],
+  "blockedAcceptanceChecks": [
+    "Windows Server 2019 build execution and WPF startup",
+    "delegated Microsoft interactive sign-in with an authorized transfer account (WAM and system-browser fallback, MFA/Conditional Access)",
+    "real employee UPN resolution and real OneDrive root URL resolution, including proof both modes resolve to the same tenant, employee object, and drive ID",
+    "mandatory dry-run Scan against a real employee OneDrive",
+    "complete copy of real supported content",
+    "cancellation and resume; interruption and crash recovery",
+    "delta reconciliation, rename and move behavior, source deletion without local deletion",
+    "exclusive destination locking across processes or Windows sessions",
+    "disk-space reserve and controlled disk-full behavior on a real volume",
+    "path, reparse-point, hard-link, NTFS ACL, and exposure checks on real storage",
+    "report generation and operational review of real (sanitized) reports",
+    "temporary download URL expiration and credential isolation against live hosts",
+    "throttling, Range 206/200 behavior, source-hash and local SHA-256 behavior against the live tenant",
+    "production ACL and BitLocker (or approved equivalent/exception) validation",
+    "temporary Site Collection Administrator access removal, verification, and external recording",
+    "sign-out behavior on the target server",
+    "self-contained win-x64 publish acceptance with execution on Windows Server 2019"
+  ],
+  "exactExternalBlockers": [
+    "No Windows Server environment: server name, exact build, Desktop Experience confirmation, and execution account are all Not provided (docs/ENVIRONMENT_AND_INPUTS.md, Windows Server section).",
+    "No Microsoft 365 tenant inputs: tenant ID, Entra public-client Client ID, allowed OneDrive host, authorized transfer-account object ID list, admin consent, and redirect/WAM confirmations are all Not provided or Not confirmed (tenant section).",
+    "No controlled test employee OneDrive with the required content matrix (nested/empty folders, Unicode/Arabic/invalid/reserved/collision names, large file, package content, timestamp and hash cases, change/rename/move/delete cases, rejection inputs) (test data section).",
+    "No destination environment: local destination root, NTFS ACL baseline, BitLocker/equivalent/exception, free-space and controlled disk-full method, token-cache ACL, and network/TLS constraints are Not provided or Not confirmed.",
+    "This session executes on macOS with no remote access to any Windows environment or tenant; no credentials of any kind are available to it, and none may be invented."
+  ],
+  "ciEvidence": {
+    "note": "No application source changed on this branch; the last full Windows CI validation of the identical application source is the post-M6 hardening run 29999753949 (4 consecutive executions, 579/579) on commit afdc04852439a10b8081dc60a8cc8b404150a97d, integrated into main via PRs #17 and #18 (baseline 97a39fc1b06bf615b52470d8fc5677a7a254d245). The branch push run is recorded separately in the control files."
+  },
+  "result": "BLOCKED",
+  "statusConclusion": {
+    "completionLabel": "Source Implementation Complete (unchanged; M7 must not be marked complete from preparation work)",
+    "m7Status": "BLOCKED",
+    "m8Status": "NOT_STARTED",
+    "productionReady": false
+  },
+  "unblockInstructions": "Provide the inputs tracked in docs/ENVIRONMENT_AND_INPUTS.md: a Windows Server 2019 (Desktop Experience) environment with execution account and destination storage, the tenant and app-registration values, an authorized transfer account, and a controlled test employee OneDrive. Re-run M7 acceptance on that environment against the unchanged validated source.",
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false,
+    "note": "No tenant identifiers, employee identities, or environment secrets exist in this evidence because none were provided."
+  }
+}
