@@ -15,7 +15,7 @@ Last updated: 2026-07-23 UTC
 - Validated M3 source commit: `eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9`
 - Validated M2 source commit: `a1afd839e79f86e01e44a9f40a46b4b46363a988`
 - Validated M1 source commit: `6940eb7b43d868c419bfa814724b5d2a9316dcbc`
-- Merged `main` baseline: `97a39fc1b06bf615b52470d8fc5677a7a254d245` (post-M6 hardening baseline recording, PR #18; hardening itself integrated by PR #17, merge commit `12e9c46d36a1d8cabdb69feff562ece3ffd300d4`)
+- Merged `main` baseline: `655e06bedbb0185f2d0ca0cca472b3de634ccd6d` (M7 blocked-status integration, PR #19; M7 `BLOCKED` on missing external environment and tenant inputs)
 - Development state: M7 blocked on missing external environment and tenant inputs; branch `agent/m7-windows-real-tenant-acceptance` carries the blocked evidence
 - Current phase: `M7 — Windows and real-tenant acceptance`
 - M7 status: `BLOCKED`
