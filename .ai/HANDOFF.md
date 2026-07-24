@@ -5,9 +5,9 @@
 - Documentation baseline: complete.
 - Application source: M1 foundation, M2 authentication, and M3 employee source resolution complete and merged into `main`.
 - M3 integration: PR #12 merged; `main` baseline `fa1b81190b481a4dc4bf3f029a407b59da117ff4`; merge CI run 29742411955 succeeded.
-- Development state: M4, M5, and M6 merged into `main` (PRs #14, #15, #16); post-M6 hardening merged into `main` (PR #17, merge commit `12e9c46d36a1d8cabdb69feff562ece3ffd300d4`); paused awaiting M7 authorization.
+- Development state: M4, M5, and M6 merged into `main` (PRs #14, #15, #16); post-M6 hardening merged into `main` (PRs #17, #18; final baseline `97a39fc1b06bf615b52470d8fc5677a7a254d245`); M7 in progress on branch `agent/m7-windows-real-tenant-acceptance`.
 - Current phase: `M7 — Windows and real-tenant acceptance`.
-- Status: `NOT_STARTED`. M7 requires a new explicit owner instruction before any work begins. No M7 activity has occurred.
+- Status: `IN_PROGRESS` on branch `agent/m7-windows-real-tenant-acceptance`, authorized by explicit owner instruction on 2026-07-23. M8 remains `NOT_STARTED` and unauthorized.
 - M6 evidence: `artifacts/evidence/M06_ui-errors-reports_20260723T092549Z.json` on validated source commit `c33138b4c1c34cb57603077679d8c42b3ea4c083` (Windows CI run 29995074450, all checks passed, 576/576 tests).
 
 The exact evidence pointer is maintained only in `.ai/PHASE_STATUS.md`.
@@ -66,9 +66,9 @@ With M1–M6 complete and evidenced, the completion label is `Source Implementat
 
 Branch `agent/post-m6-hardening` (owner-authorized 2026-07-23). Validated commit `afdc04852439a10b8081dc60a8cc8b404150a97d`: `SqliteTransferStateSchemaInitializer` now uses `Pooling = false` (consistent with the binding and transfer stores), eliminating the Windows file-lock timing flake mechanism; focused handle-release and repeated-execution tests added. Windows CI run 29999753949 passed 4 consecutive full-suite executions (579/579 each). Integrated into `main` by merged PR #17 (merge commit `12e9c46d36a1d8cabdb69feff562ece3ffd300d4`). Evidence: `artifacts/evidence/M06_post-m6-hardening_20260723T104618Z.json`. No M7 behavior.
 
-## M7 task (not started)
+## M7 task (in progress)
 
-Development is paused. Do not begin M7 until the repository owner issues a new explicit instruction for it. M7 executes on the target environment per `docs/IMPLEMENTATION_PLAN.md`: Windows Server build, WPF startup, real sign-in, real UPN/URL resolution, complete dry run and copy, interruption/resume, reconciliation, locking, disk-space behavior, reports, ACL/encryption validation, access-removal verification, and self-contained publish.
+M7 was marked `IN_PROGRESS` on 2026-07-23 under explicit owner authorization. M7 executes on the target environment per `docs/IMPLEMENTATION_PLAN.md`: Windows Server build, WPF startup, real sign-in, real UPN/URL resolution, complete dry run and copy, interruption/resume, reconciliation, locking, disk-space behavior, reports, ACL/encryption validation, access-removal verification, and self-contained publish. All required external inputs (tenant values, test accounts, Windows Server, destination, encryption) are tracked in `docs/ENVIRONMENT_AND_INPUTS.md` and are currently `Not provided`/`Not confirmed`; real-tenant acceptance must never be fabricated or simulated.
 
 ## M6 boundaries
 

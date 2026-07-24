@@ -15,11 +15,13 @@ Last updated: 2026-07-23 UTC
 - Validated M3 source commit: `eba82ff8510bda8316fa8ce4e4cdbdb4c1ca0cb9`
 - Validated M2 source commit: `a1afd839e79f86e01e44a9f40a46b4b46363a988`
 - Validated M1 source commit: `6940eb7b43d868c419bfa814724b5d2a9316dcbc`
-- Merged `main` baseline: `12e9c46d36a1d8cabdb69feff562ece3ffd300d4` (post-M6 hardening integration, PR #17)
-- Development state: M6 integrated into `main`; post-M6 hardening on branch `agent/post-m6-hardening`; M7 unauthorized
+- Merged `main` baseline: `97a39fc1b06bf615b52470d8fc5677a7a254d245` (post-M6 hardening baseline recording, PR #18; hardening itself integrated by PR #17, merge commit `12e9c46d36a1d8cabdb69feff562ece3ffd300d4`)
+- Development state: M7 in progress on branch `agent/m7-windows-real-tenant-acceptance`
 - Current phase: `M7 — Windows and real-tenant acceptance`
-- M7 status: `NOT_STARTED`
-- M7 start authorized: No (new explicit owner instruction required)
+- M7 status: `IN_PROGRESS`
+- M7 start authorized: Yes (explicit owner instruction 2026-07-23)
+- M8 status: `NOT_STARTED`
+- M8 start authorized: No (new explicit owner instruction required)
 
 M1, M2, and M3 were each completed on their implementation branches with Windows CI passing on the exact validated source commits above (runs 29720061002, 29732929639, 29737013050). M3 was integrated into `main` by merged PR #12 (merge commit `fa1b81190b481a4dc4bf3f029a407b59da117ff4`) with GitHub Actions succeeding on the merge commit (run 29742411955). M4 was integrated into `main` by merged PR #14 (merge commit `f3011cd4216c8c1c03f74ce711c71b421ea39782`) with GitHub Actions succeeding on the merge commit (run 29823373555); its validated source commit `2861f8549e9c48b09a8336b8f48b700005f058b4` passed Windows CI run 29818672841 (350/350 tests). M5 was completed on branch `agent/m5-scan-copy-resume` with Windows CI passing on the exact validated source commit above (run 29921734475, 486/486 tests) and integrated into `main` by merged PR #15 (merge commit `5a986bba4ee6c1b1bfa7c6d3d5431854bd7b0e71`) with GitHub Actions succeeding on the merge commit (run 29987459917). M6 was completed on branch `agent/m6-ui-errors-reports` with Windows CI passing on the exact validated source commit above (run 29995074450, 576/576 tests) and integrated into `main` by merged PR #16 (merge commit `1c1c873cd68badc6a199c875a1e8bcb7d8cb406c`); GitHub Actions passed on the merge commit (run 29997296552, 576/576 on re-run after a single transient Windows file-lock failure in `TemporaryUrlIsNeverPersistedInState`). A post-M6 hardening branch (`agent/post-m6-hardening`) addresses that flake by disabling SQLite pooling in the schema initializer. With M1–M6 complete and evidenced, the completion label is `Source Implementation Complete`; real-tenant, interactive, Windows Server, publish, and production checks remain unexecuted and this label must not be represented as Production Ready. M7 has not started and may begin only after a new explicit owner instruction. Do not claim Windows, tenant, transfer, publish, or production validation before it is executed and committed as evidence.
 
@@ -34,7 +36,7 @@ M1, M2, and M3 were each completed on their implementation branches with Windows
 | M4 Destination and source binding | SOURCE_COMPLETE |
 | M5 Scan, copy, resume, verification, and state | SOURCE_COMPLETE |
 | M6 UI, errors, and reports | SOURCE_COMPLETE |
-| M7 Windows and real-tenant acceptance | NOT_STARTED |
+| M7 Windows and real-tenant acceptance | IN_PROGRESS |
 | M8 Internal release | NOT_STARTED |
 
 ## Status rules
