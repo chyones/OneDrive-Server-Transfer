@@ -1,0 +1,37 @@
+{
+  "evidenceSchemaVersion": 1,
+  "milestone": "M7 — Windows and real-tenant acceptance (input re-check)",
+  "completionState": "BLOCKED (unchanged; re-verified after owner instruction to continue M7)",
+  "validatedSourceCommit": null,
+  "executedAtUtc": "2026-07-24T13:39:23Z",
+  "supersedes": "This is a re-check record only; the substantive blocked evidence remains artifacts/evidence/M07_windows-real-tenant_20260724T104407Z.json.",
+  "recheck": {
+    "action": "Re-inspected docs/ENVIRONMENT_AND_INPUTS.md on main baseline f9897e4c716be0fc8c01ee67e7eb36bd332e7046 and the execution environment after an owner instruction to continue M7.",
+    "inputsChanged": false,
+    "environmentChanged": false,
+    "details": "All 39 required input entries remain Not provided or Not confirmed. No Windows Server environment, tenant values, test account, test employee OneDrive, destination, security, or network inputs have been supplied. The execution host remains macOS arm64 with no access to any Windows environment or Microsoft 365 tenant and no credentials of any kind.",
+    "fabrication": "No acceptance check was executed, fabricated, or simulated."
+  },
+  "exactRemainingBlockers": [
+    "Windows Server 2019 environment: server name, exact build, Desktop Experience, execution account (all Not provided/Not confirmed).",
+    "Tenant and app registration: tenant name/ID, public-client Client ID, allowed OneDrive host, authorized transfer-account object ID list, admin consent, public-client flow, redirect URI, WAM/system-browser/MFA behavior (all Not provided/Not confirmed).",
+    "Controlled test employee OneDrive with the full required content matrix (not provided).",
+    "Destination environment: local root, write permission, NTFS ACL baseline, BitLocker/equivalent/exception, long-path support, free space plus 5 GiB reserve, controlled disk-full method, token-cache ACL (all Not provided/Not confirmed).",
+    "Network/security context: proxy and TLS inspection status, outbound HTTPS and dynamic download hosts, antivirus/application-control constraints, Authenticode availability, secondary server environment (all Not provided/Not confirmed)."
+  ],
+  "result": "BLOCKED",
+  "statusConclusion": {
+    "m7Status": "BLOCKED",
+    "m8Status": "NOT_STARTED (unauthorized)",
+    "productionReady": false
+  },
+  "redaction": {
+    "confirmed": true,
+    "containsPasswords": false,
+    "containsTokens": false,
+    "containsClientSecrets": false,
+    "containsTemporaryDownloadUrls": false,
+    "containsEmployeeContent": false,
+    "containsProductionIdentifiers": false
+  }
+}

@@ -7,7 +7,7 @@ Last updated: 2026-07-23 UTC
 - Completion label: `Source Implementation Complete` (M1–M6 complete with Windows CI evidence; must not be represented as Production Ready)
 - Application implementation started: Yes
 - Production ready: No
-- Current evidence: `artifacts/evidence/M07_windows-real-tenant_20260724T104407Z.json` (M7 BLOCKED — external environment and tenant inputs unavailable)
+- Current evidence: `artifacts/evidence/M07_windows-real-tenant-recheck_20260724T133923Z.json` (re-check; substantive blocked evidence: `artifacts/evidence/M07_windows-real-tenant_20260724T104407Z.json`) (M7 BLOCKED — external environment and tenant inputs unavailable)
 - Validated M6 source commit: `c33138b4c1c34cb57603077679d8c42b3ea4c083`
 - Post-M6 hardening commit: `afdc04852439a10b8081dc60a8cc8b404150a97d` (branch `agent/post-m6-hardening`, CI run 29999753949 ×4 executions, 579/579 each)
 - Validated M5 source commit: `c20d39bda96b9d7611cc9dd209e0c9bb38731fb4`
